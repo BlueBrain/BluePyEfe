@@ -1,0 +1,6 @@
+*.pyc
+*.swp
+x86_64
+/bluepyextract.egg-info/
+load_module
+.DS_Store
