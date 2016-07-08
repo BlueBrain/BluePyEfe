@@ -61,12 +61,12 @@ def adjust_spines(ax, spines, color='k', d_out=10, d_down=[]):
         # no xaxis ticks
         ax.xaxis.set_ticks([])
         ax.axes.get_xaxis().set_visible(False)
-    
-        
+
+
 def light_palette(color, n_colors=6, reverse=False, lumlight=0.8, light=None):
-    
+
     rgb = mplcol.colorConverter.to_rgb(color)
-    
+
     if light is not None:
         light = mplcol.colorConverter.to_rgb(light)
     else:
@@ -76,65 +76,61 @@ def light_palette(color, n_colors=6, reverse=False, lumlight=0.8, light=None):
 
     colors = [color, light] if reverse else [light, color]
     pal = mplcol.LinearSegmentedColormap.from_list("blend", colors)
-    
+
     palette = pal(numpy.linspace(0, 1, n_colors))
-    
+
     return palette
-    
-    
+
+
 def tiled_figure(figname='', frames=1, columns=2, figs=collections.OrderedDict(), axs=None, orientation='page', width_ratios=None, height_ratios=None, top=0.97, bottom=0.05, left=0.07, right=0.97, hspace=0.6, wspace=0.2, dirname=''):
 
     if figname not in figs.keys():
-        
+
         if axs == None:
             axs = []
-        
+
         if orientation == 'landscape':
             figsize=(297/25.4, 210/25.4)
         elif orientation == 'page':
             figsize=(210/25.4, 297/25.4)
-            
+
         params = {'backend': 'ps',
                   'axes.labelsize': 6,
                   'axes.linewidth' : 0.5,
-                  'title.fontsize': 8,
-                  'text.fontsize': 8,
                   'font.size': 8,
                   'axes.titlesize': 8,
                   'legend.fontsize': 8,
                   'xtick.labelsize': 6,
                   'ytick.labelsize': 6,
                   'legend.borderpad': 0.2,
-                  'legend.linewidth': 0.1,
                   'legend.loc': 'best',
-                  'legend.ncol': 4,
                   'text.usetex': False,
                   'pdf.fonttype': 42,
                   'figure.figsize': figsize}
         matplotlib.rcParams.update(params)
-        
+
         fig = plt.figure(figname, facecolor='white')
         figs[figname] = {}
         figs[figname]['fig'] = fig
         figs[figname]['dirname'] = dirname
-        
+
         if width_ratios is None:
             width_ratios=[1]*columns
-            
+
         rows = int(numpy.ceil(frames/float(columns)))
         if height_ratios is None:
             height_ratios=[1]*rows
-        
+
         gs = matplotlib.gridspec.GridSpec(rows, columns, height_ratios=height_ratios, width_ratios=width_ratios)
         gs.update(top=top, bottom=bottom, left=left, right=right, hspace=hspace, wspace=wspace)
 
         for fi in range(frames):
             axs.append(fig.add_subplot(gs[int(fi/columns), int(fi%columns)]))
             adjust_spines(axs[-1], ['left', 'bottom'], d_out=0)
-            
+
         figs[figname]['axs'] = axs
-        
-    else:        
+
+    else:
         axs = figs[figname]['axs']
 
     return axs
