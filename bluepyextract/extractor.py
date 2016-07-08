@@ -27,7 +27,7 @@ import plottools
 
 class Extractor(object):
 
-    def __init__(self, mainname='PC', config={}):
+    def __init__(self, mainname='PC', config=collections.OrderedDict()):
         self.config = config
 
         self.path = config['path']
@@ -36,6 +36,7 @@ class Extractor(object):
         self.format = config['format']
 
         self.dataset = collections.OrderedDict()
+        self.dataset_mean = collections.OrderedDict()
         self.max_per_plot = 16
         self.amp_min = 0.01 # minimum current amplitude used for spike detection
 
@@ -52,9 +53,15 @@ class Extractor(object):
         if "nanmean" not in self.options:
             self.options["nanmean"] = False
 
-        self.colors = {}
+        if "delay" not in self.options:
+            self.options["delay"] = 0
+
+        if "posttime" not in self.options:
+            self.options["posttime"] = 200
+
+        self.colors = collections.OrderedDict()
         self.colors['b1'] = '#1F78B4' #377EB8
-        self.colors['b2']= '#A6CEE3'
+        self.colors['b2'] = '#A6CEE3'
         self.colors['g1'] = '#33A02C' #4DAF4A
         self.colors['g2'] = '#B2DF8A'
         self.colors['r1'] = '#E31A1C' #E41A1C
@@ -75,10 +82,8 @@ class Extractor(object):
                             self.colors['o1'], self.colors['p1'], self.colors['ye1']]
         self.experiments = []
 
+        self.mainname = mainname
         self.maindirname = "./" + mainname + "/"
-
-        self.stimulus_string = ""
-        self.feature_string = ""
 
 
     def create_dataset(self):
@@ -87,7 +92,7 @@ class Extractor(object):
 
         for i_cell, cellname in enumerate(self.cells):
 
-            self.dataset[cellname] = {}
+            self.dataset[cellname] = collections.OrderedDict()
             self.dataset[cellname]['v_corr'] = self.cells[cellname]['v_corr']
 
             if 'ljp' in self.cells[cellname]:
@@ -96,8 +101,8 @@ class Extractor(object):
                 ljp = 0
             self.dataset[cellname]['ljp'] = ljp
 
-            dataset_exp = {}
-            self.dataset[cellname]['experiments'] = dataset_exp
+            dataset_cell_exp = collections.OrderedDict()
+            self.dataset[cellname]['experiments'] = dataset_cell_exp
 
             for i_exp, expname in enumerate(self.cells[cellname]['experiments']):
 
@@ -106,37 +111,41 @@ class Extractor(object):
                 if expname not in self.experiments:
                     self.experiments.append(expname)
 
-                dataset_exp[expname] = {}
-                dataset_exp[expname]['voltage'] = []
-                dataset_exp[expname]['current'] = []
-                dataset_exp[expname]['dt'] = []
-                dataset_exp[expname]['filename'] = []
+                dataset_cell_exp[expname] = collections.OrderedDict()
 
-                dataset_exp[expname]['t'] = []
-                dataset_exp[expname]['ton'] = []
-                dataset_exp[expname]['toff'] = []
-                dataset_exp[expname]['amp'] = []
-                dataset_exp[expname]['hypamp'] = []
+                dataset_cell_exp[expname]['location'] =\
+                    self.cells[cellname]['experiments'][expname]['location']
+
+                dataset_cell_exp[expname]['voltage'] = []
+                dataset_cell_exp[expname]['current'] = []
+                dataset_cell_exp[expname]['dt'] = []
+                dataset_cell_exp[expname]['filename'] = []
+
+                dataset_cell_exp[expname]['t'] = []
+                dataset_cell_exp[expname]['ton'] = []
+                dataset_cell_exp[expname]['toff'] = []
+                dataset_cell_exp[expname]['amp'] = []
+                dataset_cell_exp[expname]['hypamp'] = []
 
                 files = self.cells[cellname]['experiments'][expname]['files']
                 for i_file, filename in enumerate(files):
 
                     data = self.process_file(filename, cellname, expname)
-                    dataset_exp[expname]['voltage'].append(data['voltage'])
-                    dataset_exp[expname]['current'].append(data['current'])
-                    dataset_exp[expname]['dt'].append(data['dt'])
-                    dataset_exp[expname]['filename'].append(data['filename'])
+                    dataset_cell_exp[expname]['voltage'].append(data['voltage'])
+                    dataset_cell_exp[expname]['current'].append(data['current'])
+                    dataset_cell_exp[expname]['dt'].append(data['dt'])
+                    dataset_cell_exp[expname]['filename'].append(data['filename'])
 
-                    dataset_exp[expname]['t'].append(data['t'])
-                    dataset_exp[expname]['ton'].append(data['ton'])
-                    dataset_exp[expname]['toff'].append(data['toff'])
-                    dataset_exp[expname]['amp'].append(data['amp'])
-                    dataset_exp[expname]['hypamp'].append(data['hypamp'])
+                    dataset_cell_exp[expname]['t'].append(data['t'])
+                    dataset_cell_exp[expname]['ton'].append(data['ton'])
+                    dataset_cell_exp[expname]['toff'].append(data['toff'])
+                    dataset_cell_exp[expname]['amp'].append(data['amp'])
+                    dataset_cell_exp[expname]['hypamp'].append(data['hypamp'])
 
 
     def process_file(self, filename, cellname, expname):
 
-        data = {}
+        data = collections.OrderedDict()
         data['voltage'] = []
         data['current'] = []
         data['dt'] = []
@@ -167,8 +176,9 @@ class Extractor(object):
 
                 logger.debug(" Adding segment %d of %d", i_seg, len(bl.segments))
 
-                voltage = numpy.array(seg.analogsignals[0])
-                current = numpy.array(seg.analogsignals[1])
+                voltage = numpy.array(seg.analogsignals[0]).astype(numpy.float64)
+                current = numpy.array(seg.analogsignals[1]).astype(numpy.float64)
+
                 dt = 1./int(seg.analogsignals[0].sampling_rate) * 1e3
 
                 t = numpy.arange(len(voltage)) * dt
@@ -297,14 +307,14 @@ class Extractor(object):
 
             dirname = self.maindirname+cellname
             tools.makedir(dirname)
-            dataset_exp = self.dataset[cellname]['experiments']
+            dataset_cell_exp = self.dataset[cellname]['experiments']
 
-            for i_exp, expname in enumerate(dataset_exp):
+            for i_exp, expname in enumerate(dataset_cell_exp):
 
-                voltages = dataset_exp[expname]['voltage']
-                amps = dataset_exp[expname]['amp']
-                ts = dataset_exp[expname]['t']
-                filenames = dataset_exp[expname]['filename']
+                voltages = dataset_cell_exp[expname]['voltage']
+                amps = dataset_cell_exp[expname]['amp']
+                ts = dataset_cell_exp[expname]['t']
+                filenames = dataset_cell_exp[expname]['filename']
 
                 voltages_flat = list(itertools.chain.from_iterable(voltages))
                 amps_flat = list(itertools.chain.from_iterable(amps))
@@ -341,8 +351,9 @@ class Extractor(object):
 
                 for i_fig in range(n_fig):
                     figname = cellname.split('/')[-1] + "_" + expname + "_" + str(i_fig)
-                    axs = plottools.tiled_figure(figname, frames=frames, columns=2, figs=figs, axs=axs,
-                                            top=0.97, bottom=0.04, left=0.07, right=0.97, hspace=0.75, wspace=0.2)
+                    axs = plottools.tiled_figure(figname, frames=frames, columns=2,
+                                    figs=figs, axs=axs,
+                                    top=0.97, bottom=0.04, left=0.07, right=0.97, hspace=0.75, wspace=0.2)
 
                 for i_plot in range(n_plot):
                     axs[i_plot].plot(ts_flat[i_plot], voltages_flat[i_plot], color=colors_flat[i_plot], clip_on=False)
@@ -362,15 +373,15 @@ class Extractor(object):
 
         for i_cell, cellname in enumerate(self.dataset):
 
-            dataset_exp = self.dataset[cellname]['experiments']
-            for i_exp, expname in enumerate(dataset_exp):
+            dataset_cell_exp = self.dataset[cellname]['experiments']
+            for i_exp, expname in enumerate(dataset_cell_exp):
 
-                ts = dataset_exp[expname]['t']
-                voltages = dataset_exp[expname]['voltage']
-                #currents = dataset_exp[expname]['current']
-                tons = dataset_exp[expname]['ton']
-                toffs = dataset_exp[expname]['toff']
-                amps = dataset_exp[expname]['amp']
+                ts = dataset_cell_exp[expname]['t']
+                voltages = dataset_cell_exp[expname]['voltage']
+                #currents = dataset_cell_exp[expname]['current']
+                tons = dataset_cell_exp[expname]['ton']
+                toffs = dataset_cell_exp[expname]['toff']
+                amps = dataset_cell_exp[expname]['amp']
 
                 features_all = self.features[expname] + ['peak_time']
 
@@ -383,7 +394,7 @@ class Extractor(object):
                 for i_trace, trace in enumerate(voltages):
                     for i_sig, sig in enumerate(trace):
                         dimensions.append(i_trace)
-                dataset_exp[expname]['dimensions'] = dimensions
+                dataset_cell_exp[expname]['dimensions'] = dimensions
 
                 ts = list(itertools.chain.from_iterable(ts))
                 voltages = list(itertools.chain.from_iterable(voltages))
@@ -392,16 +403,16 @@ class Extractor(object):
                 toffs = list(itertools.chain.from_iterable(toffs))
                 amps = list(itertools.chain.from_iterable(amps))
 
-                dataset_exp[expname]['features'] = {}
+                dataset_cell_exp[expname]['features'] = collections.OrderedDict()
                 for feature in features_all:
-                    dataset_exp[expname]['features'][feature] = []
-                dataset_exp[expname]['features']['numspikes'] = []
+                    dataset_cell_exp[expname]['features'][feature] = []
+                dataset_cell_exp[expname]['features']['numspikes'] = []
 
                 # iterate over all voltages individually to get features
                 # and correct them if needed
                 for i_seg in range(len(voltages)):
 
-                    trace = {}
+                    trace = collections.OrderedDict()
                     trace['T'] = ts[i_seg]
                     trace['V'] = voltages[i_seg]
                     trace['stim_start'] = [tons[i_seg]]
@@ -409,7 +420,7 @@ class Extractor(object):
                     traces = [trace]
                     amp = amps[i_seg]
 
-                    fel_vals = efel.getFeatureValues(traces, features_all)
+                    fel_vals = efel.getFeatureValues(traces, features_all, raise_warnings=False)
 
                     for feature in features_all:
 
@@ -425,9 +436,9 @@ class Extractor(object):
                         else:
                             f = float('nan')
 
-                        dataset_exp[expname]['features'][feature].append(f)
+                        dataset_cell_exp[expname]['features'][feature].append(f)
 
-                    dataset_exp[expname]['features']['numspikes'].append(numspike)
+                    dataset_cell_exp[expname]['features']['numspikes'].append(numspike)
 
 
     def mean_features(self):
@@ -437,36 +448,36 @@ class Extractor(object):
         # mean for each cell
         for i_cell, cellname in enumerate(self.dataset):
 
-            dataset_exp = self.dataset[cellname]['experiments']
-            for i_exp, expname in enumerate(dataset_exp):
+            dataset_cell_exp = self.dataset[cellname]['experiments']
+            for i_exp, expname in enumerate(dataset_cell_exp):
 
                 # define
-                dataset_exp[expname]['mean_amp'] = {}
-                dataset_exp[expname]['mean_amp_rel'] = {}
+                dataset_cell_exp[expname]['mean_amp'] = collections.OrderedDict()
+                dataset_cell_exp[expname]['mean_amp_rel'] = collections.OrderedDict()
 
-                dataset_exp[expname]['mean_features'] = {}
-                dataset_exp[expname]['std_features'] = {}
+                dataset_cell_exp[expname]['mean_features'] = collections.OrderedDict()
+                dataset_cell_exp[expname]['std_features'] = collections.OrderedDict()
 
                 for target in self.options["target"]:
-                    dataset_exp[expname]['mean_amp'][str(target)] = []
-                    dataset_exp[expname]['mean_amp_rel'][str(target)] = []
+                    dataset_cell_exp[expname]['mean_amp'][str(target)] = []
+                    dataset_cell_exp[expname]['mean_amp_rel'][str(target)] = []
 
                 for feature in self.features[expname]:
-                    dataset_exp[expname]['mean_features'][feature] = {}
-                    dataset_exp[expname]['std_features'][feature] = {}
+                    dataset_cell_exp[expname]['mean_features'][feature] = collections.OrderedDict()
+                    dataset_cell_exp[expname]['std_features'][feature] = collections.OrderedDict()
 
-                hypamp = dataset_exp[expname]['hypamp']
+                hypamp = dataset_cell_exp[expname]['hypamp']
                 hypamp = numpy.mean(numpy.array(hypamp))
 
-                ton = dataset_exp[expname]['ton']
+                ton = dataset_cell_exp[expname]['ton']
                 ton = numpy.mean(numpy.array(ton))
 
-                toff = dataset_exp[expname]['toff']
+                toff = dataset_cell_exp[expname]['toff']
                 toff = numpy.mean(numpy.array(toff))
 
-                amp = dataset_exp[expname]['amp']
-                numspikes = dataset_exp[expname]['features']['numspikes']
-                feature_array = dataset_exp[expname]['features']
+                amp = dataset_cell_exp[expname]['amp']
+                numspikes = dataset_cell_exp[expname]['features']['numspikes']
+                feature_array = dataset_cell_exp[expname]['features']
 
                 amp = numpy.array(list(itertools.chain.from_iterable(amp)))
 
@@ -475,26 +486,26 @@ class Extractor(object):
 
                 # save amplitude results
                 for target in self.options["target"]:
-                    idx = (amp_rel >= target - self.options["tolerance"]) &
+                    idx = (amp_rel >= target - self.options["tolerance"]) &\
                             (amp_rel <= target + self.options["tolerance"])
 
                     amp_target = numpy.array(amp)[idx]
                     meanamp_target = numpy.mean(amp_target) # nanmean
-                    dataset_exp[expname]['mean_amp'][str(target)] = meanamp_target
+                    dataset_cell_exp[expname]['mean_amp'][str(target)] = meanamp_target
 
                     # equal to amp_target if amplitude not measured relative to threshold
                     amp_rel_target = numpy.array(amp_rel)[idx]
                     meanamp_rel_target = numpy.mean(amp_rel_target) # nanmean
-                    dataset_exp[expname]['mean_amp_rel'][str(target)] = meanamp_rel_target
+                    dataset_cell_exp[expname]['mean_amp_rel'][str(target)] = meanamp_rel_target
 
-                dataset_exp[expname]['mean_hypamp'] = hypamp
-                dataset_exp[expname]['mean_ton'] = ton
-                dataset_exp[expname]['mean_toff'] = toff
+                dataset_cell_exp[expname]['mean_hypamp'] = hypamp
+                dataset_cell_exp[expname]['mean_ton'] = ton
+                dataset_cell_exp[expname]['mean_toff'] = toff
 
                 for fi, feature in enumerate(self.features[expname]):
                     feat_vals = numpy.array(feature_array[feature])
                     for ti, target in enumerate(self.options["target"]):
-                        idx = (amp_rel >= target - self.options["tolerance"]) &
+                        idx = (amp_rel >= target - self.options["tolerance"]) &\
                                 (amp_rel <= target + self.options["tolerance"])
                         feat = numpy.array(feat_vals)[idx]
 
@@ -504,91 +515,96 @@ class Extractor(object):
                         else:
                             meanfeat = numpy.mean(feat)
                             stdfeat = numpy.std(feat)
-                        dataset_exp[expname]['mean_features'][feature][str(target)] = meanfeat
-                        dataset_exp[expname]['std_features'][feature][str(target)] = stdfeat
+                        dataset_cell_exp[expname]['mean_features'][feature][str(target)] = meanfeat
+                        dataset_cell_exp[expname]['std_features'][feature][str(target)] = stdfeat
 
 
         # mean for all cells
         for i_exp, expname in enumerate(self.experiments):
 
             #collect everything in global structure
-            self.dataset[expname] = {}
-            self.dataset[expname]['amp'] = {}
-            self.dataset[expname]['amp_rel'] = {}
-            self.dataset[expname]['hypamp'] = []
-            self.dataset[expname]['ton'] = []
-            self.dataset[expname]['toff'] = []
-            self.dataset[expname]['features'] = {}
+            self.dataset_mean[expname] = collections.OrderedDict()
+            self.dataset_mean[expname]['amp'] = collections.OrderedDict()
+            self.dataset_mean[expname]['amp_rel'] = collections.OrderedDict()
+            self.dataset_mean[expname]['hypamp'] = []
+            self.dataset_mean[expname]['ton'] = []
+            self.dataset_mean[expname]['toff'] = []
+            self.dataset_mean[expname]['features'] = collections.OrderedDict()
 
             for feature in self.features[expname]:
-                self.dataset[expname]['features'][feature] = {}
+                self.dataset_mean[expname]['features'][feature] = collections.OrderedDict()
                 for target in self.options["target"]:
-                    self.dataset[expname]['features'][feature][str(target)] = []
+                    self.dataset_mean[expname]['features'][feature][str(target)] = []
 
             for target in self.options["target"]:
-                self.dataset[expname]['amp'][str(target)] = []
-                self.dataset[expname]['amp_rel'][str(target)] = []
+                self.dataset_mean[expname]['amp'][str(target)] = []
+                self.dataset_mean[expname]['amp_rel'][str(target)] = []
 
             for i_cell, cellname in enumerate(self.dataset):
 
-                dataset_exp = self.dataset[cellname]['experiments']
+                print cellname
+                #tools.print_dict(self.dataset[cellname])
+                dataset_cell_exp = self.dataset[cellname]['experiments']
 
-                hypamp = dataset_exp[expname]['mean_hypamp']
-                self.dataset[expname]['hypamp'].append(hypamp)
+                self.dataset_mean[expname]['location'] =\
+                        dataset_cell_exp[expname]['location']
 
-                ton = dataset_exp[expname]['mean_ton']
-                self.dataset[expname]['ton'].append(ton)
+                hypamp = dataset_cell_exp[expname]['mean_hypamp']
+                self.dataset_mean[expname]['hypamp'].append(hypamp)
 
-                toff = dataset_exp[expname]['mean_toff']
-                self.dataset[expname]['toff'].append(toff)
+                ton = dataset_cell_exp[expname]['mean_ton']
+                self.dataset_mean[expname]['ton'].append(ton)
+
+                toff = dataset_cell_exp[expname]['mean_toff']
+                self.dataset_mean[expname]['toff'].append(toff)
 
                 for target in self.options["target"]:
-                    amp = dataset_exp[expname]['mean_amp'][str(target)]
-                    self.dataset[expname]['amp'][str(target)].append(amp)
-                    amp_rel = dataset_exp[expname]['mean_amp_rel'][str(target)]
-                    self.dataset[expname]['amp_rel'][str(target)].append(amp_rel)
+                    amp = dataset_cell_exp[expname]['mean_amp'][str(target)]
+                    self.dataset_mean[expname]['amp'][str(target)].append(amp)
+                    amp_rel = dataset_cell_exp[expname]['mean_amp_rel'][str(target)]
+                    self.dataset_mean[expname]['amp_rel'][str(target)].append(amp_rel)
 
                 for feature in self.features[expname]:
                     for target in self.options["target"]:
-                        result = dataset_exp[expname]['mean_features'][feature][str(target)]
-                        self.dataset[expname]['features'][feature][str(target)].append(result)
+                        result = dataset_cell_exp[expname]['mean_features'][feature][str(target)]
+                        self.dataset_mean[expname]['features'][feature][str(target)].append(result)
 
             #create means
-            self.dataset[expname]['mean_amp'] = {}
-            self.dataset[expname]['mean_amp_rel'] = {}
-            self.dataset[expname]['mean_features'] = {}
-            self.dataset[expname]['std_features'] = {}
+            self.dataset_mean[expname]['mean_amp'] = collections.OrderedDict()
+            self.dataset_mean[expname]['mean_amp_rel'] = collections.OrderedDict()
+            self.dataset_mean[expname]['mean_features'] = collections.OrderedDict()
+            self.dataset_mean[expname]['std_features'] = collections.OrderedDict()
 
             for feature in self.features[expname]:
-                self.dataset[expname]['mean_features'][feature] = {}
-                self.dataset[expname]['std_features'][feature] = {}
+                self.dataset_mean[expname]['mean_features'][feature] = collections.OrderedDict()
+                self.dataset_mean[expname]['std_features'][feature] = collections.OrderedDict()
 
-            hypamp = self.dataset[expname]['hypamp']
-            self.dataset[expname]['mean_hypamp'] = numpy.mean(hypamp)
+            hypamp = self.dataset_mean[expname]['hypamp']
+            self.dataset_mean[expname]['mean_hypamp'] = numpy.mean(hypamp)
 
-            ton = self.dataset[expname]['ton']
-            self.dataset[expname]['mean_ton'] = numpy.mean(ton)
+            ton = self.dataset_mean[expname]['ton']
+            self.dataset_mean[expname]['mean_ton'] = numpy.mean(ton)
 
-            toff = self.dataset[expname]['toff']
-            self.dataset[expname]['mean_toff'] = numpy.mean(toff)
+            toff = self.dataset_mean[expname]['toff']
+            self.dataset_mean[expname]['mean_toff'] = numpy.mean(toff)
 
             for target in self.options["target"]:
-                amp = self.dataset[expname]['amp'][str(target)]
-                self.dataset[expname]['mean_amp'][str(target)] = numpy.mean(amp)
+                amp = self.dataset_mean[expname]['amp'][str(target)]
+                self.dataset_mean[expname]['mean_amp'][str(target)] = numpy.mean(amp)
 
-                amp_rel = self.dataset[expname]['amp_rel'][str(target)]
-                self.dataset[expname]['mean_amp_rel'][str(target)] = numpy.mean(amp)
+                amp_rel = self.dataset_mean[expname]['amp_rel'][str(target)]
+                self.dataset_mean[expname]['mean_amp_rel'][str(target)] = numpy.mean(amp)
 
             for feature in self.features[expname]:
                 for target in self.options["target"]:
-                    feat = self.dataset[expname]['features'][feature][str(target)]
+                    feat = self.dataset_mean[expname]['features'][feature][str(target)]
 
                     if self.options["nanmean"]:
-                        self.dataset[expname]['mean_features'][feature][str(target)] = numpy.nanmean(feat)
-                        self.dataset[expname]['std_features'][feature][str(target)] = numpy.nanstd(feat)
+                        self.dataset_mean[expname]['mean_features'][feature][str(target)] = numpy.nanmean(feat)
+                        self.dataset_mean[expname]['std_features'][feature][str(target)] = numpy.nanstd(feat)
                     else:
-                        self.dataset[expname]['mean_features'][feature][str(target)] = numpy.mean(feat)
-                        self.dataset[expname]['std_features'][feature][str(target)] = numpy.std(feat)
+                        self.dataset_mean[expname]['mean_features'][feature][str(target)] = numpy.mean(feat)
+                        self.dataset_mean[expname]['std_features'][feature][str(target)] = numpy.std(feat)
 
 
     def get_threshold(self, amp, numspikes):
@@ -625,32 +641,34 @@ class Extractor(object):
 
             colorcell = next(colorcyclercell)
             markercell = next(markercyclercell)
-            dataset_exp = self.dataset[cellname]['experiments']
+            dataset_cell_exp = self.dataset[cellname]['experiments']
 
-            for i_exp, expname in enumerate(dataset_exp):
+            for i_exp, expname in enumerate(dataset_cell_exp):
 
                 if (i_cell == 0):
                     figname = "features_" + expname
-                    plottools.tiled_figure(figname, frames=len(self.features[expname]), columns=3, figs=figs, dirname=self.maindirname,
-                                            top=0.97, bottom=0.04, left=0.07, right=0.97, hspace=0.75, wspace=0.3)
+                    plottools.tiled_figure(figname, frames=len(self.features[expname]),
+                                    columns=3, figs=figs, dirname=self.maindirname,
+                                    top=0.97, bottom=0.04, left=0.07, right=0.97, hspace=0.75, wspace=0.3)
 
 
                 figname = "features_" + cellname.split('/')[-1] + "_" + expname
-                axs_cell = plottools.tiled_figure(figname, frames=len(self.features[expname]), columns=3, figs=figs, dirname=dirname,
-                                        top=0.97, bottom=0.04, left=0.07, right=0.97, hspace=0.75, wspace=0.3)
+                axs_cell = plottools.tiled_figure(figname, frames=len(self.features[expname]),
+                                    columns=3, figs=figs, dirname=dirname,
+                                    top=0.97, bottom=0.04, left=0.07, right=0.97, hspace=0.75, wspace=0.3)
 
 
-                hypamp = numpy.mean(numpy.array(dataset_exp[expname]['hypamp']))
-                amp = dataset_exp[expname]['amp']
-                numspikes = dataset_exp[expname]['features']['numspikes']
-                feature_array = dataset_exp[expname]['features']
+                hypamp = numpy.mean(numpy.array(dataset_cell_exp[expname]['hypamp']))
+                amp = dataset_cell_exp[expname]['amp']
+                numspikes = dataset_cell_exp[expname]['features']['numspikes']
+                feature_array = dataset_cell_exp[expname]['features']
 
                 amp = numpy.array(list(itertools.chain.from_iterable(amp)))
                 amp_threshold, amp_vals = self.get_threshold(amp, numspikes)
 
                 for fi, feature in enumerate(self.features[expname]):
 
-                    dimensions = dataset_exp[expname]['dimensions']
+                    dimensions = dataset_cell_exp[expname]['dimensions']
                     dimensions = numpy.concatenate(([0], numpy.where(numpy.diff(dimensions)>0)[0]+1, [len(dimensions)]))
 
                     feat_vals = numpy.array(feature_array[feature])
@@ -669,31 +687,36 @@ class Extractor(object):
                         amp_vals0 = amp_vals[istart:iend]
                         is_not_nan = ~numpy.isnan(feat_vals0)
 
-                        axs_cell[fi].plot(amp_vals0[is_not_nan], feat_vals0[is_not_nan], "", marker=marker, color=color, markersize=5, zorder=1, linewidth=1, markeredgecolor = 'none', clip_on=False)
+                        axs_cell[fi].plot(amp_vals0[is_not_nan], feat_vals0[is_not_nan], "",
+                                    marker=marker, color=color, markersize=5, zorder=1,
+                                    linewidth=1, markeredgecolor = 'none', clip_on=False)
                         axs_cell[fi].set_xticks(self.options["target"])
                         #axs_cell[fi].set_xticklabels(())
                         axs_cell[fi].set_title(feature)
 
                         figname = "features_" + expname
-                        figs[figname]['axs'][fi].plot(amp_vals0[is_not_nan], feat_vals0[is_not_nan], "", marker=markercell, color=colorcell, markersize=5, zorder=1, linewidth=1, markeredgecolor = 'none', clip_on=False)
+                        figs[figname]['axs'][fi].plot(amp_vals0[is_not_nan], feat_vals0[is_not_nan], "",
+                                    marker=markercell, color=colorcell, markersize=5, zorder=1,
+                                    linewidth=1, markeredgecolor = 'none', clip_on=False)
                         figs[figname]['axs'][fi].set_xticks(self.options["target"])
                         figs[figname]['axs'][fi].set_title(feature)
 
-                    if 'mean_features' in dataset_exp[expname]:
+                    if 'mean_features' in dataset_cell_exp[expname]:
 
                         amp_rel_list = []
                         mean_list = []
                         std_list = []
                         for target in self.options["target"]:
-                            amp_rel_list.append(dataset_exp[expname]['mean_amp_rel'][str(target)])
-                            mean_list.append(dataset_exp[expname]['mean_features'][feature][str(target)])
-                            std_list.append(dataset_exp[expname]['std_features'][feature][str(target)])
+                            amp_rel_list.append(dataset_cell_exp[expname]['mean_amp_rel'][str(target)])
+                            mean_list.append(dataset_cell_exp[expname]['mean_features'][feature][str(target)])
+                            std_list.append(dataset_cell_exp[expname]['std_features'][feature][str(target)])
 
                         mean_array = numpy.array(mean_list)
                         std_array = numpy.array(std_list)
                         amp_rel_array = numpy.array(amp_rel_list)
 
-                        e = axs_cell[fi].errorbar(amp_rel_array, mean_array, yerr=std_array, marker='s', color='k', linewidth=1, markersize=6, zorder=10, clip_on = False)
+                        e = axs_cell[fi].errorbar(amp_rel_array, mean_array, yerr=std_array, marker='s', color='k',
+                                    linewidth=1, markersize=6, zorder=10, clip_on = False)
                         axs_cell[fi].set_xticks(self.options["target"])
                         for b in e[1]:
                             b.set_clip_on(False)
@@ -701,15 +724,15 @@ class Extractor(object):
 
         for i_exp, expname in enumerate(self.experiments):
 
-            if expname in self.dataset:
+            if expname in self.dataset_mean:
                 for fi, feature in enumerate(self.features[expname]):
                     amp_rel_list = []
                     mean_list = []
                     std_list = []
                     for target in self.options["target"]:
-                        amp_rel_list.append(self.dataset[expname]['mean_amp_rel'][str(target)])
-                        mean_list.append(self.dataset[expname]['mean_features'][feature][str(target)])
-                        std_list.append(self.dataset[expname]['std_features'][feature][str(target)])
+                        amp_rel_list.append(self.dataset_mean[expname]['mean_amp_rel'][str(target)])
+                        mean_list.append(self.dataset_mean[expname]['mean_features'][feature][str(target)])
+                        std_list.append(self.dataset_mean[expname]['std_features'][feature][str(target)])
 
                     mean_array = numpy.array(mean_list)
                     std_array = numpy.array(std_list)
@@ -717,7 +740,9 @@ class Extractor(object):
                     #is_not_nan = ~numpy.isnan(mean_array)
 
                     figname = "features_" + expname
-                    e = figs[figname]['axs'][fi].errorbar(amp_rel_list, mean_array, yerr=std_array, marker='s', color='k', linewidth=1, markersize=6, zorder=10, clip_on = False)
+                    e = figs[figname]['axs'][fi].errorbar(amp_rel_list, mean_array,
+                            yerr=std_array, marker='s', color='k', linewidth=1,
+                            markersize=6, zorder=10, clip_on=False)
                     for b in e[1]:
                         b.set_clip_on(False)
 
@@ -729,47 +754,79 @@ class Extractor(object):
 
 
     def feature_config_all(self):
-        self.create_feature_config(self.maindirname, self.dataset)
+        self.create_feature_config(self.maindirname, self.dataset_mean)
 
 
     def feature_config_cells(self):
         for i_cell, cellname in enumerate(self.dataset):
-            dataset_exp = self.dataset[cellname]['experiments']
-            self.create_feature_config(self.maindirname+cellname+'/', dataset_exp)
+            dataset_cell_exp = self.dataset[cellname]['experiments']
+            self.create_feature_config(self.maindirname+cellname+'/', dataset_cell_exp)
 
 
     def create_feature_config(self, directory, dataset):
 
+        import json
         logger.info(" Saving config files to %s", directory)
 
-        self.stimulus_string = ""
-        self.feature_string = ""
+        stimulus_dict = collections.OrderedDict()
+        feature_dict = collections.OrderedDict()
+
+        stim = collections.OrderedDict()
+        stimulus_dict[self.mainname] = stim
+
+        feat = collections.OrderedDict()
+        feature_dict[self.mainname] = feat
 
         for i_exp, expname in enumerate(self.experiments):
             if expname in dataset:
+                location = dataset[expname]['location']
+
                 for fi, feature in enumerate(self.features[expname]):
                     for it, target in enumerate(self.options["target"]):
 
-                        t = round(dataset[expname]['mean_amp_rel'][str(target)],2)
-                        a = dataset[expname]['mean_amp'][str(target)]
-                        h = dataset[expname]['mean_hypamp']
+                        stimname = expname + '_' + str(target)
+                        if stimname not in stim:
+                            stim[stimname] = collections.OrderedDict()
+
+                        if stimname not in feat:
+                            feat[stimname] = collections.OrderedDict()
+
                         m = dataset[expname]['mean_features'][feature][str(target)]
                         s = dataset[expname]['std_features'][feature][str(target)]
+
+                        if ~numpy.isnan(m):
+                            if location not in feat[stimname]:
+                                feat[stimname][location] = collections.OrderedDict()
+
+                            feat[stimname][location][feature] = [m, s]
+
+                        a = round(dataset[expname]['mean_amp'][str(target)],6)
+                        h = round(dataset[expname]['mean_hypamp'],6)
                         ton = dataset[expname]['mean_ton']
                         toff = dataset[expname]['mean_toff']
 
-                        if fi == 0:
-                            self.stimulus_string += "configuration.addStimulus(opt.Stimulus(name=\"Step" + str(t) + "\", stimtype=\"SquarePulse\", amplitude=" + str(a) + ", hypamp=" + str(h) + ", delay=" + str(ton) + ", duration=" + str(toff-ton) + "))\n"
+                        if 'stimuli' not in stim[stimname]:
 
-                        if ~numpy.isnan(m):
-                            self.feature_string += "configuration.addFeature(opt.Feature(featuretype=\"" + feature + "\", stimulus=\"Step" + str(t) + "\", mean=" + str(m) + ", std=" + str(s) + ", weight=1))\n"
+                            totduration = round(self.options["delay"]+toff+self.options["posttime"])
+                            delay = round(self.options["delay"] + ton)
+                            duration = round(toff-ton)
 
-                self.feature_string += "\n"
+                            stim[stimname]['stimuli'] = [
+                                            collections.OrderedDict([
+                                                ("delay", delay),
+                                                ("amp", a),
+                                                ("duration", duration),
+                                                ("totduration", totduration),
+                                            ]),
+                                            collections.OrderedDict([
+                                                ("delay", 0.0),
+                                                ("amp", h),
+                                                ("duration", totduration),
+                                                ("totduration", totduration),
+                                            ]),
+                                        ]
 
-                path = directory + "stimulus_output_" + expname + ".txt"
-                with open(path, 'w') as text_file:
-                    text_file.write(self.stimulus_string)
-
-                path = directory + "feature_output_" + expname + ".txt"
-                with open(path, 'w') as text_file:
-                    text_file.write(self.feature_string)
+        #tools.print_dict(stimulus_dict)
+        #tools.print_dict(feature_dict)
+        json.dump(stimulus_dict, open(directory + "protocols.json", 'w'), indent=4)
+        json.dump(feature_dict, open(directory + "features.json", 'w'), indent=4)
