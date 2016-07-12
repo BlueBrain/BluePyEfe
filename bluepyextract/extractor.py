@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy
 import sys
 import efel
-import igorpy
+#import igorpy
 import os
 import fnmatch
 import itertools
