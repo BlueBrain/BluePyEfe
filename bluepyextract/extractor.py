@@ -112,6 +112,7 @@ class Extractor(object):
 
         self.mainname = mainname
         self.maindirname = "./" + mainname + "/"
+        tools.makedir(self.maindirname)
 
         self.thresholds_per_cell = OrderedDict()
         self.hypamps_per_cell = OrderedDict()
@@ -474,8 +475,6 @@ class Extractor(object):
 
         logger.info(" Plotting traces")
 
-        tools.makedir(self.maindirname)
-
         for i_cell, cellname in enumerate(self.dataset):
 
             dirname = self.maindirname+cellname
@@ -685,7 +684,6 @@ class Extractor(object):
                         numspikes = numspikes + dataset_cell_exp[expname]['features']['numspikes']
 
                 mean_hypamp = self.newmeancell(numpy.array(hypamp))
-                print cellname
                 amp_threshold = self.get_threshold(amp, numspikes)
 
                 self.thresholds_per_cell[cellname] = amp_threshold
@@ -936,8 +934,6 @@ class Extractor(object):
 
         figs = OrderedDict()
 
-        tools.makedir(self.maindirname)
-
         markercyclercell = cycle(self.markerlist)
         colorcyclercell = cycle(self.colorlist)
 
@@ -954,8 +950,8 @@ class Extractor(object):
 
             for i_exp, expname in enumerate(dataset_cell_exp):
 
-                if (i_cell == 0):
-                    figname = "features_" + expname
+                figname = "features_" + expname
+                if figname not in figs:
                     plottools.tiled_figure(figname, frames=len(self.features[expname]),
                                     columns=3, figs=figs, dirname=self.maindirname,
                                     top=0.97, bottom=0.04, left=0.07, right=0.97, hspace=0.75, wspace=0.3)
@@ -1124,10 +1120,7 @@ class Extractor(object):
 
                             if str(target) in dataset[expname]['mean_features'][feature]:
 
-                                if isinstance(target, float):
-                                    t = str(int(target))
-                                else:
-                                    t = str(target)
+                                t = str(target)
                                 stimname = expname + '_' + t
 
                                 m = round(dataset[expname]['mean_features'][feature][str(target)],4)
