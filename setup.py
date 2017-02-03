@@ -6,6 +6,6 @@ setuptools.setup(
     version='0.1dev',
     packages=['bluepyefe'],
     install_requires=['igorpy'],
-    dependency_links=['git+ssh://bbpcode.epfl.ch/user/vangeit/igorpy.git'],
+    dependency_links=['git+ssh://bbpcode.epfl.ch/user/vangeit/igorpy.git#egg=igorpy'],
     license='Creative Commons Attribution-Noncommercial-Share Alike license',
 )
