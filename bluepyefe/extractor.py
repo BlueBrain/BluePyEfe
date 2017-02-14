@@ -588,7 +588,8 @@ class Extractor(object):
         logger.info(" Extracting features")
 
         #efel.Settings.derivative_threshold = 5.0
-        efel.Settings.threshold = threshold
+        efel.setThreshold(threshold)
+        logger.info(" Setting threshold to %f", threshold)
 
 
         for i_cell, cellname in enumerate(self.dataset):
