@@ -49,6 +49,12 @@ class Extractor(object):
         self.dataset = OrderedDict()
         self.dataset_mean = OrderedDict()
 
+        try:
+            sh.git('add', '-A')
+            sh.git('commit', '-a', '-m \"Running feature extraction\"')
+        except:
+            pass
+
         self.githash = str(sh.git('rev-parse', '--short', 'HEAD')).rstrip()
 
         self.max_per_plot = 16
@@ -1214,24 +1220,53 @@ class Extractor(object):
                                         delay = round(self.options["delay"] + ton)
                                         duration = round(toff-ton)
 
-                                        stim[stimname]['type'] = 'StepProtocol'
-                                        stim[stimname]['stimuli'] = OrderedDict([
-                                                        ('step',
-                                                        OrderedDict([
-                                                            ("delay", delay),
-                                                            ("amp", a),
-                                                            ("thresh_perc", threshold),
-                                                            ("duration", duration),
-                                                            ("totduration", totduration),
-                                                        ])),
-                                                        ('holding',
-                                                        OrderedDict([
-                                                            ("delay", 0.0),
-                                                            ("amp", h),
-                                                            ("duration", totduration),
-                                                            ("totduration", totduration),
-                                                        ])),
-                                                    ])
+                                        if expname == 'H40S8': # special frequency pulse stimulus
+
+                                            n = 8
+                                            duration = 2.5
+                                            stim[stimname]['type'] = 'StepProtocol'
+                                            stim[stimname]['stimuli'] = OrderedDict()
+                                            stim[stimname]['stimuli']['step'] = []
+                                            totduration = delay + n * 25.
+                                            threshold = 600. # threshold not estimated, used fixed values
+
+                                            for s in range(n):
+                                                stim[stimname]['stimuli']['step'].append(
+                                                    OrderedDict([
+                                                        ("delay", delay + s*25.),
+                                                        ("amp", a),
+                                                        ("thresh_perc", threshold),
+                                                        ("duration", duration),
+                                                        ("totduration", totduration),
+                                                    ]))
+
+                                            stim[stimname]['stimuli']['holding'] = OrderedDict([
+                                                    ("delay", 0.0),
+                                                    ("amp", h),
+                                                    ("duration", totduration),
+                                                    ("totduration", totduration),
+                                                ])
+
+                                        else:
+
+                                            stim[stimname]['type'] = 'StepProtocol'
+                                            stim[stimname]['stimuli'] = OrderedDict([
+                                                            ('step',
+                                                            OrderedDict([
+                                                                ("delay", delay),
+                                                                ("amp", a),
+                                                                ("thresh_perc", threshold),
+                                                                ("duration", duration),
+                                                                ("totduration", totduration),
+                                                            ])),
+                                                            ('holding',
+                                                            OrderedDict([
+                                                                ("delay", 0.0),
+                                                                ("amp", h),
+                                                                ("duration", totduration),
+                                                                ("totduration", totduration),
+                                                            ])),
+                                                        ])
 
         else:
 
