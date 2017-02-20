@@ -55,7 +55,10 @@ class Extractor(object):
         except:
             pass
 
-        self.githash = str(sh.git('rev-parse', '--short', 'HEAD')).rstrip()
+        try:
+            self.githash = str(sh.git('rev-parse', '--short', 'HEAD')).rstrip()
+        except:
+            self.githash = "None"
 
         self.max_per_plot = 16
 
@@ -1525,6 +1528,7 @@ class Extractor(object):
             for exp in feature_dict[etype]:
                 for loc in feature_dict[etype][exp]:
                     crr_dict = OrderedDict()
+                    print etype, exp, loc
                     for key_feat_val, feat_val in feature_dict[etype][exp][loc].items():
                         if feat_val[1] != 0.0:
                             crr_dict[key_feat_val] = feat_val
