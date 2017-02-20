@@ -1,3 +1,4 @@
+
 import matplotlib
 matplotlib.use('Agg', warn=True)
 import matplotlib.pyplot as plt
@@ -28,6 +29,7 @@ logger = logging.getLogger(__name__)
 import tools
 import plottools
 from extra import *
+import sh
 
 class Extractor(object):
 
@@ -46,6 +48,15 @@ class Extractor(object):
 
         self.dataset = OrderedDict()
         self.dataset_mean = OrderedDict()
+
+        try:
+            sh.git('add', '-A')
+            sh.git('commit', '-a', '-m \"Running feature extraction\"')
+        except:
+            pass
+
+        self.githash = str(sh.git('rev-parse', '--short', 'HEAD')).rstrip()
+
         self.max_per_plot = 16
 
         self.options = config['options']
@@ -63,6 +74,9 @@ class Extractor(object):
 
         if "tolerance" not in self.options:
             self.options["tolerance"] = 10
+
+        if "strict_stiminterval" not in self.options:
+            self.options["strict_stiminterval"] = {'base': False}
 
         if isinstance(self.options["tolerance"], list) is False:
             self.options["tolerance"] =\
@@ -243,17 +257,14 @@ class Extractor(object):
 
             i_file = self.path + filename['i_file']
             v_file = self.path + filename['v_file']
-            i_unit = filename['i_unit']
-            v_unit = filename['v_unit']
-
-            t_unit = filename['t_unit']
-            dt = filename['dt']
-
-            if (t_unit == "") or (t_unit == "s"):
-                dt = dt * 1e3 # convert to ms
 
             notes, wave = igorpy.read(v_file)
-            t = dt * numpy.arange(0, len(wave))
+
+            if 'v_unit' not in filename:
+                v_unit = notes.xUnits
+            else:
+                v_unit = filename['v_unit']
+
             if v_unit == 'V':
                 v = wave * 1e3  # mV
             elif v_unit == 'mV':
@@ -262,7 +273,30 @@ class Extractor(object):
                 raise Exception(
                     "Unit voltage not configured!")
 
+            if 'dt' in filename:
+                dt = filename['dt']
+                if numpy.isclose(dt, notes.dx) is False:
+                    raise Exception(
+                        "Given stepsize %f does not match stepsize from wavenotes %f" % (dt, notes.dt))
+            else:
+                dt = notes.dx
+
+            if 't_unit' not in filename:
+                t_unit = notes.dUnits
+            else:
+                t_unit = filename['t_unit']
+
+            if (t_unit == "") or (t_unit == "s"):
+                dt = dt * 1e3 # convert to ms
+            t = dt * numpy.arange(0, len(wave))
+
             notes, wave = igorpy.read(i_file)
+
+            if 'i_unit' not in filename:
+                i_unit = notes.xUnits
+            else:
+                i_unit = filename['i_unit']
+
             if i_unit == 'A':
                 i = wave * 1e9 # nA
             elif i_unit == 'pA':
@@ -292,6 +326,8 @@ class Extractor(object):
                 ampoff = numpy.mean( i[int(imax-10./dt):imax] ) - hypamp
                 amp = ampoff/trun * 2000. # extrapolate to get expected amplitude at 1 sec
                 #amp = ampoff
+            elif expname in ['H40S8']:
+                amp = numpy.mean(i[i > 0.1])
             else:
                 amp = numpy.mean( i[ion+iborder:ioff-iborder] ) - hypamp
 
@@ -668,6 +704,8 @@ class Extractor(object):
                     axs_c[i_plot].plot(ts[i_plot], currents[i_plot], color=colors[i_plot], clip_on=False)
                     axs_c[i_plot].set_title(cellname + " " + expname + " amp:" + str(amps[i_plot]) + " file:" + filenames[i_plot])
 
+                #plt.show()
+
                 for i_fig, figname in enumerate(figs):
                     fig = figs[figname]
                     fig['fig'].savefig(dirname + '/' + figname + '.pdf', dpi=300)
@@ -684,12 +722,20 @@ class Extractor(object):
         logger.info(" Extracting features")
 
         #efel.Settings.derivative_threshold = 5.0
-        efel.Settings.threshold = threshold
+        efel.setThreshold(threshold)
+        logger.info(" Setting threshold to %f", threshold)
+
 
         for i_cell, cellname in enumerate(self.dataset):
 
             dataset_cell_exp = self.dataset[cellname]['experiments']
             for i_exp, expname in enumerate(dataset_cell_exp):
+
+                if expname in self.options["strict_stiminterval"].keys():
+                    strict_stiminterval = self.options["strict_stiminterval"][expname]
+                else:
+                    strict_stiminterval = self.options["strict_stiminterval"]['base']
+                efel.setIntSetting("strict_stiminterval",strict_stiminterval)
 
                 ts = dataset_cell_exp[expname]['t']
                 voltages = dataset_cell_exp[expname]['voltage']
@@ -779,10 +825,13 @@ class Extractor(object):
                         else:
                             f = float('nan')
 
-                        # exclude any activity outside stimulus (2 ms grace period)
-                        if (any(numpy.atleast_1d(peak_times) < trace['stim_start'][0]) or
-                           any(numpy.atleast_1d(peak_times) > trace['stim_end'][0]+20)):
-                           f = float('nan')
+                        if "trace_check" in self.options and self.options["trace_check"] is False:
+                            pass
+                        else:
+                            # exclude any activity outside stimulus (20 ms grace period)
+                            if (any(numpy.atleast_1d(peak_times) < trace['stim_start'][0]) or
+                               any(numpy.atleast_1d(peak_times) > trace['stim_end'][0]+20)):
+                               f = float('nan')
 
                         dataset_cell_exp[expname]['features'][feature].append(f)
 
@@ -1289,6 +1338,12 @@ class Extractor(object):
                                                     ("n",n)
                                                     ]) )
 
+                                    if expname in self.options["strict_stiminterval"].keys():
+                                        strict_stiminterval = self.options["strict_stiminterval"][expname]
+                                    else:
+                                        strict_stiminterval = self.options["strict_stiminterval"]['base']
+                                    feat[stimname][location][-1]["strict_stim"] = strict_stiminterval
+
                                     a = round(dataset[expname]['mean_amp'][str(target)],6)
                                     h = round(dataset[expname]['mean_hypamp'][str(target)],6)
                                     threshold = round(dataset[expname]['mean_amp_rel'][str(target)],4)
@@ -1302,24 +1357,53 @@ class Extractor(object):
                                         delay = round(self.options["delay"] + ton)
                                         duration = round(toff-ton)
 
-                                        stim[stimname]['type'] = 'StepProtocol'
-                                        stim[stimname]['stimuli'] = OrderedDict([
-                                                        ('step',
-                                                        OrderedDict([
-                                                            ("delay", delay),
-                                                            ("amp", a),
-                                                            ("thresh_perc", threshold),
-                                                            ("duration", duration),
-                                                            ("totduration", totduration),
-                                                        ])),
-                                                        ('holding',
-                                                        OrderedDict([
-                                                            ("delay", 0.0),
-                                                            ("amp", h),
-                                                            ("duration", totduration),
-                                                            ("totduration", totduration),
-                                                        ])),
-                                                    ])
+                                        if expname == 'H40S8': # special frequency pulse stimulus
+
+                                            n = 8
+                                            duration = 2.5
+                                            stim[stimname]['type'] = 'StepProtocol'
+                                            stim[stimname]['stimuli'] = OrderedDict()
+                                            stim[stimname]['stimuli']['step'] = []
+                                            totduration = delay + n * 25.
+                                            threshold = 600. # threshold not estimated, used fixed values
+
+                                            for s in range(n):
+                                                stim[stimname]['stimuli']['step'].append(
+                                                    OrderedDict([
+                                                        ("delay", delay + s*25.),
+                                                        ("amp", a),
+                                                        ("thresh_perc", threshold),
+                                                        ("duration", duration),
+                                                        ("totduration", totduration),
+                                                    ]))
+
+                                            stim[stimname]['stimuli']['holding'] = OrderedDict([
+                                                    ("delay", 0.0),
+                                                    ("amp", h),
+                                                    ("duration", totduration),
+                                                    ("totduration", totduration),
+                                                ])
+
+                                        else:
+
+                                            stim[stimname]['type'] = 'StepProtocol'
+                                            stim[stimname]['stimuli'] = OrderedDict([
+                                                            ('step',
+                                                            OrderedDict([
+                                                                ("delay", delay),
+                                                                ("amp", a),
+                                                                ("thresh_perc", threshold),
+                                                                ("duration", duration),
+                                                                ("totduration", totduration),
+                                                            ])),
+                                                            ('holding',
+                                                            OrderedDict([
+                                                                ("delay", 0.0),
+                                                                ("amp", h),
+                                                                ("duration", totduration),
+                                                                ("totduration", totduration),
+                                                            ])),
+                                                        ])
 
         else:
 
@@ -1408,6 +1492,14 @@ class Extractor(object):
 
         # replacing stimulus dict with clean dict
         stimulus_dict = stim_dict_clean
+
+        meta = OrderedDict()
+        meta['version'] = self.githash
+
+        s = json.dumps(meta, indent=2)
+        s = tools.collapse_json(s, indent=6)
+        with open(directory + "meta.json", "w") as f:
+            f.write(s)
 
         s = json.dumps(stimulus_dict, indent=2)
         s = tools.collapse_json(s, indent=6)
