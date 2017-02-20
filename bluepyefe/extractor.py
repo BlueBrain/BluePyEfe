@@ -22,9 +22,9 @@ from collections import OrderedDict
 
 import logging
 logger = logging.getLogger(__name__)
-# logging.basicConfig(stream=sys.stdout)
-# logger = logging.getLogger()
-# logger.setLevel(logging.INFO)
+logging.basicConfig(stream=sys.stdout)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 import tools
 import plottools
