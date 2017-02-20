@@ -363,6 +363,9 @@ class Extractor(object):
             data['hypamp'].append(hypamp)
             data['filename'].append(ordinal)
 
+            logger.debug(" Added igor file with ordinal %s", ordinal)
+
+
         elif self.format == 'axon':
 
             logger.debug(" Adding axon file %s", filename)
@@ -750,6 +753,7 @@ class Extractor(object):
 
                 if 'threshold' in self.cells[cellname]['experiments'][expname]:
                     threshold = self.cells[cellname]['experiments'][expname]['threshold']
+                    logger.info(" Setting threshold to %f", threshold)
                     efel.setThreshold(threshold)
 
                 dataset_cell_exp[expname]['features'] = OrderedDict()
@@ -839,6 +843,8 @@ class Extractor(object):
 
 
     def mean_features(self):
+
+        logger.info(" Calculating mean features")
 
         # mean for each cell
         for i_cell, cellname in enumerate(self.dataset):
