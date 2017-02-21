@@ -22,8 +22,8 @@ config = {
             "voltage_deflection",
             "voltage_deflection_begin",
             "steady_state_voltage",
-            "decay_time_constant_after_stim"
-            "AP_amplitude",
+            "decay_time_constant_after_stim",
+            "AP_amplitude"
         ]
     },
     "format": "igor",
