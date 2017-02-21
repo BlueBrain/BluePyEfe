@@ -972,13 +972,12 @@ class Extractor(object):
 
                                 m = round(dataset[expname]['mean_features'][feature][str(target)],4)
                                 s = round(dataset[expname]['std_features'][feature][str(target)],4)
-
-                                if s == 0.0: # prevent divison by 0
-                                    s = 1e-3
-
                                 n = int(dataset[expname]['n'][feature][str(target)])
 
-                                if ~numpy.isnan(m) and n > 1:
+                                if ~numpy.isnan(m) and ((s > 0.0) or (m == 0.0) ):
+
+                                    if s == 0.0: # prevent divison by 0
+                                        s = 1e-3
 
                                     if stimname not in stim:
                                         stim[stimname] = OrderedDict()

@@ -1,11 +1,8 @@
 {
   "IDthresh_all": {
     "soma.v": [
-      {"feature": "adaptation_index2", "val": [-0.0398, 0.0], "n": 1, "strict_stim": true},
       {"feature": "mean_frequency", "val": [8.0622, 7.3302], "n": 5, "strict_stim": true},
       {"feature": "time_to_first_spike", "val": [47.62, 11.4097], "n": 5, "strict_stim": true},
-      {"feature": "ISI_log_slope", "val": [-0.2148, 0.0], "n": 1, "strict_stim": true},
-      {"feature": "ISI_log_slope_skip", "val": [0.1339, 0.0], "n": 1, "strict_stim": true},
       {"feature": "time_to_last_spike", "val": [569.7222, 780.8391], "n": 9, "strict_stim": true},
       {"feature": "inv_time_to_first_spike", "val": [12.3303, 11.6654], "n": 9, "strict_stim": true},
       {"feature": "inv_first_ISI", "val": [0.6055, 1.1464], "n": 9, "strict_stim": true},
@@ -19,25 +16,6 @@
       {"feature": "steady_state_voltage", "val": [-87.3049, 0.4816], "n": 9, "strict_stim": true},
       {"feature": "decay_time_constant_after_stim", "val": [11.1565, 1.8632], "n": 9, "strict_stim": true},
       {"feature": "AP_amplitude", "val": [82.7679, 0.6124], "n": 5, "strict_stim": true}
-    ]
-  }, 
-  "IDthresh_100": {
-    "soma.v": [
-      {"feature": "mean_frequency", "val": [15.083, 0.0], "n": 1, "strict_stim": true},
-      {"feature": "time_to_first_spike", "val": [66.3, 0.0], "n": 1, "strict_stim": true},
-      {"feature": "time_to_last_spike", "val": [66.3, 0.0], "n": 1, "strict_stim": true},
-      {"feature": "inv_time_to_first_spike", "val": [15.083, 0.0], "n": 1, "strict_stim": true},
-      {"feature": "inv_first_ISI", "val": [0.0, 0.0], "n": 1, "strict_stim": true},
-      {"feature": "inv_second_ISI", "val": [0.0, 0.0], "n": 1, "strict_stim": true},
-      {"feature": "inv_third_ISI", "val": [0.0, 0.0], "n": 1, "strict_stim": true},
-      {"feature": "inv_fourth_ISI", "val": [0.0, 0.0], "n": 1, "strict_stim": true},
-      {"feature": "inv_fifth_ISI", "val": [0.0, 0.0], "n": 1, "strict_stim": true},
-      {"feature": "inv_last_ISI", "val": [0.0, 0.0], "n": 1, "strict_stim": true},
-      {"feature": "voltage_deflection", "val": [15.357, 0.0], "n": 1, "strict_stim": true},
-      {"feature": "voltage_deflection_begin", "val": [11.8807, 0.0], "n": 1, "strict_stim": true},
-      {"feature": "steady_state_voltage", "val": [-87.6232, 0.0], "n": 1, "strict_stim": true},
-      {"feature": "decay_time_constant_after_stim", "val": [11.1197, 0.0], "n": 1, "strict_stim": true},
-      {"feature": "AP_amplitude", "val": [81.94, 0.0], "n": 1, "strict_stim": true}
     ]
   }
 }
