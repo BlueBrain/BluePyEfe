@@ -1156,17 +1156,17 @@ class Extractor(object):
         meta['version'] = self.githash
 
         s = json.dumps(meta, indent=2)
-        s = tools.collapse_json(s, indent=6)
+        s = tools.collapse_json(s, indent=8)
         with open(directory + "meta.json", "w") as f:
             f.write(s)
 
         s = json.dumps(stimulus_dict, indent=2)
-        s = tools.collapse_json(s, indent=6)
+        s = tools.collapse_json(s, indent=8)
         with open(directory + "protocols.json", "w") as f:
             f.write(s)
 
         s = json.dumps(feature_dict, indent=2)
-        s = tools.collapse_json(s, indent=6)
+        s = tools.collapse_json(s, indent=8)
         with open(directory + "features.json", "w") as f:
             f.write(s)
 
