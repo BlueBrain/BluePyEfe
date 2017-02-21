@@ -9,8 +9,8 @@
   "IDthresh_100": {
     "type": "StepProtocol", 
     "stimuli": {
-      "step": {"delay": 700.0, "amp": 0.253025, "thresh_perc": 99.9823, "duration": 2000.0, "totduration": 3000.0},
-      "holding": {"delay": 0.0, "amp": -0.113175, "duration": 3000.0, "totduration": 3000.0}
+      "step": {"delay": 700.0, "amp": 0.253084, "thresh_perc": 100.0222, "duration": 2000.0, "totduration": 3000.0},
+      "holding": {"delay": 0.0, "amp": -0.113202, "duration": 3000.0, "totduration": 3000.0}
     }
   }
 }

@@ -524,10 +524,13 @@ class Extractor(object):
 
                 dataset_cell_exp[expname]['mean_features'] = OrderedDict()
                 dataset_cell_exp[expname]['std_features'] = OrderedDict()
+                dataset_cell_exp[expname]['n'] = OrderedDict()
+
 
                 for feature in self.features[expname]:
                     dataset_cell_exp[expname]['mean_features'][feature] = OrderedDict()
                     dataset_cell_exp[expname]['std_features'][feature] = OrderedDict()
+                    dataset_cell_exp[expname]['n'][feature] = OrderedDict()
 
                 ton = dataset_cell_exp[expname]['ton']
                 toff = dataset_cell_exp[expname]['toff']
@@ -618,7 +621,6 @@ class Extractor(object):
 
                         feat = numpy.atleast_1d(numpy.array(feat_vals)[idx])
 
-                        #
                         if len(feat) > 0:
 
                             if (target == 'noinput'):
@@ -633,6 +635,7 @@ class Extractor(object):
 
                             dataset_cell_exp[expname]['mean_features'][feature][str(target)] = meanfeat
                             dataset_cell_exp[expname]['std_features'][feature][str(target)] = stdfeat
+                            dataset_cell_exp[expname]['n'][feature][str(target)] = numpy.sum(numpy.invert(numpy.isnan(numpy.atleast_1d(feat))))
 
 
         # mean for all cells
@@ -648,12 +651,12 @@ class Extractor(object):
             self.dataset_mean[expname]['tend'] = []
             self.dataset_mean[expname]['features'] = OrderedDict()
             self.dataset_mean[expname]['cell_std_features'] = OrderedDict()
-            self.dataset_mean[expname]['ncells'] = OrderedDict()
+            self.dataset_mean[expname]['n'] = OrderedDict()
 
             for feature in self.features[expname]:
                 self.dataset_mean[expname]['features'][feature] = OrderedDict()
                 self.dataset_mean[expname]['cell_std_features'][feature] = OrderedDict()
-                self.dataset_mean[expname]['ncells'][feature] = OrderedDict()
+                self.dataset_mean[expname]['n'][feature] = OrderedDict()
                 for target in self.options["target"]:
                     self.dataset_mean[expname]['features'][feature][str(target)] = []
                     self.dataset_mean[expname]['cell_std_features'][feature][str(target)] = []
@@ -744,7 +747,7 @@ class Extractor(object):
                     else:
                        self.dataset_mean[expname]['mean_features'][feature][str(target)] = self.newmean(feat)
                        self.dataset_mean[expname]['std_features'][feature][str(target)] = self.newstd(feat)
-                    self.dataset_mean[expname]['ncells'][feature][str(target)] = numpy.sum(numpy.invert(numpy.isnan(numpy.atleast_1d(feat))))
+                    self.dataset_mean[expname]['n'][feature][str(target)] = numpy.sum(numpy.invert(numpy.isnan(numpy.atleast_1d(feat))))
 
 
     def get_threshold(self, amp, numspikes):
@@ -955,8 +958,8 @@ class Extractor(object):
                                 m = round(dataset[expname]['mean_features'][feature][str(target)],4)
                                 s = round(dataset[expname]['std_features'][feature][str(target)],4)
 
-                                if 'ncells' in dataset[expname]:
-                                    n = int(dataset[expname]['ncells'][feature][str(target)])
+                                if 'n' in dataset[expname]:
+                                    n = int(dataset[expname]['n'][feature][str(target)])
                                 else:
                                     n = 1
 
