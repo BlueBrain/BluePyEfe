@@ -17,5 +17,15 @@
       {"feature": "decay_time_constant_after_stim", "val": [11.1565, 1.8632], "n": 9, "strict_stim": true},
       {"feature": "AP_amplitude", "val": [82.7679, 0.6124], "n": 5, "strict_stim": true}
     ]
+  }, 
+  "IDthresh_100": {
+    "soma.v": [
+      {"feature": "inv_first_ISI", "val": [0.0, 0.001], "n": 1, "strict_stim": true},
+      {"feature": "inv_second_ISI", "val": [0.0, 0.001], "n": 1, "strict_stim": true},
+      {"feature": "inv_third_ISI", "val": [0.0, 0.001], "n": 1, "strict_stim": true},
+      {"feature": "inv_fourth_ISI", "val": [0.0, 0.001], "n": 1, "strict_stim": true},
+      {"feature": "inv_fifth_ISI", "val": [0.0, 0.001], "n": 1, "strict_stim": true},
+      {"feature": "inv_last_ISI", "val": [0.0, 0.001], "n": 1, "strict_stim": true}
+    ]
   }
 }

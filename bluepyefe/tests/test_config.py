@@ -38,11 +38,11 @@ config = {
                             {"ordinal": "349", "i_unit": "A", "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_349.ibw", "t_unit": "s", "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_349.ibw", "v_unit": "V", "dt": 0.00025},
                             {"ordinal": "350", "i_unit": "A", "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_350.ibw", "t_unit": "s", "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_350.ibw", "v_unit": "V", "dt": 0.00025},
                             {"ordinal": "351", "i_unit": "A", "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_351.ibw", "t_unit": "s", "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_351.ibw", "v_unit": "V", "dt": 0.00025},
-                            {"ordinal": "352", "i_unit": "A", "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_352.ibw", "t_unit": "s", "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_352.ibw", "v_unit": "V", "dt": 0.00025},
-                            {"ordinal": "353", "i_unit": "A", "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_353.ibw", "t_unit": "s", "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_353.ibw", "v_unit": "V", "dt": 0.00025},
-                            {"ordinal": "354", "i_unit": "A", "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_354.ibw", "t_unit": "s", "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_354.ibw", "v_unit": "V", "dt": 0.00025},
-                            {"ordinal": "355", "i_unit": "A", "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_355.ibw", "t_unit": "s", "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_355.ibw", "v_unit": "V", "dt": 0.00025},
-                            {"ordinal": "356", "i_unit": "A", "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_356.ibw", "t_unit": "s", "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_356.ibw", "v_unit": "V", "dt": 0.00025}
+                            #{"ordinal": "352", "i_unit": "A", "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_352.ibw", "t_unit": "s", "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_352.ibw", "v_unit": "V", "dt": 0.00025},
+                            #{"ordinal": "353", "i_unit": "A", "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_353.ibw", "t_unit": "s", "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_353.ibw", "v_unit": "V", "dt": 0.00025},
+                            #{"ordinal": "354", "i_unit": "A", "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_354.ibw", "t_unit": "s", "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_354.ibw", "v_unit": "V", "dt": 0.00025},
+                            #{"ordinal": "355", "i_unit": "A", "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_355.ibw", "t_unit": "s", "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_355.ibw", "v_unit": "V", "dt": 0.00025},
+                            #{"ordinal": "356", "i_unit": "A", "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_356.ibw", "t_unit": "s", "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_356.ibw", "v_unit": "V", "dt": 0.00025}
                             ],
                     "location": "soma.v"
                 }
