@@ -1,0 +1,13 @@
+{
+  "testtype_legacy2": {
+    "IDthresh_120": {
+      "stimuli": [{"delay": 700.0, "amp": 0.219261, "duration": 2000.0, "totduration": 3000.0}, {"delay": 0.0, "amp": -0.024238, "duration": 3000.0, "totduration": 3000.0}]
+    }, 
+    "IDthresh_all": {
+      "stimuli": [{"delay": 700.0, "amp": 0.239716, "duration": 2000.0, "totduration": 3000.0}, {"delay": 0.0, "amp": -0.113159, "duration": 3000.0, "totduration": 3000.0}]
+    }, 
+    "IDthresh_100": {
+      "stimuli": [{"delay": 700.0, "amp": 0.253084, "duration": 2000.0, "totduration": 3000.0}, {"delay": 0.0, "amp": -0.113202, "duration": 3000.0, "totduration": 3000.0}]
+    }
+  }
+}
