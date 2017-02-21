@@ -651,15 +651,16 @@ class Extractor(object):
             self.dataset_mean[expname]['tend'] = []
             self.dataset_mean[expname]['features'] = OrderedDict()
             self.dataset_mean[expname]['cell_std_features'] = OrderedDict()
-            self.dataset_mean[expname]['n'] = OrderedDict()
+            self.dataset_mean[expname]['cell_n'] = OrderedDict()
 
             for feature in self.features[expname]:
                 self.dataset_mean[expname]['features'][feature] = OrderedDict()
                 self.dataset_mean[expname]['cell_std_features'][feature] = OrderedDict()
-                self.dataset_mean[expname]['n'][feature] = OrderedDict()
+                self.dataset_mean[expname]['cell_n'][feature] = OrderedDict()
                 for target in self.options["target"]:
                     self.dataset_mean[expname]['features'][feature][str(target)] = []
                     self.dataset_mean[expname]['cell_std_features'][feature][str(target)] = []
+                    self.dataset_mean[expname]['cell_n'][feature][str(target)] = []
 
             for target in self.options["target"]:
                 self.dataset_mean[expname]['amp'][str(target)] = []
@@ -668,7 +669,6 @@ class Extractor(object):
 
             for i_cell, cellname in enumerate(self.dataset):
 
-                #tools.print_dict(self.dataset[cellname])
                 dataset_cell_exp = self.dataset[cellname]['experiments']
 
                 if expname in dataset_cell_exp:
@@ -696,10 +696,15 @@ class Extractor(object):
                     for feature in self.features[expname]:
                         for target in self.options["target"]:
                             if str(target) in dataset_cell_exp[expname]['mean_features'][feature]:
+
                                 result = dataset_cell_exp[expname]['mean_features'][feature][str(target)]
                                 self.dataset_mean[expname]['features'][feature][str(target)].append(result)
+
                                 cell_std_result = dataset_cell_exp[expname]['std_features'][feature][str(target)]
                                 self.dataset_mean[expname]['cell_std_features'][feature][str(target)].append(cell_std_result)
+
+                                n = dataset_cell_exp[expname]['n'][feature][str(target)]
+                                self.dataset_mean[expname]['cell_n'][feature][str(target)].append(n)
 
             #create means
             self.dataset_mean[expname]['mean_amp'] = OrderedDict()
@@ -739,15 +744,22 @@ class Extractor(object):
                 for target in self.options["target"]:
                     feat = self.dataset_mean[expname]['features'][feature][str(target)]
                     cell_std_feat = self.dataset_mean[expname]['cell_std_features'][feature][str(target)]
+                    cell_n = self.dataset_mean[expname]['cell_n'][feature][str(target)]
+
                     # added by Luca Leonardo Bologna to handle the case in which only one feature value is present at this point
-                    if len(feat) == 1:
-                        if cell_std_feat != 0.0:
+                    n = numpy.sum(numpy.invert(numpy.isnan(numpy.atleast_1d(feat)))) # count non Nan entries!
+                    self.dataset_mean[expname]['n'][feature][str(target)] = n
+
+                    if n < 2: # less than two cells in population
+                        if cell_n > 1: # pick values from this one cell if more than one recording
                             self.dataset_mean[expname]['mean_features'][feature][str(target)] = feat[0]
                             self.dataset_mean[expname]['std_features'][feature][str(target)] = cell_std_feat[0]
                     else:
-                       self.dataset_mean[expname]['mean_features'][feature][str(target)] = self.newmean(feat)
-                       self.dataset_mean[expname]['std_features'][feature][str(target)] = self.newstd(feat)
-                    self.dataset_mean[expname]['n'][feature][str(target)] = numpy.sum(numpy.invert(numpy.isnan(numpy.atleast_1d(feat))))
+                        self.dataset_mean[expname]['mean_features'][feature][str(target)] = self.newmean(feat)
+                        s = self.newstd(feat)
+                        if s == 0: # prevent divison by 0
+                            s = 1e-3
+                        self.dataset_mean[expname]['std_features'][feature][str(target)] = s
 
 
     def get_threshold(self, amp, numspikes):
@@ -957,14 +969,7 @@ class Extractor(object):
 
                                 m = round(dataset[expname]['mean_features'][feature][str(target)],4)
                                 s = round(dataset[expname]['std_features'][feature][str(target)],4)
-
-                                if 'n' in dataset[expname]:
-                                    n = int(dataset[expname]['n'][feature][str(target)])
-                                else:
-                                    n = 1
-
-                                if s == 0: # prevent divison by 0
-                                    s = 1e-3
+                                n = int(dataset[expname]['n'][feature][str(target)])
 
                                 if ~numpy.isnan(m):
 
