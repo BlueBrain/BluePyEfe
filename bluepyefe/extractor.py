@@ -143,6 +143,7 @@ class Extractor(object):
 
         self.mainname = mainname
         self.maindirname = mainname + os.sep # llb
+        tools.makedir(self.maindirname)
 
         self.thresholds_per_cell = OrderedDict()
         self.hypamps_per_cell = OrderedDict()
@@ -274,7 +275,6 @@ class Extractor(object):
     def plt_traces(self):
 
         logger.info(" Plotting traces")
-        tools.makedir(self.maindirname)
 
         for i_cell, cellname in enumerate(self.dataset):
 
