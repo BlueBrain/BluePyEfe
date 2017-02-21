@@ -755,7 +755,7 @@ class Extractor(object):
                     n = numpy.sum(numpy.invert(numpy.isnan(numpy.atleast_1d(feat)))) # count non Nan entries!
                     self.dataset_mean[expname]['n'][feature][str(target)] = n
 
-                    if n < 2: # less than two cells in population
+                    if n == 1: # only one cell in population
                         if cell_n > 1: # pick values from this one cell instead if more than one sweep
                             self.dataset_mean[expname]['mean_features'][feature][str(target)] = feat[0]
                             self.dataset_mean[expname]['std_features'][feature][str(target)] = cell_std_feat[0]
