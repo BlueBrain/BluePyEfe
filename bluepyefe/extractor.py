@@ -238,7 +238,7 @@ class Extractor(object):
 
                     for idx_file, filename in enumerate(files):
 
-                        data = self.process_file(config=config,
+                        data = self.process_file(config=self.config,
                                                 filename=filename,
                                                 cellname=cellname,
                                                 expname=expname,
