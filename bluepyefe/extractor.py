@@ -411,6 +411,8 @@ class Extractor(object):
 
                     features_all_ = [f for f in features_all if f not in self.extra_features]
 
+                    print features_all_
+                    
                     fel_vals = efel.getFeatureValues(traces, features_all_, raise_warnings=False)
 
                     peak_times = fel_vals[0]['peak_time']
