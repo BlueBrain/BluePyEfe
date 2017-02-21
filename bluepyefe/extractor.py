@@ -360,7 +360,7 @@ class Extractor(object):
 
         #efel.Settings.derivative_threshold = 5.0
         efel.setThreshold(threshold)
-        logger.info(" Setting threshold to %f", threshold)
+        logger.info(" Setting spike threshold to %.2f mV", threshold)
 
 
         for i_cell, cellname in enumerate(self.dataset):
@@ -412,7 +412,7 @@ class Extractor(object):
                     features_all_ = [f for f in features_all if f not in self.extra_features]
 
                     print features_all_
-                    
+
                     fel_vals = efel.getFeatureValues(traces, features_all_, raise_warnings=False)
 
                     peak_times = fel_vals[0]['peak_time']
