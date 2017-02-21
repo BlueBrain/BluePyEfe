@@ -118,12 +118,10 @@ config = {
 }
 
 import bluepyefe as bpefe
-extractor = bpefe.Extractor('testtype_old', config)
+extractor = bpefe.Extractor('testtype_legacy2', config, use_git=True)
 extractor.create_dataset()
 extractor.extract_features(threshold=-30)
 extractor.mean_features()
 extractor.analyse_threshold()
-extractor.feature_config_cells()
-extractor.feature_config_all()
-#extractor.feature_config_cells(version = 'lnmc')
-#extractor.feature_config_all(version = 'lnmc')
+extractor.feature_config_cells(version = 'legacy')
+extractor.feature_config_all(version = 'legacy')

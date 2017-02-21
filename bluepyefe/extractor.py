@@ -38,7 +38,7 @@ import sh
 
 class Extractor(object):
 
-    def __init__(self, mainname='PC', config=OrderedDict()):
+    def __init__(self, mainname='PC', config=OrderedDict(), use_git=True):
 
         self.config = config
         self.path = config['path']
@@ -55,16 +55,18 @@ class Extractor(object):
         self.dataset = OrderedDict()
         self.dataset_mean = OrderedDict()
 
-        try:
-            sh.git('add', '-A')
-            sh.git('commit', '-a', '-m \"Running feature extraction\"')
-        except:
-            pass
+        if use_git:
 
-        try:
-            self.githash = str(sh.git('rev-parse', '--short', 'HEAD')).rstrip()
-        except:
-            self.githash = "None"
+            try:
+                sh.git('add', '-A')
+                sh.git('commit', '-a', '-m \"Running feature extraction\"')
+            except:
+                pass
+
+            try:
+                self.githash = str(sh.git('rev-parse', '--short', 'HEAD')).rstrip()
+            except:
+                self.githash = "None"
 
         self.max_per_plot = 16
 
@@ -290,8 +292,6 @@ class Extractor(object):
                 ts = dataset_cell_exp[expname]['t']
                 filenames = dataset_cell_exp[expname]['filename']
 
-                # old:
-                # voltages = list(itertools.chain.from_iterable(voltages))
                 colors = []
 
                 markercycler = cycle(self.markerlist)
@@ -950,13 +950,78 @@ class Extractor(object):
 
         logger.info(" Saving config files to %s", directory)
 
-        stimulus_dict = OrderedDict()
-        feature_dict = OrderedDict()
+        if version == 'legacy':
 
-        if version == 'lnmc':
+            stim = OrderedDict()
+            feat = OrderedDict()
 
-            stim = stimulus_dict
-            feat = feature_dict
+            for i_exp, expname in enumerate(self.experiments):
+                if expname in dataset:
+                    location = dataset[expname]['location']
+
+                    for fi, feature in enumerate(self.features[expname]):
+                        for it, target in enumerate(self.options["target"]):
+
+                            if str(target) in dataset[expname]['mean_features'][feature]:
+
+                                t = str(target)
+                                stimname = expname + '_' + t
+
+                                m = round(dataset[expname]['mean_features'][feature][str(target)],4)
+                                s = round(dataset[expname]['std_features'][feature][str(target)],4)
+                                n = int(dataset[expname]['n'][feature][str(target)])
+
+                                if ~numpy.isnan(m) and ((s > 0.0) or (m == 0.0) ):
+
+                                    if s == 0.0: # prevent divison by 0
+                                        s = 1e-3
+
+                                    if stimname not in stim:
+                                        stim[stimname] = OrderedDict()
+
+                                    if stimname not in feat:
+                                        feat[stimname] = OrderedDict()
+
+                                    if location not in feat[stimname]:
+                                        feat[stimname][location] = OrderedDict()
+
+                                    feat[stimname][location][feature] = [m, s]
+
+                                    a = round(dataset[expname]['mean_amp'][str(target)],6)
+                                    h = round(dataset[expname]['mean_hypamp'][str(target)],6)
+                                    ton = dataset[expname]['mean_ton']
+                                    toff = dataset[expname]['mean_toff']
+                                    tend = dataset[expname]['mean_tend']
+
+                                    if 'stimuli' not in stim[stimname]:
+
+                                        totduration = round(tend)
+                                        delay = round(self.options["delay"] + ton)
+                                        duration = round(toff-ton)
+
+                                        stim[stimname]['stimuli'] = [
+                                                        OrderedDict([
+                                                            ("delay", delay),
+                                                            ("amp", a),
+                                                            ("duration", duration),
+                                                            ("totduration", totduration),
+                                                        ]),
+                                                        OrderedDict([
+                                                            ("delay", 0.0),
+                                                            ("amp", h),
+                                                            ("duration", totduration),
+                                                            ("totduration", totduration),
+                                                        ]),
+                                                    ]
+
+
+            stim = OrderedDict([ (self.mainname, stim) ])
+            feat = OrderedDict([ (self.mainname, feat) ])
+
+        else:
+
+            stim = OrderedDict()
+            feat = OrderedDict()
 
             for i_exp, expname in enumerate(self.experiments):
                 if expname in dataset:
@@ -1062,132 +1127,23 @@ class Extractor(object):
                                                             ])),
                                                         ])
 
-            #tools.print_dict(stimulus_dict)
-            #tools.print_dict(feature_dict)
-
-        else:
-
-            stim = OrderedDict()
-            stimulus_dict[self.mainname] = stim
-
-            feat = OrderedDict()
-            feature_dict[self.mainname] = feat
-
-            for i_exp, expname in enumerate(self.experiments):
-                if expname in dataset:
-                    location = dataset[expname]['location']
-
-                    for fi, feature in enumerate(self.features[expname]):
-                        for it, target in enumerate(self.options["target"]):
-                            if str(target) in dataset[expname]['mean_features'][feature]:
-
-                                stimname = expname + '_' + str(target)
-                                if stimname not in stim:
-                                    stim[stimname] = OrderedDict()
-
-                                if stimname not in feat:
-                                    feat[stimname] = OrderedDict()
-
-                                m = dataset[expname]['mean_features'][feature][str(target)]
-                                s = dataset[expname]['std_features'][feature][str(target)]
-
-                                if ~numpy.isnan(m):
-                                    if location not in feat[stimname]:
-                                        feat[stimname][location] = OrderedDict()
-
-                                    feat[stimname][location][feature] = [m, s]
-
-                                a = round(dataset[expname]['mean_amp'][str(target)],6)
-                                h = round(dataset[expname]['mean_hypamp'][str(target)],6)
-                                ton = dataset[expname]['mean_ton']
-                                toff = dataset[expname]['mean_toff']
-
-                                if 'stimuli' not in stim[stimname]:
-
-                                    totduration = round(self.options["delay"]+toff+self.options["posttime"])
-                                    delay = round(self.options["delay"] + ton)
-                                    duration = round(toff-ton)
-
-                                    stim[stimname]['stimuli'] = [
-                                                    OrderedDict([
-                                                        ("delay", delay),
-                                                        ("amp", a),
-                                                        ("duration", duration),
-                                                        ("totduration", totduration),
-                                                    ]),
-                                                    OrderedDict([
-                                                        ("delay", 0.0),
-                                                        ("amp", h),
-                                                        ("duration", totduration),
-                                                        ("totduration", totduration),
-                                                    ]),
-                                                ]
-
-            feature_dict = self.clean_zero_std(feature_dict, directory)
-
-            # clean protocols.json from amplitude for which no feature was computed
-            all_stim_c = []
-            for key, content in feature_dict.items():
-                if key.startswith("ERROR"):
-                    continue
-                else:
-                    for key_c in content:
-                        if key_c not in all_stim_c:
-                            all_stim_c.append(key_c)
-
-            stim_dict_clean = OrderedDict()
-            if not all_stim_c:
-                stim_dict_clean = {"ERROR" : "No feature extracted. No protocol generated."}
-            else:
-                for key, content in stimulus_dict.items():
-                    for key_c in content:
-                        if key_c in all_stim_c:
-                            if key in stim_dict_clean:
-                                stim_dict_clean[key][key_c] = stimulus_dict[key][key_c]
-                            else:
-                                stim_dict_clean[key] = OrderedDict()
-                                stim_dict_clean[key][key_c] = stimulus_dict[key][key_c]
-
-            # replacing stimulus dict with clean dict
-            stimulus_dict = stim_dict_clean
-
-
         meta = OrderedDict()
         meta['version'] = self.githash
 
         s = json.dumps(meta, indent=2)
-        s = tools.collapse_json(s, indent=8)
+        s = tools.collapse_json(s, indent=6)
         with open(directory + "meta.json", "w") as f:
             f.write(s)
 
-        s = json.dumps(stimulus_dict, indent=2)
-        s = tools.collapse_json(s, indent=8)
+        s = json.dumps(stim, indent=2)
+        s = tools.collapse_json(s, indent=6)
         with open(directory + "protocols.json", "w") as f:
             f.write(s)
 
-        s = json.dumps(feature_dict, indent=2)
-        s = tools.collapse_json(s, indent=8)
+        s = json.dumps(feat, indent=2)
+        s = tools.collapse_json(s, indent=6)
         with open(directory + "features.json", "w") as f:
             f.write(s)
 
-
-    def clean_zero_std(self, feature_dict, directory):
-        # delete from feature_dict all empty dictionaries
-        feat_final_dict = OrderedDict()
-        for etype in feature_dict:
-            for exp in feature_dict[etype]:
-                for loc in feature_dict[etype][exp]:
-                    crr_dict = OrderedDict()
-                    for key_feat_val, feat_val in feature_dict[etype][exp][loc].items():
-                        if feat_val[1] != 0.0:
-                            crr_dict[key_feat_val] = feat_val
-                    if crr_dict:
-                        if etype not in feat_final_dict:
-                            feat_final_dict[etype] = OrderedDict()
-                        if exp not in feat_final_dict[etype]:
-                            feat_final_dict[etype][exp] = OrderedDict()
-                        feat_final_dict[etype][exp][loc] = crr_dict
-
-        if not feat_final_dict:
-            feat_final_dict["ERROR"] = "Either all features had zero standard deviation or no feature could be extracted from traces"
-        return feat_final_dict
+        #tools.print_dict(stimulus_dict)
+        #tools.print_dict(feature_dict)

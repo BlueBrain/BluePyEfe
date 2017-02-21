@@ -1,0 +1,10 @@
+{
+  "testtype_old": {
+    "IDthresh_all": {
+      "stimuli": [
+        {"delay": 700.0, "amp": 0.28799, "duration": 2000.0, "totduration": 2900.0},
+        {"delay": 0.0, "amp": -0.202247, "duration": 2900.0, "totduration": 2900.0}
+      ]
+    }
+  }
+}

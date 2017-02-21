@@ -1,0 +1,14 @@
+{
+  "testtype_old": {
+    "IDthresh_all": {
+      "soma.v": {
+        "time_to_last_spike": [13.260000000021137, 26.520000000042273],
+        "inv_time_to_first_spike": [3.0165912518805609, 6.0331825037611218],
+        "voltage_deflection": [12.222038803953632, 2.1946760241116667],
+        "voltage_deflection_begin": [14.387557255159251, 2.2713855280917827],
+        "steady_state_voltage": [-87.144818603582777, 0.36762179573790654],
+        "decay_time_constant_after_stim": [9.6972269842633452, 1.1261574361718798]
+      }
+    }
+  }
+}
