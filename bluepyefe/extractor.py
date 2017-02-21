@@ -902,6 +902,8 @@ class Extractor(object):
 
     def feature_config_cells(self, version=None):
         for i_cell, cellname in enumerate(self.dataset):
+            dirname = self.maindirname+cellname
+            tools.makedir(dirname)
             dataset_cell_exp = self.dataset[cellname]['experiments']
             self.create_feature_config(self.maindirname+cellname+os.sep,
                             dataset_cell_exp, version=version)
