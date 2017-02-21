@@ -652,15 +652,20 @@ class Extractor(object):
             self.dataset_mean[expname]['features'] = OrderedDict()
             self.dataset_mean[expname]['cell_std_features'] = OrderedDict()
             self.dataset_mean[expname]['cell_n'] = OrderedDict()
+            self.dataset_mean[expname]['n'] = OrderedDict()
 
             for feature in self.features[expname]:
                 self.dataset_mean[expname]['features'][feature] = OrderedDict()
                 self.dataset_mean[expname]['cell_std_features'][feature] = OrderedDict()
                 self.dataset_mean[expname]['cell_n'][feature] = OrderedDict()
+                self.dataset_mean[expname]['n'][feature] = OrderedDict()
+
                 for target in self.options["target"]:
                     self.dataset_mean[expname]['features'][feature][str(target)] = []
                     self.dataset_mean[expname]['cell_std_features'][feature][str(target)] = []
                     self.dataset_mean[expname]['cell_n'][feature][str(target)] = []
+                    self.dataset_mean[expname]['n'][feature][str(target)] = []
+
 
             for target in self.options["target"]:
                 self.dataset_mean[expname]['amp'][str(target)] = []
@@ -751,7 +756,7 @@ class Extractor(object):
                     self.dataset_mean[expname]['n'][feature][str(target)] = n
 
                     if n < 2: # less than two cells in population
-                        if cell_n > 1: # pick values from this one cell if more than one recording
+                        if cell_n > 1: # pick values from this one cell instead if more than one sweep
                             self.dataset_mean[expname]['mean_features'][feature][str(target)] = feat[0]
                             self.dataset_mean[expname]['std_features'][feature][str(target)] = cell_std_feat[0]
                     else:
