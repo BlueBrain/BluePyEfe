@@ -620,8 +620,9 @@ class Extractor(object):
                                     (amp_rel <= (target + self.options["tolerance"][ti])))
 
                         feat = numpy.atleast_1d(numpy.array(feat_vals)[idx])
+                        n = numpy.sum(numpy.invert(numpy.isnan(numpy.atleast_1d(feat))))
 
-                        if len(feat) > 0:
+                        if n > 0:
 
                             if (target == 'noinput'):
                                 if (amp_abs[i_noinput] < 0.01):
@@ -635,7 +636,7 @@ class Extractor(object):
 
                             dataset_cell_exp[expname]['mean_features'][feature][str(target)] = meanfeat
                             dataset_cell_exp[expname]['std_features'][feature][str(target)] = stdfeat
-                            dataset_cell_exp[expname]['n'][feature][str(target)] = numpy.sum(numpy.invert(numpy.isnan(numpy.atleast_1d(feat))))
+                            dataset_cell_exp[expname]['n'][feature][str(target)] = n
 
 
         # mean for all cells
@@ -755,16 +756,13 @@ class Extractor(object):
                     n = numpy.sum(numpy.invert(numpy.isnan(numpy.atleast_1d(feat)))) # count non Nan entries!
                     self.dataset_mean[expname]['n'][feature][str(target)] = n
 
-                    if n == 1: # only one cell in population
+                    if n == 1: # only result from one cell in population
                         if cell_n > 1: # pick values from this one cell instead if more than one sweep
                             self.dataset_mean[expname]['mean_features'][feature][str(target)] = feat[0]
                             self.dataset_mean[expname]['std_features'][feature][str(target)] = cell_std_feat[0]
                     else:
                         self.dataset_mean[expname]['mean_features'][feature][str(target)] = self.newmean(feat)
-                        s = self.newstd(feat)
-                        if s == 0: # prevent divison by 0
-                            s = 1e-3
-                        self.dataset_mean[expname]['std_features'][feature][str(target)] = s
+                        self.dataset_mean[expname]['std_features'][feature][str(target)] = self.newstd(feat)
 
 
     def get_threshold(self, amp, numspikes):
@@ -974,9 +972,13 @@ class Extractor(object):
 
                                 m = round(dataset[expname]['mean_features'][feature][str(target)],4)
                                 s = round(dataset[expname]['std_features'][feature][str(target)],4)
+
+                                if s == 0.0: # prevent divison by 0
+                                    s = 1e-3
+
                                 n = int(dataset[expname]['n'][feature][str(target)])
 
-                                if ~numpy.isnan(m):
+                                if ~numpy.isnan(m) and n > 1:
 
                                     if stimname not in stim:
                                         stim[stimname] = OrderedDict()

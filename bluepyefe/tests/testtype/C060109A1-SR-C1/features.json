@@ -1,18 +1,18 @@
 {
   "IDthresh_100": {
     "soma.v": [
-      {"feature": "adaptation_index2", "val": [-0.4843, 0.001], "n": 1, "strict_stim": true},
+      {"feature": "adaptation_index2", "val": [-0.4843, 0.0], "n": 1, "strict_stim": true},
       {"feature": "mean_frequency", "val": [1.9075, 0.3049], "n": 2, "strict_stim": true},
       {"feature": "time_to_first_spike", "val": [271.0, 104.5], "n": 2, "strict_stim": true},
-      {"feature": "ISI_log_slope", "val": [-1.5253, 0.001], "n": 1, "strict_stim": true},
-      {"feature": "ISI_log_slope_skip", "val": [-1.5253, 0.001], "n": 1, "strict_stim": true},
+      {"feature": "ISI_log_slope", "val": [-1.5253, 0.0], "n": 1, "strict_stim": true},
+      {"feature": "ISI_log_slope_skip", "val": [-1.5253, 0.0], "n": 1, "strict_stim": true},
       {"feature": "time_to_last_spike", "val": [1840.0, 32.0], "n": 2, "strict_stim": true},
       {"feature": "inv_time_to_first_spike", "val": [4.3346, 1.6714], "n": 2, "strict_stim": true},
       {"feature": "inv_first_ISI", "val": [2.466, 0.1114], "n": 2, "strict_stim": true},
       {"feature": "inv_second_ISI", "val": [1.004, 0.071], "n": 2, "strict_stim": true},
       {"feature": "inv_third_ISI", "val": [1.547, 1.547], "n": 2, "strict_stim": true},
-      {"feature": "inv_fourth_ISI", "val": [0.0, 0.001], "n": 2, "strict_stim": true},
-      {"feature": "inv_fifth_ISI", "val": [0.0, 0.001], "n": 2, "strict_stim": true},
+      {"feature": "inv_fourth_ISI", "val": [0.0, 0.0], "n": 2, "strict_stim": true},
+      {"feature": "inv_fifth_ISI", "val": [0.0, 0.0], "n": 2, "strict_stim": true},
       {"feature": "inv_last_ISI", "val": [2.0135, 1.0805], "n": 2, "strict_stim": true},
       {"feature": "voltage_deflection", "val": [10.031, 2.9085], "n": 2, "strict_stim": true},
       {"feature": "voltage_deflection_begin", "val": [14.4723, 1.7826], "n": 2, "strict_stim": true},
