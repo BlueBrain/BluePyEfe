@@ -2,6 +2,12 @@
 import matplotlib
 matplotlib.use('Agg', warn=True)
 import matplotlib.pyplot as plt
+
+try:
+    plt.style.use('classic')
+except:
+    pass
+
 import numpy
 import sys
 import efel
@@ -24,7 +30,6 @@ import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout)
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
 
 import tools
 import plottools
@@ -34,11 +39,12 @@ import sh
 class Extractor(object):
 
     def __init__(self, mainname='PC', config=OrderedDict()):
-        self.config = config
 
+        self.config = config
         self.path = config['path']
         self.cells = config['cells']
         self.features = config['features']
+        self.options = config['options']
 
         for experiment in self.features:
             f = self.features[experiment]
@@ -62,7 +68,6 @@ class Extractor(object):
 
         self.max_per_plot = 16
 
-        self.options = config['options']
         if "relative" not in self.options:
             self.options["relative"] = False
 
@@ -104,6 +109,15 @@ class Extractor(object):
         if "spike_threshold" not in self.options:
             self.options["spike_threshold"] = 2
 
+        if "logging" not in self.options:
+            self.options["logging"] = False
+
+        if self.options["logging"]:
+            logger.setLevel(logging.INFO)
+        else:
+            logger.setLevel(logging.ERROR)
+
+
         self.colors = OrderedDict()
         self.colors['b1'] = '#1F78B4' #377EB8
         self.colors['b2'] = '#A6CEE3'
@@ -137,12 +151,14 @@ class Extractor(object):
                                 'spikerate_tau_log', 'spikerate_tau_fit',
                                 'spikerate_tau_slope']
 
+
     def newmeancell(self, a):
         if (self.options["nanmean_cell"] or
             (numpy.sum(numpy.isnan(a)) <= self.options["nangrace"])):
             return numpy.nanmean(a)
         else:
             return numpy.mean(a)
+
 
     def newstdcell(self, a):
         if (self.options["nanmean_cell"]
@@ -159,6 +175,7 @@ class Extractor(object):
         else:
             return numpy.mean(a)
 
+
     def newstd(self, a):
         if (self.options["nanmean"]
             or (numpy.sum(numpy.isnan(a)) <= self.options["nangrace"])):
@@ -174,7 +191,9 @@ class Extractor(object):
         for i_cell, cellname in enumerate(self.cells):
 
             self.dataset[cellname] = OrderedDict()
-            self.dataset[cellname]['v_corr'] = self.cells[cellname]['v_corr']
+
+            v_corr = self.cells[cellname]['v_corr']
+            self.dataset[cellname]['v_corr'] = v_corr
 
             if 'ljp' in self.cells[cellname]:
                 ljp = self.cells[cellname]['ljp']
@@ -188,12 +207,17 @@ class Extractor(object):
             for i_exp, expname in enumerate(self.cells[cellname]['experiments']):
 
                 files = self.cells[cellname]['experiments'][expname]['files']
+
+                # read stimulus features if present
+                stim_feats = []
+                if 'stim_feats' in self.cells[cellname]['experiments'][expname]:
+                    stim_feats = self.cells[cellname]['experiments'][expname]['stim_feats']
+
                 if len(files) > 0:
                     logger.debug(" Adding experiment %s", expname)
 
                     if expname not in self.experiments:
                         self.experiments.append(expname)
-
 
                     dataset_cell_exp[expname] = OrderedDict()
 
@@ -212,9 +236,17 @@ class Extractor(object):
                     dataset_cell_exp[expname]['amp'] = []
                     dataset_cell_exp[expname]['hypamp'] = []
 
-                    for i_file, filename in enumerate(files):
+                    for idx_file, filename in enumerate(files):
 
-                        data = self.process_file(filename, cellname, expname, i_file)
+                        data = self.process_file(config=config,
+                                                filename=filename,
+                                                cellname=cellname,
+                                                expname=expname,
+                                                stim_feats=stim_feats,
+                                                idx_file=idx_file,
+                                                v_corr=v_corr,
+                                                ljp=ljp)
+
                         dataset_cell_exp[expname]['voltage'] += data['voltage']
                         dataset_cell_exp[expname]['current'] += data['current']
                         dataset_cell_exp[expname]['dt'] += data['dt']
@@ -228,416 +260,15 @@ class Extractor(object):
                         dataset_cell_exp[expname]['hypamp'] += data['hypamp']
 
 
-    def process_file(self, filename, cellname, expname, idx_file):
-
-        data = OrderedDict()
-        data['voltage'] = []
-        data['current'] = []
-        data['dt'] = []
-
-        data['t'] = []
-        data['ton'] = []
-        data['toff'] = []
-        data['tend'] = []
-        data['amp'] = []
-        data['hypamp'] = []
-        data['filename'] = []
-
-        ljp = self.dataset[cellname]['ljp']
-        v_corr = self.dataset[cellname]['v_corr']
-
-        # read stimulus features if present
-        stim_feats = []
-        if 'stim_feats' in self.cells[cellname]['experiments'][expname]:
-            stim_feats = self.cells[cellname]['experiments'][expname]['stim_feats']
+    def process_file(self, **kwargs):
 
         if self.format == 'igor':
-
-            import igorpy
-
-            ordinal = filename['ordinal']
-            logger.debug(" Adding igor file with ordinal %s", ordinal)
-
-            i_file = self.path + filename['i_file']
-            v_file = self.path + filename['v_file']
-
-            notes, wave = igorpy.read(v_file)
-
-            if 'v_unit' not in filename:
-                v_unit = notes.xUnits
-            else:
-                v_unit = filename['v_unit']
-
-            if v_unit == 'V':
-                v = wave * 1e3  # mV
-            elif v_unit == 'mV':
-                v = wave  # mV
-            else:
-                raise Exception(
-                    "Unit voltage not configured!")
-
-            if 'dt' in filename:
-                dt = filename['dt']
-                if numpy.isclose(dt, notes.dx) is False:
-                    raise Exception(
-                        "Given stepsize %f does not match stepsize from wavenotes %f" % (dt, notes.dt))
-            else:
-                dt = notes.dx
-
-            if 't_unit' not in filename:
-                t_unit = notes.dUnits
-            else:
-                t_unit = filename['t_unit']
-
-            if (t_unit == "") or (t_unit == "s"):
-                dt = dt * 1e3 # convert to ms
-            t = dt * numpy.arange(0, len(wave))
-
-            notes, wave = igorpy.read(i_file)
-
-            if 'i_unit' not in filename:
-                i_unit = notes.xUnits
-            else:
-                i_unit = filename['i_unit']
-
-            if i_unit == 'A':
-                i = wave * 1e9 # nA
-            elif i_unit == 'pA':
-                i = wave * 1e-3 # nA
-            else:
-                raise Exception(
-                    "Unit current not configured!")
-
-            ton = self.options['onoff'][expname][0]
-            toff = self.options['onoff'][expname][1]
-
-            ion = int(ton/dt)
-
-            if toff:
-                ioff = int(toff/dt)
-            else:
-                ioff = False
-
-            hypamp = numpy.mean( i[0:ion] )  # estimate hyperpolarization current
-            iborder = int((ioff-ion)*0.1)  # 10% distance to measure step current
-            # depolarization amplitude starting from hypamp!!
-
-            if expname in ['APThreshold']:
-                imax = numpy.argmax(i)
-                toff = t[imax]
-                trun = toff - ton
-                ampoff = numpy.mean( i[int(imax-10./dt):imax] ) - hypamp
-                amp = ampoff/trun * 2000. # extrapolate to get expected amplitude at 1 sec
-                #amp = ampoff
-            elif expname in ['H40S8']:
-                amp = numpy.mean(i[i > 0.1])
-            else:
-                amp = numpy.mean( i[ion+iborder:ioff-iborder] ) - hypamp
-
-            # clean voltage from transients
-            if expname in ['IDRest', 'IDrest', 'IDthresh', 'IDdepol']:
-                cut_start = int(ion+numpy.ceil(1.0/dt))
-                v[ion:cut_start] = v[cut_start]
-                cut_end0 = int(ioff-numpy.ceil(0.5/dt))
-                cut_end1 = int(ioff+numpy.ceil(2.0/dt))
-                v[cut_end0:cut_end1] = v[cut_end1]
-
-            # delete second pulse
-            elif expname in ['SpikeRec']:
-                t = t[:int(50./dt)]
-                v = v[:int(50./dt)]
-                i = i[:int(50./dt)]
-
-            # normalize membrane potential to known value
-            if v_corr:
-                v = v - numpy.mean(v[0:ion]) + v_corr
-
-            v = v - ljp # correct junction potential
-
-            data['voltage'].append(v)
-            data['current'].append(i)
-            data['dt'].append(dt)
-
-            data['t'].append(t)
-            data['tend'].append(t[-1])
-            data['ton'].append(ton)
-            data['toff'].append(toff)
-            data['amp'].append(amp)
-            data['hypamp'].append(hypamp)
-            data['filename'].append(ordinal)
-
-            logger.debug(" Added igor file with ordinal %s", ordinal)
-
+            import formats.igor
+            return formats.igor.process(**kwargs)
 
         elif self.format == 'axon':
-
-            logger.debug(" Adding axon file %s", filename)
-
-            from neo import io
-            f = self.path + cellname + os.sep + filename + '.abf'
-            r = io.AxonIO(filename = f) #
-            header = r.read_header() # read file header
-            sampling_rate = 1.e6 / header['protocol']['fADCSequenceInterval'] # read sampling rate
-
-            dt = 1./int(sampling_rate) * 1e3
-            version = header['fFileVersionNumber'] # read file version
-            bl = r.read_block(lazy=False, cascade=True)
-            all_stims = []
-            if stim_feats:
-                res = self.stim_feats_from_meta(stim_feats, len(bl.segments), idx_file)
-                if res[0]:
-                    all_stims = res[1]
-                else:
-                    print(res[1])
-            if not all_stims:
-                res = self.stim_feats_from_header(header)
-                if res[0]:
-                    all_stims = res[1]
-                else:
-                    pprint.pprint("No valid stimulus was found in metadata or files. Skipping current file")
-                    return
-
-            # for all segments in file
-            for i_seg, seg in enumerate(bl.segments):
-
-                voltage = numpy.array(seg.analogsignals[0]).astype(numpy.float64)
-                #current = numpy.array(seg.analogsignals[1]).astype(numpy.float64)
-                #dt = 1./int(seg.analogsignals[0].sampling_rate) * 1e3
-
-                t = numpy.arange(len(voltage)) * dt
-
-                # when does voltage change
-                #c_changes = numpy.where( abs(numpy.gradient(current, 1.)) > 0.0 )[0]
-
-                # detect on and off of current
-                #c_changes2 = numpy.where( abs(numpy.gradient(c_changes, 1.)) > 10.0 )[0]
-
-                #ion = c_changes[c_changes2[0]]
-                #ioff = c_changes[-1]
-                #ton = ion * dt
-                #toff = ioff * dt
-
-                ton = all_stims[i_seg][1]
-                toff = all_stims[i_seg][2]
-                ion = int(ton / dt)
-                ioff = int(toff / dt)
-                amp = numpy.float64(all_stims[i_seg][3])
-
-                current = []
-                current = numpy.zeros(len(voltage))
-                current[ion:ioff] = amp
-
-                # estimate hyperpolarization current
-                hypamp = numpy.mean( current[0:ion] )
-
-                # 10% distance to measure step current
-                iborder = int((ioff-ion)*0.1)
-
-                # depolarization amplitude
-                #amp = numpy.mean( current[ion+iborder:ioff-iborder] )
-                voltage_dirty = voltage[:]
-
-                # clean voltage from transients
-                voltage[ion:ion+int(numpy.ceil(0.4/dt))] = voltage[ion+int(numpy.ceil(0.4/dt))]
-                voltage[ioff:ioff+int(numpy.ceil(0.4/dt))] = voltage[ioff+int(numpy.ceil(0.4/dt))]
-
-                # normalize membrane potential to known value (given in UCL excel sheet)
-                if v_corr:
-                    if len(v_corr) == 1 and v_corr[0] != 0.0:
-                        voltage = voltage - numpy.mean(voltage[0:ion]) + v_corr[0]
-                    elif len(v_corr) - 1 >= idx_file and v_corr[idx_file] != 0.0:
-                        voltage = voltage - numpy.mean(voltage[0:ion]) + v_corr[idx_file]
-
-                voltage = voltage - ljp
-
-                # clip spikes after stimulus so they are not analysed
-                voltage[ioff:] = numpy.clip(voltage[ioff:], -300, -40)
-
-                if ('exclude' in self.cells[cellname] and
-                    any(abs(self.cells[cellname]['exclude'][idx_file] - amp) < 1e-4)):
-                    continue # llb
-
-                else:
-                    data['voltage'].append(voltage)
-                    data['current'].append(current)
-                    data['dt'].append(dt)
-
-                    data['t'].append(t)
-                    data['tend'].append(t[-1])
-                    data['ton'].append(ton)
-                    data['toff'].append(toff)
-                    data['amp'].append(amp)
-                    data['hypamp'].append(hypamp)
-                    data['filename'].append(filename)
-
-
-        elif self.format == 'csv_lccr':
-
-            if isinstance(filename, str) is False:
-                raise Exception('Please provide a string with filename of csv file')
-
-            filename = self.path + '/' + filename + '.txt'
-
-            exp_options = self.cells[cellname]['experiments'][expname]
-
-            if (('dt' not in exp_options) or
-                ('amplitudes' not in exp_options) or
-                ('hypamp' not in exp_options) or
-                ('ton' not in exp_options) or
-                ('toff' not in exp_options)):
-                raise Exception('Please provide additional options for LCCR csv')
-
-            dt = exp_options['dt']
-            hypamp = exp_options['hypamp']
-            ton = exp_options['startstop'][0]
-            toff = exp_options['startstop'][1]
-            amplitudes = exp_options['amplitudes']
-
-            import csv
-            with open(filename, 'rb') as f:
-                reader = csv.reader(f, delimiter='\t')
-                columns = zip(*reader)
-                length = numpy.shape(columns)[1]
-
-                for ic, column in enumerate(columns):
-
-                    voltage = numpy.zeros(length)
-                    for istr, string in enumerate(column):
-                        if (string != "-") and (string != ""):
-                            voltage[istr] = float(string)
-
-                    t = numpy.arange(len(voltage)) * dt
-                    amp = amplitudes[ic]
-
-                    voltage = voltage - ljp # correct liquid junction potential
-
-                    # remove last 100 ms
-                    voltage = voltage[0:int(-100./dt)]
-                    t = t[0:int(-100./dt)]
-                    current = None
-
-                    if ('exclude' in self.cells[cellname]
-                        and any(abs(self.cells[cellname]['exclude'][i_file] - amp) < 1e-4)):
-                        continue #llb
-
-                    else:
-                        data['voltage'].append(voltage)
-                        data['current'].append(current)
-                        data['dt'].append(dt)
-
-                        data['t'].append(t)
-                        data['tend'].append(t[-1])
-                        data['ton'].append(ton)
-                        data['toff'].append(toff)
-                        data['amp'].append(amp)
-                        data['hypamp'].append(hypamp)
-                        data['filename'].append(filename)
-
-        return data
-
-    # author Luca Leonardo Bologna
-    def stim_feats_from_meta(self, stim_feats, num_segments, idx_file):
-        if not stim_feats:
-            return (0, "Empty metadata in file")
-        elif len(stim_feats) - 1 < idx_file and len(stim_feats) !=1:
-            return (0, "Stimulus dictionaries are different from the number of files")
-        else:
-            # array for storing all stimulus features
-            all_stim_feats = []
-
-            # for every segment in the axon file
-            for i in range(num_segments):
-
-                # read current stimulus dict
-                if len(stim_feats) == 1:
-                    crr_dict = stim_feats[0]
-                else:
-                    crr_dict = stim_feats[idx_file]
-
-                # read stimulus information
-                ty = str(crr_dict['stimulus_type'])
-                tu = crr_dict['stimulus_time_unit']
-                st = crr_dict['stimulus_start']
-                en = crr_dict['stimulus_end']
-                u = str(crr_dict['stimulus_unit'])
-                fa = float(format(crr_dict['stimulus_first_amplitude'], '.3f'))
-                inc = float(format(crr_dict['stimulus_increment'], '.3f'))
-                ru = crr_dict['sampling_rate_unit']
-                r = crr_dict['sampling_rate']
-                if tu == 's':
-                    st = st * 1e3
-                    en = en * 1e3
-                # compute current stimulus amplitude
-                crr_val = float(format(fa + inc * float(format(i, '.3f')), '.3f'))
-                crr_stim_feats = (ty, st, en, crr_val, u)
-
-                # store current tuple
-                all_stim_feats.append(crr_stim_feats)
-            return (1, all_stim_feats)
-
-
-    # author Luca Leonardo Bologna
-    def stim_feats_from_header(self, header):
-        sampling_rate = 1.e6 / header['protocol']['fADCSequenceInterval'] # read sampling rate
-        version = header['fFileVersionNumber'] # read file version
-
-        # extract protocol for version >=.2
-        if version >= 2.:
-            #prot = r.read_protocol() # read protocol
-            dictEpochInfoPerDAC = header['dictEpochInfoPerDAC'] # read info for DAC
-
-            # if field is empty
-            if not (dictEpochInfoPerDAC):
-                return (0, "No 'dictEpochInfoPerDAC' field")
-
-            # if field is not empty, read all stimulus segments
-            else:
-                valid_epoch_dicts = [k for k, v in dictEpochInfoPerDAC.iteritems() if bool(v)]
-
-                # if more than one channel is activated for the stimulus
-                # or a number of epochs different than 3 is found
-                if len(valid_epoch_dicts) != 1 or len(dictEpochInfoPerDAC[0]) != 3:
-                    return (0, 'Exiting. More than one channel used for stimulation')
-                else:
-                    stim_epochs = dictEpochInfoPerDAC[k] # read all stimulus epochs
-                    stim_ch_info = [(i['DACChNames'], i['DACChUnits'], i['nDACNum']) for i in header['listDACInfo'] if bool(i['nWaveformEnable'])] # read enabled waveforms
-
-                    # if epoch initial levels and increment are not compatible with a step stimulus
-                    if (stim_epochs[0]['fEpochInitLevel'] != stim_epochs[2]['fEpochInitLevel'] or
-                        stim_epochs[0]['fEpochLevelInc'] != stim_epochs[2]['fEpochLevelInc'] or
-                        float(format(stim_epochs[0]['fEpochLevelInc'], '.3f')) != 0 or
-                        (len(stim_ch_info) != 1 or stim_ch_info[0][2] != k)):
-                            # return 0 with message
-                            return (0, "A stimulus different from the steps has been detected")
-                    else:
-                        ty = "step"
-                        u = stim_ch_info[0][1]
-                        nADC = header['sections']['ADCSection']['llNumEntries'] # number of ADC channels
-                        nDAC = header['sections']['DACSection']['llNumEntries'] # number of DAC channels
-                        nSam = header['protocol']['lNumSamplesPerEpisode']/nADC # number of samples per episode
-                        nEpi = header['lActualEpisodes'] # number of actual episodes
-
-                        e_zero = header['dictEpochInfoPerDAC'][stim_ch_info[0][2]][0] # read first stimulus epoch
-                        e_one = header['dictEpochInfoPerDAC'][stim_ch_info[0][2]][1] # read second stimulus epoch
-                        e_two = header['dictEpochInfoPerDAC'][stim_ch_info[0][2]][2] # read third stimulus epoch
-
-                        i_last = int(nSam*15625/10**6) # index of stimulus beginning
-
-                        all_stim_info = [] # create array for all stimulus info
-
-                        e_one_inc = float(format(e_one['fEpochLevelInc'] , '.3f')) # step increment
-                        e_one_init_level = float(format(e_one['fEpochInitLevel'] , '.3f')) # step initial level
-
-                        # for every episode, compute stimulus start, stimulus end, stimulus value
-                        for epiNum in range(nEpi):
-                            st = i_last + e_zero['lEpochInitDuration'] + e_zero['lEpochDurationInc'] * epiNum
-                            en = st + e_one['lEpochInitDuration'] +  e_one['lEpochDurationInc'] * epiNum
-                            crr_val_full = float(format(e_one_init_level + e_one_inc * epiNum, '.3f'))
-                            crr_val = float(format(crr_val_full, '.3f'))
-                            st = 1/sampling_rate * st * 1e3
-                            en = 1/sampling_rate * en * 1e3
-                            all_stim_info.append((ty, st, en, crr_val, u))
-                        return (1, all_stim_info)
+            import formats.igor
+            return formats.axon.process(**kwargs)
 
 
     def plt_traces(self):
@@ -1263,7 +894,6 @@ class Extractor(object):
 
     def feature_config_all(self, version=None):
 
-        #pickle.dump(self.dataset_mean, open(self.maindirname + "dataset_mean.pkl", 'w'), indent=4)
         self.create_feature_config(self.maindirname,
                             self.dataset_mean, version=version)
 
@@ -1414,6 +1044,9 @@ class Extractor(object):
                                                             ])),
                                                         ])
 
+            #tools.print_dict(stimulus_dict)
+            #tools.print_dict(feature_dict)
+
         else:
 
             stim = OrderedDict()
@@ -1472,35 +1105,34 @@ class Extractor(object):
                                                     ]),
                                                 ]
 
-        #tools.print_dict(stimulus_dict)
-        #tools.print_dict(feature_dict)
-        feature_dict = self.clean_zero_std(feature_dict, directory)
+            feature_dict = self.clean_zero_std(feature_dict, directory)
 
-        # clean protocols.json from amplitude for which no feature was computed
-        all_stim_c = []
-        for key, content in feature_dict.items():
-            if key.startswith("ERROR"):
-                continue
+            # clean protocols.json from amplitude for which no feature was computed
+            all_stim_c = []
+            for key, content in feature_dict.items():
+                if key.startswith("ERROR"):
+                    continue
+                else:
+                    for key_c in content:
+                        if key_c not in all_stim_c:
+                            all_stim_c.append(key_c)
+
+            stim_dict_clean = OrderedDict()
+            if not all_stim_c:
+                stim_dict_clean = {"ERROR" : "No feature extracted. No protocol generated."}
             else:
-                for key_c in content:
-                    if key_c not in all_stim_c:
-                        all_stim_c.append(key_c)
+                for key, content in stimulus_dict.items():
+                    for key_c in content:
+                        if key_c in all_stim_c:
+                            if key in stim_dict_clean:
+                                stim_dict_clean[key][key_c] = stimulus_dict[key][key_c]
+                            else:
+                                stim_dict_clean[key] = OrderedDict()
+                                stim_dict_clean[key][key_c] = stimulus_dict[key][key_c]
 
-        stim_dict_clean = OrderedDict()
-        if not all_stim_c:
-            stim_dict_clean = {"ERROR" : "No feature extracted. No protocol generated."}
-        else:
-            for key, content in stimulus_dict.items():
-                for key_c in content:
-                    if key_c in all_stim_c:
-                        if key in stim_dict_clean:
-                            stim_dict_clean[key][key_c] = stimulus_dict[key][key_c]
-                        else:
-                            stim_dict_clean[key] = OrderedDict()
-                            stim_dict_clean[key][key_c] = stimulus_dict[key][key_c]
+            # replacing stimulus dict with clean dict
+            stimulus_dict = stim_dict_clean
 
-        # replacing stimulus dict with clean dict
-        stimulus_dict = stim_dict_clean
 
         meta = OrderedDict()
         meta['version'] = self.githash
@@ -1528,7 +1160,6 @@ class Extractor(object):
             for exp in feature_dict[etype]:
                 for loc in feature_dict[etype][exp]:
                     crr_dict = OrderedDict()
-                    print etype, exp, loc
                     for key_feat_val, feat_val in feature_dict[etype][exp][loc].items():
                         if feat_val[1] != 0.0:
                             crr_dict[key_feat_val] = feat_val
