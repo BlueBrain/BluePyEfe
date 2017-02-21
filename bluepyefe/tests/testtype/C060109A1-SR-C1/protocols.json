@@ -1,4 +1,11 @@
 {
+  "IDthresh_120": {
+    "type": "StepProtocol", 
+    "stimuli": {
+      "step": {"delay": 700.0, "amp": 0.219261, "thresh_perc": 121.4537, "duration": 2000.0, "totduration": 3000.0},
+      "holding": {"delay": 0.0, "amp": -0.024238, "duration": 3000.0, "totduration": 3000.0}
+    }
+  }, 
   "IDthresh_all": {
     "type": "StepProtocol", 
     "stimuli": {

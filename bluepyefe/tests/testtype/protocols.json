@@ -1,9 +1,16 @@
 {
+  "IDthresh_120": {
+    "type": "StepProtocol", 
+    "stimuli": {
+      "step": {"delay": 700.0, "amp": 0.219261, "thresh_perc": 121.4537, "duration": 2000.0, "totduration": 3000.0},
+      "holding": {"delay": 0.0, "amp": -0.024238, "duration": 3000.0, "totduration": 3000.0}
+    }
+  }, 
   "IDthresh_all": {
     "type": "StepProtocol", 
     "stimuli": {
-      "step": {"delay": 700.0, "amp": 0.258525, "thresh_perc": 103.0299, "duration": 2000.0, "totduration": 3000.0},
-      "holding": {"delay": 0.0, "amp": -0.113172, "duration": 3000.0, "totduration": 3000.0}
+      "step": {"delay": 700.0, "amp": 0.239716, "thresh_perc": 97.2522, "duration": 2000.0, "totduration": 3000.0},
+      "holding": {"delay": 0.0, "amp": -0.113159, "duration": 3000.0, "totduration": 3000.0}
     }
   }, 
   "IDthresh_100": {
