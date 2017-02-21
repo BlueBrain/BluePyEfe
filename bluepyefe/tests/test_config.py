@@ -88,7 +88,7 @@ config = {
         "delay": 0,
         "nanmean": False,
         "target": [-20, "noinput", 50, 100, 150, "all"],
-        "tolerance": [10, False, 10, 10, 10, False ],
+        "tolerance": [5, False, 5, 5, 5, False ],
         "nangrace": 0,
         "spike_threshold": 1,
         "amp_min": 0,

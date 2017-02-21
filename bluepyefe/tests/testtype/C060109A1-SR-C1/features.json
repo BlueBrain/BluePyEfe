@@ -1,0 +1,46 @@
+{
+  "IDthresh_100": {
+    "soma.v": [
+      {"feature": "adaptation_index2", "val": [-0.1752, 0.2186], "n": 1, "strict_stim": true},
+      {"feature": "mean_frequency", "val": [2.5486, 0.6801], "n": 1, "strict_stim": true},
+      {"feature": "time_to_first_spike", "val": [175.875, 120.5168], "n": 1, "strict_stim": true},
+      {"feature": "ISI_log_slope", "val": [-0.6167, 0.6432], "n": 1, "strict_stim": true},
+      {"feature": "ISI_log_slope_skip", "val": [-0.834, 0.6333], "n": 1, "strict_stim": true},
+      {"feature": "time_to_last_spike", "val": [1240.9333, 878.4903], "n": 1, "strict_stim": true},
+      {"feature": "inv_time_to_first_spike", "val": [5.5924, 5.2697], "n": 1, "strict_stim": true},
+      {"feature": "inv_first_ISI", "val": [1.864, 1.3557], "n": 1, "strict_stim": true},
+      {"feature": "inv_second_ISI", "val": [1.3002, 1.2217], "n": 1, "strict_stim": true},
+      {"feature": "inv_third_ISI", "val": [1.2298, 1.3436], "n": 1, "strict_stim": true},
+      {"feature": "inv_fourth_ISI", "val": [1.1671, 1.6539], "n": 1, "strict_stim": true},
+      {"feature": "inv_fifth_ISI", "val": [1.1082, 1.595], "n": 1, "strict_stim": true},
+      {"feature": "inv_last_ISI", "val": [1.7794, 1.5318], "n": 1, "strict_stim": true},
+      {"feature": "voltage_deflection", "val": [10.7346, 2.8511], "n": 1, "strict_stim": true},
+      {"feature": "voltage_deflection_begin", "val": [12.8543, 2.6427], "n": 1, "strict_stim": true},
+      {"feature": "steady_state_voltage", "val": [-87.0586, 0.3772], "n": 1, "strict_stim": true},
+      {"feature": "decay_time_constant_after_stim", "val": [13.1434, 5.7015], "n": 1, "strict_stim": true},
+      {"feature": "AP_amplitude", "val": [80.8863, 1.0711], "n": 1, "strict_stim": true}
+    ]
+  }, 
+  "IDthresh_all": {
+    "soma.v": [
+      {"feature": "adaptation_index2", "val": [-0.0514, 0.1373], "n": 1, "strict_stim": true},
+      {"feature": "mean_frequency", "val": [3.9393, 1.1432], "n": 1, "strict_stim": true},
+      {"feature": "time_to_first_spike", "val": [92.7417, 91.4532], "n": 1, "strict_stim": true},
+      {"feature": "ISI_log_slope", "val": [-0.1924, 0.4256], "n": 1, "strict_stim": true},
+      {"feature": "ISI_log_slope_skip", "val": [-0.2683, 0.4808], "n": 1, "strict_stim": true},
+      {"feature": "time_to_last_spike", "val": [1264.5, 895.5064], "n": 1, "strict_stim": true},
+      {"feature": "inv_time_to_first_spike", "val": [10.8921, 9.579], "n": 1, "strict_stim": true},
+      {"feature": "inv_first_ISI", "val": [2.6205, 2.0172], "n": 1, "strict_stim": true},
+      {"feature": "inv_second_ISI", "val": [2.2938, 1.9407], "n": 1, "strict_stim": true},
+      {"feature": "inv_third_ISI", "val": [2.1935, 1.9049], "n": 1, "strict_stim": true},
+      {"feature": "inv_fourth_ISI", "val": [2.2398, 2.034], "n": 1, "strict_stim": true},
+      {"feature": "inv_fifth_ISI", "val": [2.2427, 2.0486], "n": 1, "strict_stim": true},
+      {"feature": "inv_last_ISI", "val": [2.5503, 2.0212], "n": 1, "strict_stim": true},
+      {"feature": "voltage_deflection", "val": [11.0873, 3.7308], "n": 1, "strict_stim": true},
+      {"feature": "voltage_deflection_begin", "val": [12.7971, 1.7982], "n": 1, "strict_stim": true},
+      {"feature": "steady_state_voltage", "val": [-86.924, 0.4299], "n": 1, "strict_stim": true},
+      {"feature": "decay_time_constant_after_stim", "val": [12.1068, 5.3301], "n": 1, "strict_stim": true},
+      {"feature": "AP_amplitude", "val": [79.4922, 1.2015], "n": 1, "strict_stim": true}
+    ]
+  }
+}
