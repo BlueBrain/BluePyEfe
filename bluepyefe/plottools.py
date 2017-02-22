@@ -105,7 +105,7 @@ def tiled_figure(figname='', frames=1, columns=2, figs=collections.OrderedDict()
                   'legend.borderpad': 0.2,
                   'legend.loc': 'best',
                   'text.usetex': False,
-                  'pdf.fonttype': 42,
+                  #'pdf.fonttype': 42,
                   'figure.figsize': figsize}
         matplotlib.rcParams.update(params)
 

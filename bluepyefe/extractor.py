@@ -3,10 +3,10 @@ import matplotlib
 matplotlib.use('Agg', warn=True)
 import matplotlib.pyplot as plt
 
-try:
-    plt.style.use('classic')
-except:
-    pass
+#try:
+#    plt.style.use('classic')
+#except:
+#    pass
 
 import numpy
 import sys
@@ -59,7 +59,7 @@ class Extractor(object):
 
             try:
                 sh.git('add', '-A')
-                sh.git('commit', '-a', '-m \"Running feature extraction\"')
+                sh.git('commit', '-a', '-m \"Running feature extraction %s\"' % mainname)
             except:
                 pass
 
@@ -67,6 +67,9 @@ class Extractor(object):
                 self.githash = str(sh.git('rev-parse', '--short', 'HEAD')).rstrip()
             except:
                 self.githash = "None"
+
+        else:
+            self.githash = "None"
 
         self.max_per_plot = 16
 
@@ -410,8 +413,6 @@ class Extractor(object):
                     efel.setDoubleSetting('stimulus_current', amp)
 
                     features_all_ = [f for f in features_all if f not in self.extra_features]
-
-                    print features_all_
 
                     fel_vals = efel.getFeatureValues(traces, features_all_, raise_warnings=False)
 
@@ -858,17 +859,23 @@ class Extractor(object):
                         mean_list = []
                         std_list = []
                         for target in self.options["target"]:
-                            if str(target) in dataset_cell_exp[expname]['mean_amp_rel']:
-                                amp_rel_list.append(dataset_cell_exp[expname]['mean_amp_rel'][str(target)])
-                                mean_list.append(dataset_cell_exp[expname]['mean_features'][feature][str(target)])
-                                std_list.append(dataset_cell_exp[expname]['std_features'][feature][str(target)])
+                            if str(target) in dataset_cell_exp[expname]['mean_features'][feature]:
+                                a = dataset_cell_exp[expname]['mean_amp_rel'][str(target)]
+                                m = dataset_cell_exp[expname]['mean_features'][feature][str(target)]
+                                s = dataset_cell_exp[expname]['std_features'][feature][str(target)]
+                                if ~numpy.isnan(m) and ((s > 0.0) or (m == 0.0) ):
+                                    amp_rel_list.append(a)
+                                    mean_list.append(m)
+                                    std_list.append(s)
 
                         mean_array = numpy.array(mean_list)
                         std_array = numpy.array(std_list)
                         amp_rel_array = numpy.array(amp_rel_list)
 
-                        e = axs_cell[fi].errorbar(amp_rel_array, mean_array, yerr=std_array, marker='s', color='k',
-                                    linewidth=1, markersize=6, zorder=10, clip_on = False)
+                        e = axs_cell[fi].errorbar(amp_rel_array, mean_array, yerr=std_array,
+                                    marker='s', color='k',
+                                    linewidth=1, linestyle='None',
+                                    markersize=6, zorder=10, clip_on = False)
                         #axs_cell[fi].set_xticks(self.options["target"])
                         for b in e[1]:
                             b.set_clip_on(False)
@@ -888,10 +895,14 @@ class Extractor(object):
                     mean_list = []
                     std_list = []
                     for target in self.options["target"]:
-                        if str(target) in self.dataset_mean[expname]['mean_amp_rel']:
-                            amp_rel_list.append(self.dataset_mean[expname]['mean_amp_rel'][str(target)])
-                            mean_list.append(self.dataset_mean[expname]['mean_features'][feature][str(target)])
-                            std_list.append(self.dataset_mean[expname]['std_features'][feature][str(target)])
+                        if str(target) in self.dataset_mean[expname]['mean_features'][feature]:
+                            a = self.dataset_mean[expname]['mean_amp_rel'][str(target)]
+                            m = self.dataset_mean[expname]['mean_features'][feature][str(target)]
+                            s = self.dataset_mean[expname]['std_features'][feature][str(target)]
+                            if ~numpy.isnan(m) and ((s > 0.0) or (m == 0.0) ):
+                                amp_rel_list.append(a)
+                                mean_list.append(m)
+                                std_list.append(s)
 
                     mean_array = numpy.array(mean_list)
                     std_array = numpy.array(std_list)
@@ -900,7 +911,8 @@ class Extractor(object):
 
                     figname = "features_" + expname
                     e = figs[figname]['axs'][fi].errorbar(amp_rel_list, mean_array,
-                            yerr=std_array, marker='s', color='k', linewidth=1,
+                            yerr=std_array, marker='s', color='k',
+                            linewidth=1, linestyle='None',
                             markersize=6, zorder=10, clip_on=False)
                     for b in e[1]:
                         b.set_clip_on(False)
@@ -952,6 +964,7 @@ class Extractor(object):
 
         if version == 'legacy':
 
+            indent = 8
             stim = OrderedDict()
             feat = OrderedDict()
 
@@ -1020,6 +1033,7 @@ class Extractor(object):
 
         else:
 
+            indent = 6
             stim = OrderedDict()
             feat = OrderedDict()
 
@@ -1039,7 +1053,7 @@ class Extractor(object):
                                 s = round(dataset[expname]['std_features'][feature][str(target)],4)
                                 n = int(dataset[expname]['n'][feature][str(target)])
 
-                                if ~numpy.isnan(m) and ((s > 0.0) or (m == 0.0) ):
+                                if ~numpy.isnan(m) and ( (s > 0.0) or (m == 0.0) ):
 
                                     if s == 0.0: # prevent divison by 0
                                         s = 1e-3
@@ -1131,17 +1145,17 @@ class Extractor(object):
         meta['version'] = self.githash
 
         s = json.dumps(meta, indent=2)
-        s = tools.collapse_json(s, indent=6)
+        s = tools.collapse_json(s, indent=indent)
         with open(directory + "meta.json", "w") as f:
             f.write(s)
 
         s = json.dumps(stim, indent=2)
-        s = tools.collapse_json(s, indent=6)
+        s = tools.collapse_json(s, indent=indent)
         with open(directory + "protocols.json", "w") as f:
             f.write(s)
 
         s = json.dumps(feat, indent=2)
-        s = tools.collapse_json(s, indent=6)
+        s = tools.collapse_json(s, indent=indent)
         with open(directory + "features.json", "w") as f:
             f.write(s)
 

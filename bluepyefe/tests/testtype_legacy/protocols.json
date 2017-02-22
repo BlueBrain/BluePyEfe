@@ -1,5 +1,5 @@
 {
-  "testtype": {
+  "testtype_legacy": {
     "IDthresh_120": {
       "stimuli": [
         {"delay": 700.0, "amp": 0.219261, "duration": 2000.0, "totduration": 3000.0},

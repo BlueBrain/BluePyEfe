@@ -1,13 +1,29 @@
 {
-  "testtype_old": {
+  "testtype_legacy": {
     "IDthresh_all": {
       "soma.v": {
-        "time_to_last_spike": [13.260000000021137, 26.520000000042273],
-        "inv_time_to_first_spike": [3.0165912518805609, 6.0331825037611218],
-        "voltage_deflection": [12.222038803953632, 2.1946760241116667],
-        "voltage_deflection_begin": [14.387557255159251, 2.2713855280917827],
-        "steady_state_voltage": [-87.144818603582777, 0.36762179573790654],
-        "decay_time_constant_after_stim": [9.6972269842633452, 1.1261574361718798]
+        "time_to_last_spike": [13.26, 26.52],
+        "inv_time_to_first_spike": [3.0166, 6.0332],
+        "inv_first_ISI": [0.0, 0.001],
+        "inv_second_ISI": [0.0, 0.001],
+        "inv_third_ISI": [0.0, 0.001],
+        "inv_fourth_ISI": [0.0, 0.001],
+        "inv_fifth_ISI": [0.0, 0.001],
+        "inv_last_ISI": [0.0, 0.001],
+        "voltage_deflection": [12.222, 2.1947],
+        "voltage_deflection_begin": [14.3876, 2.2714],
+        "steady_state_voltage": [-87.1448, 0.3676],
+        "decay_time_constant_after_stim": [9.6972, 1.1262]
+      }
+    }, 
+    "IDthresh_100": {
+      "soma.v": {
+        "inv_first_ISI": [0.0, 0.001],
+        "inv_second_ISI": [0.0, 0.001],
+        "inv_third_ISI": [0.0, 0.001],
+        "inv_fourth_ISI": [0.0, 0.001],
+        "inv_fifth_ISI": [0.0, 0.001],
+        "inv_last_ISI": [0.0, 0.001]
       }
     }
   }

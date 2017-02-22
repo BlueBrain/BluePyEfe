@@ -1,64 +1,66 @@
 {
-  "testtype_old": {
-    "IDthresh_100": {
-      "soma.v": {
-        "mean_frequency": [1.9074767415487957, 0.30491263898362841],
-        "time_to_first_spike": [271.0000000001229, 104.49999999999443],
-        "time_to_last_spike": [1839.9999999987854, 31.999999999970896],
-        "inv_time_to_first_spike": [4.3345609257699103, 1.6714450802314615],
-        "inv_first_ISI": [2.4659614184923235, 0.11135816913769792],
-        "inv_second_ISI": [1.0039659790283593, 0.07095608912267759],
-        "inv_third_ISI": [1.5470297029717039, 1.5470297029717039],
-        "inv_last_ISI": [2.0135346479245446, 1.0805247580188633],
-        "voltage_deflection": [10.03103073658599, 2.9084587983536068],
-        "voltage_deflection_begin": [14.472341661409068, 1.7826434540794267],
-        "steady_state_voltage": [-86.969902451304279, 0.39585847913050287],
-        "decay_time_constant_after_stim": [13.379330573198267, 4.4625580818193171],
-        "AP_amplitude": [81.853698047281938, 0.3128663186688172]
-      }
-    }, 
+  "testtype_legacy": {
     "IDthresh_120": {
       "soma.v": {
-        "adaptation_index2": [-0.0054214970075823262, 0.010540856184219776],
-        "mean_frequency": [4.6800638378061086, 0.25899294062623063],
-        "time_to_first_spike": [52.375000000102517, 3.9136779376958151],
-        "ISI_log_slope": [-0.029488774698931762, 0.035231418424140973],
-        "ISI_log_slope_skip": [-0.03855160918744506, 0.018477370759933852],
-        "time_to_last_spike": [1920.8749999987119, 58.601551813870536],
-        "inv_time_to_first_spike": [19.209606920313931, 1.5599954710817976],
-        "inv_first_ISI": [4.5132236982492788, 0.30955786358280402],
-        "inv_second_ISI": [4.2464149142204821, 0.51149493339533669],
-        "inv_third_ISI": [4.1482959655206919, 0.14421737530956119],
-        "inv_fourth_ISI": [4.1296188164611181, 0.22843305337902239],
-        "inv_fifth_ISI": [4.2738160745503375, 0.28885813490004014],
-        "inv_last_ISI": [4.4468669724152132, 0.18328737079605306],
-        "voltage_deflection": [9.6834949326525042, 3.2054214741056541],
-        "voltage_deflection_begin": [13.806255967699027, 0.25836284967702605],
-        "steady_state_voltage": [-86.837852753339064, 0.37115989272367078],
-        "decay_time_constant_after_stim": [7.5182588759238822, 5.7337716146883873],
-        "AP_amplitude": [78.733528225393002, 0.38310461455362183]
+        "adaptation_index2": [-0.0054, 0.0105],
+        "mean_frequency": [4.6801, 0.259],
+        "time_to_first_spike": [52.375, 3.9137],
+        "ISI_log_slope": [-0.0295, 0.0352],
+        "ISI_log_slope_skip": [-0.0386, 0.0185],
+        "time_to_last_spike": [1920.875, 58.6016],
+        "inv_time_to_first_spike": [19.2096, 1.56],
+        "inv_first_ISI": [4.5132, 0.3096],
+        "inv_second_ISI": [4.2464, 0.5115],
+        "inv_third_ISI": [4.1483, 0.1442],
+        "inv_fourth_ISI": [4.1296, 0.2284],
+        "inv_fifth_ISI": [4.2738, 0.2889],
+        "inv_last_ISI": [4.4469, 0.1833],
+        "voltage_deflection": [9.6835, 3.2054],
+        "voltage_deflection_begin": [13.8063, 0.2584],
+        "steady_state_voltage": [-86.8379, 0.3712],
+        "decay_time_constant_after_stim": [7.5183, 5.7338],
+        "AP_amplitude": [78.7335, 0.3831]
       }
     }, 
     "IDthresh_all": {
       "soma.v": {
-        "adaptation_index2": [-0.051441742817816175, 0.13729824994901674],
-        "mean_frequency": [3.939320151909103, 1.1432463116504796],
-        "time_to_first_spike": [92.741666666773469, 91.45316158498801],
-        "ISI_log_slope": [-0.19241063034399117, 0.42559747035043055],
-        "ISI_log_slope_skip": [-0.26826806163428979, 0.48080613896559143],
-        "time_to_last_spike": [1264.499999999156, 895.50636017285717],
-        "inv_time_to_first_spike": [10.892100108325545, 9.5790030743851489],
-        "inv_first_ISI": [2.6205164896593454, 2.0171666618824822],
-        "inv_second_ISI": [2.2937910015118068, 1.9407157801061399],
-        "inv_third_ISI": [2.1935461070796252, 1.9048807162996457],
-        "inv_fourth_ISI": [2.2397799573576078, 2.0339905210509048],
-        "inv_fifth_ISI": [2.242727038618936, 2.0485811195666606],
-        "inv_last_ISI": [2.5503424327516684, 2.0212000942248385],
-        "voltage_deflection": [11.087269648102989, 3.7308133876811231],
-        "voltage_deflection_begin": [12.797136557112703, 1.7981976504185611],
-        "steady_state_voltage": [-86.923982107184557, 0.42988801682419064],
-        "decay_time_constant_after_stim": [12.106794894790944, 5.3300823913626534],
-        "AP_amplitude": [79.492161225925074, 1.2014611950616998]
+        "adaptation_index2": [-0.0514, 0.1373],
+        "mean_frequency": [3.9393, 1.1432],
+        "time_to_first_spike": [92.7417, 91.4532],
+        "ISI_log_slope": [-0.1924, 0.4256],
+        "ISI_log_slope_skip": [-0.2683, 0.4808],
+        "time_to_last_spike": [1264.5, 895.5064],
+        "inv_time_to_first_spike": [10.8921, 9.579],
+        "inv_first_ISI": [2.6205, 2.0172],
+        "inv_second_ISI": [2.2938, 1.9407],
+        "inv_third_ISI": [2.1935, 1.9049],
+        "inv_fourth_ISI": [2.2398, 2.034],
+        "inv_fifth_ISI": [2.2427, 2.0486],
+        "inv_last_ISI": [2.5503, 2.0212],
+        "voltage_deflection": [11.0873, 3.7308],
+        "voltage_deflection_begin": [12.7971, 1.7982],
+        "steady_state_voltage": [-86.924, 0.4299],
+        "decay_time_constant_after_stim": [12.1068, 5.3301],
+        "AP_amplitude": [79.4922, 1.2015]
+      }
+    }, 
+    "IDthresh_100": {
+      "soma.v": {
+        "mean_frequency": [1.9075, 0.3049],
+        "time_to_first_spike": [271.0, 104.5],
+        "time_to_last_spike": [1840.0, 32.0],
+        "inv_time_to_first_spike": [4.3346, 1.6714],
+        "inv_first_ISI": [2.466, 0.1114],
+        "inv_second_ISI": [1.004, 0.071],
+        "inv_third_ISI": [1.547, 1.547],
+        "inv_fourth_ISI": [0.0, 0.001],
+        "inv_fifth_ISI": [0.0, 0.001],
+        "inv_last_ISI": [2.0135, 1.0805],
+        "voltage_deflection": [10.031, 2.9085],
+        "voltage_deflection_begin": [14.4723, 1.7826],
+        "steady_state_voltage": [-86.9699, 0.3959],
+        "decay_time_constant_after_stim": [13.3793, 4.4626],
+        "AP_amplitude": [81.8537, 0.3129]
       }
     }
   }

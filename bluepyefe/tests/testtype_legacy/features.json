@@ -1,5 +1,5 @@
 {
-  "testtype": {
+  "testtype_legacy": {
     "IDthresh_120": {
       "soma.v": {
         "adaptation_index2": [-0.0054, 0.0105],
