@@ -119,7 +119,7 @@ config = {
 
 import bluepyefe as bpefe
 
-extractor = bpefe.Extractor('testtype_legacy', config, use_git=True)
+extractor = bpefe.Extractor('testtype_legacy', config, use_git=False)
 extractor.create_dataset()
 extractor.plt_traces()
 extractor.extract_features(threshold=-30)
@@ -130,7 +130,7 @@ extractor.feature_config_cells(version='legacy')
 extractor.feature_config_all(version='legacy')
 
 
-extractor = bpefe.Extractor('testtype', config, use_git=True)
+extractor = bpefe.Extractor('testtype', config, use_git=False)
 extractor.create_dataset()
 extractor.plt_traces()
 extractor.extract_features(threshold=-30)
