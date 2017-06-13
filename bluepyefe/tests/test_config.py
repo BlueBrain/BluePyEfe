@@ -113,7 +113,8 @@ config = {
             "Delta": [10.0, 60.0],
             "IRdepol": [500.0, 700.0]
         },
-        "logging": True
+        "logging": True,
+        "boxcox": True
     }
 }
 
@@ -139,3 +140,4 @@ extractor.analyse_threshold()
 extractor.plt_features()
 extractor.feature_config_cells()
 extractor.feature_config_all()
+extractor.plt_features_dist()

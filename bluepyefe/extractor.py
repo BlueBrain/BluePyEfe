@@ -2,6 +2,7 @@
 import matplotlib
 matplotlib.use('Agg', warn=True)
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
 #try:
 #    plt.style.use('classic')
@@ -35,6 +36,40 @@ import tools
 import plottools
 from extra import *
 import sh
+from scipy import stats
+
+
+def make_nonzero_positive(y):
+    # make values non zero and positive
+
+    y = numpy.array(y)
+    if any(y<0): # has values smaller than zero?
+        shift = False
+    else:
+        if any(y==0):
+            shift = 1e-9
+        else:
+            shift = 0
+
+        y = y + shift
+
+    return y, shift
+
+
+def clip_ld_convert(vals, shift, ld):
+    # convert values with lambda
+
+    vals = numpy.array(vals)
+
+    if shift is not False:
+        vals = vals + shift # add shift to values
+        vals = vals.clip(min=1e-9) # clip just before zero if shift was not enough
+        vals_bc = stats.boxcox(vals, ld)
+    else:
+        vals_bc = False
+
+    return vals_bc
+
 
 class Extractor(object):
 
@@ -172,6 +207,26 @@ class Extractor(object):
             return numpy.nanstd(a)
         else:
             return numpy.std(a)
+
+
+    def boxcoxcell(self, a, nanopt="nanmean_cell"):
+        if ((self.options[nanopt] or
+            (numpy.sum(numpy.isnan(a)) <= self.options["nangrace"])) and
+            (len(a) > 0) ):
+            a = numpy.array(a)
+            a = a[~numpy.isnan(a)]
+        else:
+            return float('NaN'), float('NaN'), float('NaN'), float('NaN')
+
+        a_shift, shift = make_nonzero_positive(a)
+        if shift is not False:
+            at, ld = stats.boxcox(a_shift)
+            mean = numpy.mean(at)
+            std = numpy.std(at)
+        else:
+            return False, False, False, False
+
+        return mean, std, ld, shift
 
 
     def newmean(self, a):
@@ -527,10 +582,19 @@ class Extractor(object):
                 dataset_cell_exp[expname]['std_features'] = OrderedDict()
                 dataset_cell_exp[expname]['n'] = OrderedDict()
 
+                dataset_cell_exp[expname]['bc_mean_features'] = OrderedDict()
+                dataset_cell_exp[expname]['bc_std_features'] = OrderedDict()
+                dataset_cell_exp[expname]['bc_shift_features'] = OrderedDict()
+                dataset_cell_exp[expname]['bc_ld_features'] = OrderedDict()
+
 
                 for feature in self.features[expname]:
                     dataset_cell_exp[expname]['mean_features'][feature] = OrderedDict()
                     dataset_cell_exp[expname]['std_features'][feature] = OrderedDict()
+                    dataset_cell_exp[expname]['bc_mean_features'][feature] = OrderedDict()
+                    dataset_cell_exp[expname]['bc_std_features'][feature] = OrderedDict()
+                    dataset_cell_exp[expname]['bc_shift_features'][feature] = OrderedDict()
+                    dataset_cell_exp[expname]['bc_ld_features'][feature] = OrderedDict()
                     dataset_cell_exp[expname]['n'][feature] = OrderedDict()
 
                 ton = dataset_cell_exp[expname]['ton']
@@ -629,15 +693,22 @@ class Extractor(object):
                                 if (amp_abs[i_noinput] < 0.01):
                                     meanfeat = self.newmeancell(feat)
                                     stdfeat = self.newstdcell(feat)
+                                    bcmean, bcstd, bcld, bcshift = self.boxcoxcell(feat, nanopt="nanmean_cell")
                                 else:
                                     continue
                             else:
                                 meanfeat = self.newmeancell(feat)
                                 stdfeat = self.newstdcell(feat)
+                                bcmean, bcstd, bcld, bcshift = self.boxcoxcell(feat, nanopt="nanmean_cell")
 
                             dataset_cell_exp[expname]['mean_features'][feature][str(target)] = meanfeat
                             dataset_cell_exp[expname]['std_features'][feature][str(target)] = stdfeat
                             dataset_cell_exp[expname]['n'][feature][str(target)] = n
+
+                            dataset_cell_exp[expname]['bc_mean_features'][feature][str(target)] = bcmean
+                            dataset_cell_exp[expname]['bc_std_features'][feature][str(target)] = bcstd
+                            dataset_cell_exp[expname]['bc_shift_features'][feature][str(target)] = bcshift
+                            dataset_cell_exp[expname]['bc_ld_features'][feature][str(target)] = bcld
 
 
         # mean for all cells
@@ -653,18 +724,21 @@ class Extractor(object):
             self.dataset_mean[expname]['tend'] = []
             self.dataset_mean[expname]['features'] = OrderedDict()
             self.dataset_mean[expname]['cell_std_features'] = OrderedDict()
+            self.dataset_mean[expname]['cell_bc_features'] = OrderedDict()
             self.dataset_mean[expname]['cell_n'] = OrderedDict()
             self.dataset_mean[expname]['n'] = OrderedDict()
 
             for feature in self.features[expname]:
                 self.dataset_mean[expname]['features'][feature] = OrderedDict()
                 self.dataset_mean[expname]['cell_std_features'][feature] = OrderedDict()
+                self.dataset_mean[expname]['cell_bc_features'][feature] = OrderedDict()
                 self.dataset_mean[expname]['cell_n'][feature] = OrderedDict()
                 self.dataset_mean[expname]['n'][feature] = OrderedDict()
 
                 for target in self.options["target"]:
                     self.dataset_mean[expname]['features'][feature][str(target)] = []
                     self.dataset_mean[expname]['cell_std_features'][feature][str(target)] = []
+                    self.dataset_mean[expname]['cell_bc_features'][feature][str(target)] = []
                     self.dataset_mean[expname]['cell_n'][feature][str(target)] = []
                     self.dataset_mean[expname]['n'][feature][str(target)] = []
 
@@ -710,6 +784,12 @@ class Extractor(object):
                                 cell_std_result = dataset_cell_exp[expname]['std_features'][feature][str(target)]
                                 self.dataset_mean[expname]['cell_std_features'][feature][str(target)].append(cell_std_result)
 
+                                bcmean = dataset_cell_exp[expname]['bc_mean_features'][feature][str(target)]
+                                bcstd = dataset_cell_exp[expname]['bc_std_features'][feature][str(target)]
+                                bcshift = dataset_cell_exp[expname]['bc_shift_features'][feature][str(target)]
+                                bcld = dataset_cell_exp[expname]['bc_ld_features'][feature][str(target)]
+                                self.dataset_mean[expname]['cell_bc_features'][feature][str(target)].append([bcmean, bcstd, bcld, bcshift])
+
                                 n = dataset_cell_exp[expname]['n'][feature][str(target)]
                                 self.dataset_mean[expname]['cell_n'][feature][str(target)].append(n)
 
@@ -723,9 +803,19 @@ class Extractor(object):
             self.dataset_mean[expname]['mean_features'] = OrderedDict()
             self.dataset_mean[expname]['std_features'] = OrderedDict()
 
+            self.dataset_mean[expname]['bc_mean_features'] = OrderedDict()
+            self.dataset_mean[expname]['bc_std_features'] = OrderedDict()
+            self.dataset_mean[expname]['bc_shift_features'] = OrderedDict()
+            self.dataset_mean[expname]['bc_ld_features'] = OrderedDict()
+
             for feature in self.features[expname]:
                 self.dataset_mean[expname]['mean_features'][feature] = OrderedDict()
                 self.dataset_mean[expname]['std_features'][feature] = OrderedDict()
+
+                self.dataset_mean[expname]['bc_mean_features'][feature] = OrderedDict()
+                self.dataset_mean[expname]['bc_std_features'][feature] = OrderedDict()
+                self.dataset_mean[expname]['bc_shift_features'][feature] = OrderedDict()
+                self.dataset_mean[expname]['bc_ld_features'][feature] = OrderedDict()
 
             ton = self.dataset_mean[expname]['ton']
             toff = self.dataset_mean[expname]['toff']
@@ -761,9 +851,16 @@ class Extractor(object):
                         if cell_n > 1: # pick values from this one cell instead if more than one sweep
                             self.dataset_mean[expname]['mean_features'][feature][str(target)] = feat[0]
                             self.dataset_mean[expname]['std_features'][feature][str(target)] = cell_std_feat[0]
+                            [bcmean, bcstd, bcld, bcshift] = self.dataset_mean[expname]['cell_bc_features'][feature][str(target)][0]
                     else:
                         self.dataset_mean[expname]['mean_features'][feature][str(target)] = self.newmean(feat)
                         self.dataset_mean[expname]['std_features'][feature][str(target)] = self.newstd(feat)
+                        bcmean, bcstd, bcld, bcshift = self.boxcoxcell(feat, nanopt="nanmean")
+
+                    self.dataset_mean[expname]['bc_mean_features'][feature][str(target)] = bcmean
+                    self.dataset_mean[expname]['bc_std_features'][feature][str(target)] = bcstd
+                    self.dataset_mean[expname]['bc_shift_features'][feature][str(target)] = bcshift
+                    self.dataset_mean[expname]['bc_ld_features'][feature][str(target)] = bcld
 
 
     def get_threshold(self, amp, numspikes):
@@ -880,7 +977,7 @@ class Extractor(object):
                         for b in e[1]:
                             b.set_clip_on(False)
 
-            # close singe cell figures
+            # close single cell figures
             for i_fig, figname in enumerate(cellfigs):
                 fig = cellfigs[figname]
                 fig['fig'].savefig(fig['dirname'] + '/' + figname + '.pdf', dpi=300)
@@ -922,6 +1019,61 @@ class Extractor(object):
             fig = figs[figname]
             fig['fig'].savefig(fig['dirname'] + '/' + figname + '.pdf', dpi=300)
             plt.close(fig['fig'])
+
+
+    def plt_features_dist(self):
+
+        logger.info(" Plotting feature distributions")
+        figs = OrderedDict()
+
+        dirname = self.maindirname + 'dists'
+        tools.makedir(dirname)
+
+        for i_exp, expname in enumerate(self.experiments):
+
+            figpath = dirname + '/features_' + expname + '.pdf'
+            pdf_pages = PdfPages(figpath)
+
+            for feature in self.features[expname]:
+
+                figname = "features_" + expname + "_" + feature
+                axs = plottools.tiled_figure(figname, frames=2*len(self.options["target"]),
+                                    columns=6, figs=figs, dirname=dirname,
+                                    top=0.92, bottom=0.04, left=0.07, right=0.97, hspace=0.75, wspace=0.3)
+
+                for it, target in enumerate(self.options["target"]):
+
+                    feat = numpy.array(self.dataset_mean[expname]['features'][feature][str(target)])
+
+                    ax = axs[2*it]
+                    ax_bc = axs[2*it+1]
+                    ax.set_title(str(target))
+                    ax_bc.set_title(str(target) + " boxcox" )
+                    feat[numpy.isinf(feat)] = float('nan')
+
+                    bcmean = self.dataset_mean[expname]['bc_mean_features'][feature][str(target)]
+                    bcstd = self.dataset_mean[expname]['bc_std_features'][feature][str(target)]
+                    bcshift = self.dataset_mean[expname]['bc_shift_features'][feature][str(target)]
+                    bcld = self.dataset_mean[expname]['bc_ld_features'][feature][str(target)]
+
+                    if (all(numpy.isnan(feat)) is False):
+
+                        ax.hist(feat, max(1, int(len(feat)/2)), histtype='stepfilled', color='b', edgecolor='none')
+                        ax_bc.set_title(str(target) + " boxcox\nld:" + str(bcld) + "\nshift:" + str(bcshift) )
+
+                        if (bcshift is not False):
+                            feat_bc = clip_ld_convert(feat, bcshift, bcld)
+                            feat_bc[numpy.isinf(feat_bc)] = float('nan')
+
+                            if (all(numpy.isnan(feat_bc)) is False) and all(numpy.array(feat_bc) < 2**53):
+                                ax_bc.hist(feat_bc, max(1, int(len(feat)/2)), histtype='stepfilled', color='r', edgecolor='none')
+
+
+                fig = figs[figname]
+                fig['fig'].suptitle(feature)
+                pdf_pages.savefig(fig['fig'])
+
+            pdf_pages.close()
 
 
     def feature_config_all(self, version=None):
@@ -1037,6 +1189,10 @@ class Extractor(object):
             stim = OrderedDict()
             feat = OrderedDict()
 
+            boxcox = False
+            if ('boxcox' in self.options) and self.options['boxcox']:
+                boxcox = True
+
             for i_exp, expname in enumerate(self.experiments):
                 if expname in dataset:
                     location = dataset[expname]['location']
@@ -1053,10 +1209,23 @@ class Extractor(object):
                                 s = round(dataset[expname]['std_features'][feature][str(target)],4)
                                 n = int(dataset[expname]['n'][feature][str(target)])
 
-                                if ~numpy.isnan(m) and ( (s > 0.0) or (m == 0.0) ):
+                                bcm = dataset[expname]['bc_mean_features'][feature][str(target)]
+                                bcs = dataset[expname]['bc_std_features'][feature][str(target)]
+                                bcshift = dataset[expname]['bc_shift_features'][feature][str(target)]
+                                bcld = dataset[expname]['bc_ld_features'][feature][str(target)]
+
+                                if boxcox:
+                                    do_add = ~numpy.isnan(bcm) and ( (bcs > 0.0) or (bcm == 0.0) )
+                                else:
+                                    do_add = ~numpy.isnan(m) and ( (s > 0.0) or (m == 0.0) )
+
+                                if do_add:
 
                                     if s == 0.0: # prevent divison by 0
                                         s = 1e-3
+
+                                    if bcs == 0.0: # prevent divison by 0
+                                        bcs = 1e-3
 
                                     if stimname not in stim:
                                         stim[stimname] = OrderedDict()
@@ -1067,12 +1236,21 @@ class Extractor(object):
                                     if location not in feat[stimname]:
                                         feat[stimname][location] = []
 
-                                    feat[stimname][location].append(
-                                                    OrderedDict([
-                                                    ("feature",feature),
-                                                    ("val",[m, s]),
-                                                    ("n",n)
-                                                    ]) )
+                                    if boxcox and (bcshift is not False):
+                                        feat[stimname][location].append(
+                                                        OrderedDict([
+                                                        ("feature",feature),
+                                                        ("val",[bcm, bcs, bcld, bcshift]),
+                                                        ("valorig",[m, s]),
+                                                        ("n",n)
+                                                        ]) )
+                                    else:
+                                        feat[stimname][location].append(
+                                                        OrderedDict([
+                                                        ("feature",feature),
+                                                        ("val",[m, s]),
+                                                        ("n",n)
+                                                        ]) )
 
                                     if expname in self.options["strict_stiminterval"].keys():
                                         strict_stiminterval = self.options["strict_stiminterval"][expname]

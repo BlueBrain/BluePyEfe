@@ -5,12 +5,5 @@
       "step": {"delay": 700.0, "amp": 0.28799, "thresh_perc": 88.4606, "duration": 2000.0, "totduration": 3000.0},
       "holding": {"delay": 0.0, "amp": -0.202247, "duration": 3000.0, "totduration": 3000.0}
     }
-  }, 
-  "IDthresh_100": {
-    "type": "StepProtocol", 
-    "stimuli": {
-      "step": {"delay": 700.0, "amp": 0.325557, "thresh_perc": 100.0, "duration": 2000.0, "totduration": 3000.0},
-      "holding": {"delay": 0.0, "amp": -0.202175, "duration": 3000.0, "totduration": 3000.0}
-    }
   }
 }
