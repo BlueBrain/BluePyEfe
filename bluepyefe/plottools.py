@@ -82,7 +82,9 @@ def light_palette(color, n_colors=6, reverse=False, lumlight=0.8, light=None):
     return palette
 
 
-def tiled_figure(figname='', frames=1, columns=2, figs=collections.OrderedDict(), axs=None, orientation='page', width_ratios=None, height_ratios=None, top=0.97, bottom=0.05, left=0.07, right=0.97, hspace=0.6, wspace=0.2, dirname=''):
+def tiled_figure(figname='', frames=1, columns=2, figs=collections.OrderedDict(),
+                axs=None, orientation='page', width_ratios=None, height_ratios=None,
+                top=0.97, bottom=0.05, left=0.07, right=0.97, hspace=0.6, wspace=0.2, dirname=''):
 
     if figname not in figs.keys():
 
