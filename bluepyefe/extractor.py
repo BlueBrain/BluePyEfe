@@ -273,10 +273,15 @@ class Extractor(object):
             return formats.igor.process(**kwargs)
 
         elif self.format == 'axon':
-            import formats.igor
+            import formats.axon
             return formats.axon.process(**kwargs)
 
-
+        elif self.format == 'ibf_json':
+            import bluepyefe.formats.ibf_json
+            return bluepyefe.formats.ibf_json.process(**kwargs)
+            
+            
+            
     def plt_traces(self):
 
         logger.info(" Plotting traces")
