@@ -56,7 +56,6 @@ r_car = importr("car")
 # valst = numpy.array(temp.rx2(1), dtype=numpy.float64)
 # print type(a), a
 
-import rpy2.robjects as robjects
 
 data = robjects.FloatVector(x)
 fmla = robjects.Formula('x~1')
@@ -64,17 +63,20 @@ env = fmla.environment
 env['x'] = data
 fit = r_stats.lm(fmla)
 
+lds = numpy.linspace(-2,2,21)
 r_car.boxCox = SignatureTranslatedFunction(r_car.boxCox, {'r_lambda': 'lambda'})
 yj = r_car.boxCox(fit,
             family = robjects.StrVector(["yjPower"]),
-            r_lambda = robjects.FloatVector(numpy.arange(-2,2,0.1)),
+            r_lambda = robjects.FloatVector(lds),
             plotit = False)
 
 x_ = numpy.array(yj.rx('x')[0])
 y_ = numpy.array(yj.rx('y')[0])
 
+
 lmbda = x_[numpy.argmax(y_)]
 
+print x_
 
 from YeoJohnson import YeoJohnson
 

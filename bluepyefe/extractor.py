@@ -38,38 +38,21 @@ from extra import *
 import sh
 from scipy import stats
 
+try:
+    from rpy2.robjects.functions import SignatureTranslatedFunction
+    import rpy2.robjects as robjects
+    from rpy2.robjects.packages import importr
 
-def make_nonzero_positive(y):
-    # make values non zero and positive
+    base = importr('base')
+    #r_caret = importr("caret")
+    r_stats = importr("stats")
+    r_car = importr("car")
 
-    y = numpy.array(y)
-    if any(y<0): # has values smaller than zero?
-        shift = False
-    else:
-        if any(y==0):
-            shift = 1e-9
-        else:
-            shift = 0
+except:
+    print "Cannot load R, you will not be able to use BoxCox/YeoJohnson"
 
-        y = y + shift
-
-    return y, shift
-
-
-def clip_ld_convert(vals, shift, ld):
-    # convert values with lambda
-
-    vals = numpy.array(vals)
-
-    if shift is not False:
-        vals = vals + shift # add shift to values
-        vals = vals.clip(min=1e-9) # clip just before zero if shift was not enough
-        vals_bc = stats.boxcox(vals, ld)
-    else:
-        vals_bc = False
-
-    return vals_bc
-
+from tools.YeoJohnson import YeoJohnson
+import gzip
 
 class Extractor(object):
 
@@ -209,7 +192,7 @@ class Extractor(object):
             return numpy.std(a)
 
 
-    def boxcoxcell(self, a, nanopt="nanmean_cell"):
+    def boxcoxcell(self, a, nanopt="nanmean_cell", lm_vec=numpy.linspace(-3,3,41)):
         if ((self.options[nanopt] or
             (numpy.sum(numpy.isnan(a)) <= self.options["nangrace"])) and
             (len(a) > 0) ):
@@ -218,15 +201,30 @@ class Extractor(object):
         else:
             return float('NaN'), float('NaN'), float('NaN'), float('NaN')
 
-        a_shift, shift = make_nonzero_positive(a)
-        if shift is not False:
-            at, ld = stats.boxcox(a_shift)
-            mean = numpy.mean(at)
-            std = numpy.std(at)
-        else:
-            return False, False, False, False
+        data = robjects.FloatVector(a)
+        fmla = robjects.Formula('x~1')
+        env = fmla.environment
+        env['x'] = data
+        fit = r_stats.lm(fmla)
 
-        return mean, std, ld, shift
+        r_car.boxCox = SignatureTranslatedFunction(r_car.boxCox, {'r_lambda': 'lambda'})
+        yj = r_car.boxCox(fit,
+                    family = robjects.StrVector(["yjPower"]),
+                    r_lambda = robjects.FloatVector(lm_vec),
+                    plotit = False)
+
+        x_ = numpy.array(yj.rx('x')[0])
+        y_ = numpy.array(yj.rx('y')[0])
+        lmbda = x_[numpy.argmax(y_)]
+
+        yj = YeoJohnson()
+        at = yj.fit(a, lmbda)
+
+        mean = numpy.mean(at)
+        std = numpy.std(at)
+        shift = 0
+
+        return mean, std, lmbda, shift
 
 
     def newmean(self, a):
@@ -296,6 +294,8 @@ class Extractor(object):
                     dataset_cell_exp[expname]['toff'] = []
                     dataset_cell_exp[expname]['amp'] = []
                     dataset_cell_exp[expname]['hypamp'] = []
+                    dataset_cell_exp[expname]['files'] = []
+                    dataset_cell_exp[expname]['rawfiles'] = []
 
                     for idx_file, filename in enumerate(files):
 
@@ -312,6 +312,7 @@ class Extractor(object):
                         dataset_cell_exp[expname]['current'] += data['current']
                         dataset_cell_exp[expname]['dt'] += data['dt']
                         dataset_cell_exp[expname]['filename'] += data['filename']
+                        dataset_cell_exp[expname]['rawfiles'].append(filename)
 
                         dataset_cell_exp[expname]['t'] += data['t']
                         dataset_cell_exp[expname]['ton'] += data['ton']
@@ -581,6 +582,7 @@ class Extractor(object):
                 dataset_cell_exp[expname]['mean_features'] = OrderedDict()
                 dataset_cell_exp[expname]['std_features'] = OrderedDict()
                 dataset_cell_exp[expname]['n'] = OrderedDict()
+                dataset_cell_exp[expname]['raw'] = OrderedDict()
 
                 dataset_cell_exp[expname]['bc_mean_features'] = OrderedDict()
                 dataset_cell_exp[expname]['bc_std_features'] = OrderedDict()
@@ -596,6 +598,7 @@ class Extractor(object):
                     dataset_cell_exp[expname]['bc_shift_features'][feature] = OrderedDict()
                     dataset_cell_exp[expname]['bc_ld_features'][feature] = OrderedDict()
                     dataset_cell_exp[expname]['n'][feature] = OrderedDict()
+                    dataset_cell_exp[expname]['raw'][feature] = OrderedDict()
 
                 ton = dataset_cell_exp[expname]['ton']
                 toff = dataset_cell_exp[expname]['toff']
@@ -609,6 +612,8 @@ class Extractor(object):
                 amp = dataset_cell_exp[expname]['amp']
                 numspikes = dataset_cell_exp[expname]['features']['numspikes']
                 feature_array = dataset_cell_exp[expname]['features']
+
+                rawfiles_list = dataset_cell_exp[expname]['rawfiles']
 
                 if self.options["relative"]:
                     amp_threshold = self.thresholds_per_cell[cellname]
@@ -674,6 +679,7 @@ class Extractor(object):
 
                 for fi, feature in enumerate(self.features[expname]):
                     feat_vals = numpy.array(feature_array[feature])
+
                     for ti, target in enumerate(self.options["target"]):
 
                         if target == 'noinput':
@@ -685,6 +691,8 @@ class Extractor(object):
                                     (amp_rel <= (target + self.options["tolerance"][ti])))
 
                         feat = numpy.atleast_1d(numpy.array(feat_vals)[idx])
+                        raw = numpy.atleast_1d(numpy.array(rawfiles_list)[idx]).tolist()
+
                         n = numpy.sum(numpy.invert(numpy.isnan(numpy.atleast_1d(feat))))
 
                         if n > 0:
@@ -704,6 +712,7 @@ class Extractor(object):
                             dataset_cell_exp[expname]['mean_features'][feature][str(target)] = meanfeat
                             dataset_cell_exp[expname]['std_features'][feature][str(target)] = stdfeat
                             dataset_cell_exp[expname]['n'][feature][str(target)] = n
+                            dataset_cell_exp[expname]['raw'][feature][str(target)] = raw
 
                             dataset_cell_exp[expname]['bc_mean_features'][feature][str(target)] = bcmean
                             dataset_cell_exp[expname]['bc_std_features'][feature][str(target)] = bcstd
@@ -727,6 +736,7 @@ class Extractor(object):
             self.dataset_mean[expname]['cell_bc_features'] = OrderedDict()
             self.dataset_mean[expname]['cell_n'] = OrderedDict()
             self.dataset_mean[expname]['n'] = OrderedDict()
+            self.dataset_mean[expname]['raw'] = OrderedDict()
 
             for feature in self.features[expname]:
                 self.dataset_mean[expname]['features'][feature] = OrderedDict()
@@ -734,6 +744,7 @@ class Extractor(object):
                 self.dataset_mean[expname]['cell_bc_features'][feature] = OrderedDict()
                 self.dataset_mean[expname]['cell_n'][feature] = OrderedDict()
                 self.dataset_mean[expname]['n'][feature] = OrderedDict()
+                self.dataset_mean[expname]['raw'][feature] = OrderedDict()
 
                 for target in self.options["target"]:
                     self.dataset_mean[expname]['features'][feature][str(target)] = []
@@ -741,6 +752,7 @@ class Extractor(object):
                     self.dataset_mean[expname]['cell_bc_features'][feature][str(target)] = []
                     self.dataset_mean[expname]['cell_n'][feature][str(target)] = []
                     self.dataset_mean[expname]['n'][feature][str(target)] = []
+                    self.dataset_mean[expname]['raw'][feature][str(target)] = []
 
 
             for target in self.options["target"]:
@@ -792,6 +804,9 @@ class Extractor(object):
 
                                 n = dataset_cell_exp[expname]['n'][feature][str(target)]
                                 self.dataset_mean[expname]['cell_n'][feature][str(target)].append(n)
+
+                                raw = dataset_cell_exp[expname]['raw'][feature][str(target)]
+                                self.dataset_mean[expname]['raw'][feature][str(target)].append(raw)
 
             #create means
             self.dataset_mean[expname]['mean_amp'] = OrderedDict()
@@ -1062,7 +1077,9 @@ class Extractor(object):
                         ax_bc.set_title(str(target) + " boxcox\nld:" + str(bcld) + "\nshift:" + str(bcshift) )
 
                         if (bcshift is not False):
-                            feat_bc = clip_ld_convert(feat, bcshift, bcld)
+
+                            yj = YeoJohnson()
+                            feat_bc = yj.fit(feat, bcld)
                             feat_bc[numpy.isinf(feat_bc)] = float('nan')
 
                             if (all(numpy.isnan(feat_bc)) is False) and all(numpy.array(feat_bc) < 2**53):
@@ -1113,6 +1130,9 @@ class Extractor(object):
     def create_feature_config(self, directory, dataset, version=None):
 
         logger.info(" Saving config files to %s", directory)
+
+        if ('saveraw' in self.options) and self.options['saveraw']:
+            saveraw = True
 
         if version == 'legacy':
 
@@ -1188,11 +1208,14 @@ class Extractor(object):
             indent = 6
             stim = OrderedDict()
             feat = OrderedDict()
+            featraw = OrderedDict()
 
             boxcox = False
             if ('boxcox' in self.options) and self.options['boxcox']:
                 boxcox = True
 
+
+            fid = 0
             for i_exp, expname in enumerate(self.experiments):
                 if expname in dataset:
                     location = dataset[expname]['location']
@@ -1208,6 +1231,7 @@ class Extractor(object):
                                 m = round(dataset[expname]['mean_features'][feature][str(target)],4)
                                 s = round(dataset[expname]['std_features'][feature][str(target)],4)
                                 n = int(dataset[expname]['n'][feature][str(target)])
+                                raw = dataset[expname]['raw'][feature][str(target)]
 
                                 bcm = dataset[expname]['bc_mean_features'][feature][str(target)]
                                 bcs = dataset[expname]['bc_std_features'][feature][str(target)]
@@ -1232,31 +1256,60 @@ class Extractor(object):
 
                                     if stimname not in feat:
                                         feat[stimname] = OrderedDict()
+                                        featraw[stimname] = OrderedDict()
 
                                     if location not in feat[stimname]:
                                         feat[stimname][location] = []
+                                        featraw[stimname][location] = []
 
                                     if boxcox and (bcshift is not False):
                                         feat[stimname][location].append(
                                                         OrderedDict([
                                                         ("feature",feature),
-                                                        ("val",[bcm, bcs, bcld, bcshift]),
-                                                        ("valorig",[m, s]),
-                                                        ("n",n)
+                                                        ("val",[m, s, bcm, bcs, bcld, bcshift]),
+                                                        ("n",n),
+                                                        ("fid",fid)
                                                         ]) )
+
+                                        if saveraw:
+                                            featraw[stimname][location].append(
+                                                            OrderedDict([
+                                                            ("feature",feature),
+                                                            ("val",[m, s, bcm, bcs, bcld, bcshift]),
+                                                            ("n",n),
+                                                            ("fid",fid),
+                                                            ("raw",raw)
+                                                            ]) )
+
                                     else:
+
                                         feat[stimname][location].append(
                                                         OrderedDict([
                                                         ("feature",feature),
                                                         ("val",[m, s]),
-                                                        ("n",n)
+                                                        ("n",n),
+                                                        ("fid",fid)
                                                         ]) )
+
+                                        if saveraw:
+                                            featraw[stimname][location].append(
+                                                            OrderedDict([
+                                                            ("feature",feature),
+                                                            ("val",[m, s]),
+                                                            ("n",n),
+                                                            ("fid",fid),
+                                                            ("raw",raw)
+                                                            ]) )
+
+                                    fid += 1
 
                                     if expname in self.options["strict_stiminterval"].keys():
                                         strict_stiminterval = self.options["strict_stiminterval"][expname]
                                     else:
                                         strict_stiminterval = self.options["strict_stiminterval"]['base']
                                     feat[stimname][location][-1]["strict_stim"] = strict_stiminterval
+                                    featraw[stimname][location][-1]["strict_stim"] = strict_stiminterval
+
 
                                     a = round(dataset[expname]['mean_amp'][str(target)],6)
                                     h = round(dataset[expname]['mean_hypamp'][str(target)],6)
@@ -1336,6 +1389,12 @@ class Extractor(object):
         s = tools.collapse_json(s, indent=indent)
         with open(directory + "features.json", "w") as f:
             f.write(s)
+
+        if saveraw:
+            s = json.dumps(featraw, indent=2)
+            s = tools.collapse_json(s, indent=indent)
+            with gzip.open(directory + "features_sources.json.gz", "wb") as f:
+                f.write(s)
 
         #tools.print_dict(stimulus_dict)
         #tools.print_dict(feature_dict)
