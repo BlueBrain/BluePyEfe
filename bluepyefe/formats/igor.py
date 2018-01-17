@@ -62,8 +62,12 @@ def process(config=None,
 
     if 't_unit' not in filename:
         t_unit = notes.dUnits
+        filename['t_unit'] = t_unit
     else:
         t_unit = filename['t_unit']
+
+    if (t_unit == ""):
+        filename['t_unit'] = "s"
 
     if (t_unit == "") or (t_unit == "s"):
         dt = dt * 1e3 # convert to ms
