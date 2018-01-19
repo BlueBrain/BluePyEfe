@@ -3,7 +3,7 @@ config = {
     "cells":    {
                     "cell01" : {
                         "etype": "etype",
-                        "exclude":[[-1.8],[-1.8]],
+                        "exclude":[[-2.0],[-2.0]],
                         "experiments": {
                             "step": {
                                 "files": ["96711008", "96711009"],
@@ -15,7 +15,7 @@ config = {
         },
         "cell02" : {
                         "etype": "etype",
-                        "exclude":[[-1.8],[-1.8]],
+                        "exclude":[[],[]],
                         "experiments": {
                             "step": {
                                 "files": ["98205017", "98205018"],
@@ -33,7 +33,7 @@ config = {
              "logging": False,
              "nanmean": False,
              "relative": False,
-             "target": ["all"],
+             "target": [-2.0,0.0,1.0],
              "tolerance": 0.02},
  "path": "./data_abf/"
  }
@@ -41,13 +41,12 @@ config = {
 
 import bluepyefe as bpefe
 
-extractor = bpefe.Extractor('testABF', config, use_git=False)
+extractor = bpefe.Extractor('testtype_abf', config, use_git=False)
 extractor.create_dataset()
 extractor.plt_traces()
 extractor.extract_features(threshold=-30)
 extractor.mean_features()
 #extractor.analyse_threshold()
 extractor.plt_features()
-extractor.feature_config_cells(version='legacy')
-extractor.feature_config_all(version='legacy')
-
+extractor.feature_config_cells()
+extractor.feature_config_all()

@@ -29,7 +29,7 @@ config = {
 
 import bluepyefe as bpefe
 
-extractor = bpefe.Extractor('tempTestIbfJson', config, use_git=False)
+extractor = bpefe.Extractor('temptype_ibf', config, use_git=False)
 extractor.create_dataset()
 extractor.plt_traces()
 extractor.extract_features(threshold=-30)
@@ -38,4 +38,3 @@ extractor.mean_features()
 extractor.plt_features()
 extractor.feature_config_cells(version='legacy')
 extractor.feature_config_all(version='legacy')
-

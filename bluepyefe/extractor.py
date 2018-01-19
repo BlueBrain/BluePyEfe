@@ -39,6 +39,7 @@ import sh
 from scipy import stats
 
 try:
+    USE_YEO = True
     from rpy2.robjects.functions import SignatureTranslatedFunction
     import rpy2.robjects as robjects
     from rpy2.robjects.packages import importr
@@ -49,6 +50,7 @@ try:
     r_car = importr("car")
 
 except:
+    USE_YEO = False
     print "Cannot load R, you will not be able to use BoxCox/YeoJohnson"
 
 from tools.YeoJohnson import YeoJohnson
@@ -140,6 +142,9 @@ class Extractor(object):
         else:
             logger.setLevel(logging.ERROR)
 
+        self.saveraw = False
+        if ('saveraw' in self.options) and self.options['saveraw']:
+            self.saveraw = True
 
         self.colors = OrderedDict()
         self.colors['b1'] = '#1F78B4' #377EB8
@@ -201,30 +206,34 @@ class Extractor(object):
         else:
             return float('NaN'), float('NaN'), float('NaN'), float('NaN')
 
-        data = robjects.FloatVector(a)
-        fmla = robjects.Formula('x~1')
-        env = fmla.environment
-        env['x'] = data
-        fit = r_stats.lm(fmla)
+        if USE_YEO:
+            data = robjects.FloatVector(a)
+            fmla = robjects.Formula('x~1')
+            env = fmla.environment
+            env['x'] = data
+            fit = r_stats.lm(fmla)
 
-        r_car.boxCox = SignatureTranslatedFunction(r_car.boxCox, {'r_lambda': 'lambda'})
-        yj = r_car.boxCox(fit,
-                    family = robjects.StrVector(["yjPower"]),
-                    r_lambda = robjects.FloatVector(lm_vec),
-                    plotit = False)
+            r_car.boxCox = SignatureTranslatedFunction(r_car.boxCox, {'r_lambda': 'lambda'})
+            yj = r_car.boxCox(fit,
+                        family = robjects.StrVector(["yjPower"]),
+                        r_lambda = robjects.FloatVector(lm_vec),
+                        plotit = False)
 
-        x_ = numpy.array(yj.rx('x')[0])
-        y_ = numpy.array(yj.rx('y')[0])
-        lmbda = x_[numpy.argmax(y_)]
+            x_ = numpy.array(yj.rx('x')[0])
+            y_ = numpy.array(yj.rx('y')[0])
+            lmbda = x_[numpy.argmax(y_)]
 
-        yj = YeoJohnson()
-        at = yj.fit(a, lmbda)
+            yj = YeoJohnson()
+            at = yj.fit(a, lmbda)
 
-        mean = numpy.mean(at)
-        std = numpy.std(at)
-        shift = 0
+            mean = numpy.mean(at)
+            std = numpy.std(at)
+            shift = 0
 
-        return mean, std, lmbda, shift
+            return mean, std, lmbda, shift
+
+        else:
+            return float('NaN'), float('NaN'), float('NaN'), float('NaN')
 
 
     def newmean(self, a):
@@ -339,9 +348,9 @@ class Extractor(object):
         elif self.format == 'ibf_json':
             import bluepyefe.formats.ibf_json
             return bluepyefe.formats.ibf_json.process(**kwargs)
-            
-            
-            
+
+
+
     def plt_traces(self):
 
         logger.info(" Plotting traces")
@@ -700,7 +709,9 @@ class Extractor(object):
                                     (amp_rel <= (target + self.options["tolerance"][ti])))
 
                         feat = numpy.atleast_1d(numpy.array(feat_vals)[idx])
-                        raw = numpy.atleast_1d(numpy.array(rawfiles_list)[idx]).tolist()
+
+                        if self.saveraw:
+                            raw = numpy.atleast_1d(numpy.array(rawfiles_list)[idx]).tolist()
 
                         n = numpy.sum(numpy.invert(numpy.isnan(numpy.atleast_1d(feat))))
 
@@ -721,7 +732,9 @@ class Extractor(object):
                             dataset_cell_exp[expname]['mean_features'][feature][str(target)] = meanfeat
                             dataset_cell_exp[expname]['std_features'][feature][str(target)] = stdfeat
                             dataset_cell_exp[expname]['n'][feature][str(target)] = n
-                            dataset_cell_exp[expname]['raw'][feature][str(target)] = raw
+
+                            if self.saveraw:
+                                dataset_cell_exp[expname]['raw'][feature][str(target)] = raw
 
                             dataset_cell_exp[expname]['bc_mean_features'][feature][str(target)] = bcmean
                             dataset_cell_exp[expname]['bc_std_features'][feature][str(target)] = bcstd
@@ -814,8 +827,9 @@ class Extractor(object):
                                 n = dataset_cell_exp[expname]['n'][feature][str(target)]
                                 self.dataset_mean[expname]['cell_n'][feature][str(target)].append(n)
 
-                                raw = dataset_cell_exp[expname]['raw'][feature][str(target)]
-                                self.dataset_mean[expname]['raw'][feature][str(target)].append(raw)
+                                if self.saveraw:
+                                    raw = dataset_cell_exp[expname]['raw'][feature][str(target)]
+                                    self.dataset_mean[expname]['raw'][feature][str(target)].append(raw)
 
             #create means
             self.dataset_mean[expname]['mean_amp'] = OrderedDict()
@@ -955,7 +969,7 @@ class Extractor(object):
                         color = colormarker_dict[filenames[i_feat]][0]
                         marker = colormarker_dict[filenames[i_feat]][1]
 
-                        amp_rel_ = amp_rel[i_feat]
+                        amp_rel_ = numpy.float64(amp_rel[i_feat])
                         is_not_nan = ~numpy.isnan(feat_vals_)
 
                         axs_cell[fi].plot(amp_rel_[is_not_nan], feat_vals_[is_not_nan], "",
@@ -1140,9 +1154,6 @@ class Extractor(object):
 
         logger.info(" Saving config files to %s", directory)
 
-        if ('saveraw' in self.options) and self.options['saveraw']:
-            saveraw = True
-
         if version == 'legacy':
 
             indent = 8
@@ -1240,7 +1251,9 @@ class Extractor(object):
                                 m = round(dataset[expname]['mean_features'][feature][str(target)],4)
                                 s = round(dataset[expname]['std_features'][feature][str(target)],4)
                                 n = int(dataset[expname]['n'][feature][str(target)])
-                                raw = dataset[expname]['raw'][feature][str(target)]
+
+                                if self.saveraw:
+                                    raw = dataset[expname]['raw'][feature][str(target)]
 
                                 bcm = dataset[expname]['bc_mean_features'][feature][str(target)]
                                 bcs = dataset[expname]['bc_std_features'][feature][str(target)]
@@ -1280,7 +1293,7 @@ class Extractor(object):
                                                         ("fid",fid)
                                                         ]) )
 
-                                        if saveraw:
+                                        if self.saveraw:
                                             featraw[stimname][location].append(
                                                             OrderedDict([
                                                             ("feature",feature),
@@ -1300,7 +1313,7 @@ class Extractor(object):
                                                         ("fid",fid)
                                                         ]) )
 
-                                        if saveraw:
+                                        if self.saveraw:
                                             featraw[stimname][location].append(
                                                             OrderedDict([
                                                             ("feature",feature),
@@ -1317,7 +1330,9 @@ class Extractor(object):
                                     else:
                                         strict_stiminterval = self.options["strict_stiminterval"]['base']
                                     feat[stimname][location][-1]["strict_stim"] = strict_stiminterval
-                                    featraw[stimname][location][-1]["strict_stim"] = strict_stiminterval
+
+                                    if self.saveraw:
+                                        featraw[stimname][location][-1]["strict_stim"] = strict_stiminterval
 
 
                                     a = round(dataset[expname]['mean_amp'][str(target)],6)
@@ -1399,7 +1414,7 @@ class Extractor(object):
         with open(directory + "features.json", "w") as f:
             f.write(s)
 
-        if saveraw:
+        if self.saveraw:
             s = json.dumps(featraw, indent=2)
             s = tools.collapse_json(s, indent=indent)
             with gzip.open(directory + "features_sources.json.gz", "wb") as f:

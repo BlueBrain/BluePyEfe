@@ -79,9 +79,7 @@ def process(config=None,
                 current = numpy.zeros(len(voltage))
                 current[ion:ioff] = amp
 
-
-
-                if ('exclude' in cells[cellname] 
+                if ('exclude' in cells[cellname]
                     and  any(abs(cells[cellname]['exclude'][idx_file] - amp) < 1e-4)):
 
                     logger.info(" Not using trace with amplitude %f", amp)
@@ -89,15 +87,13 @@ def process(config=None,
                 else:
                     data['voltage'].append(voltage)
                     data['current'].append(current)
-                    data['dt'].append(dt)
-
                     data['t'].append(t)
-                    data['ton'].append(ton)
-                    data['toff'].append(toff)
-                    data['amp'].append(amp)
-                    data['hypamp'].append(hypamp)
+                    
+                    data['dt'].append(numpy.float(dt))
+                    data['ton'].append(numpy.float(ton))
+                    data['toff'].append(numpy.float(toff))
+                    data['amp'].append(numpy.float(amp))
+                    data['hypamp'].append(numpy.float(hypamp))
                     data['filename'].append(filename)
-    pprint.pprint(data['voltage'])
-    pprint.pprint(data['current'])
-    return data
 
+    return data
