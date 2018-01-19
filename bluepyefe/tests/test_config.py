@@ -114,7 +114,7 @@ config = {
             "IRdepol": [500.0, 700.0]
         },
         "logging": True,
-        "boxcox": True
+        "boxcox": False
     }
 }
 
