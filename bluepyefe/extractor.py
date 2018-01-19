@@ -332,6 +332,10 @@ class Extractor(object):
             import formats.axon
             return formats.axon.process(**kwargs)
 
+        elif self.format == 'csv_lccr':
+            import formats.csv_lccr
+            return formats.csv_lccr.process(**kwargs)
+
         elif self.format == 'ibf_json':
             import bluepyefe.formats.ibf_json
             return bluepyefe.formats.ibf_json.process(**kwargs)
