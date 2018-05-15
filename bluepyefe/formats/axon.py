@@ -5,6 +5,8 @@ import logging
 logger = logging.getLogger(__name__)
 import numpy
 import os
+import pprint
+
 def process(config=None,
             filename=None,
             cellname=None,
@@ -31,12 +33,6 @@ def process(config=None,
     data['hypamp'] = []
     data['filename'] = []
 
-    # read stimulus features if present
-    stim_feats = []
-    if 'stim_feats' in cells[cellname]['experiments'][expname]:
-        stim_feats = cells[cellname]['experiments'][expname]['stim_feats']
-
-
     logger.debug(" Adding axon file %s", filename)
 
     f = os.path.join(path, cellname, filename + '.abf')
@@ -51,67 +47,111 @@ def process(config=None,
     dt = 1./int(sampling_rate) * 1e3
     version = header['fFileVersionNumber'] # read file version
     bl = r.read_block(lazy=False, cascade=True)
-    all_stims = []
-    if stim_feats:
-        res = stim_feats_from_meta(stim_feats, len(bl.segments), idx_file)
-        if res[0]:
-            all_stims = res[1]
-        else:
-            print(res[1])
-    if not all_stims:
-        res = stim_feats_from_header(header)
-        if res[0]:
-            all_stims = res[1]
-        else:
-            pprint.pprint("No valid stimulus was found in metadata or files. \
-                    Skipping current file")
-            return
+
+    stim_info = None
+    if 'stim_info' in cells[cellname]['experiments'][expname]:
+        stim_info = cells[cellname]['experiments'][expname]['stim_info']
+
+    else:
+
+        # read stimulus features if present
+        stim_feats = []
+        if 'stim_feats' in cells[cellname]['experiments'][expname]:
+            stim_feats = cells[cellname]['experiments'][expname]['stim_feats']
+
+        all_stims = []
+        if stim_feats:
+            res = stim_feats_from_meta(stim_feats, len(bl.segments), idx_file)
+            if res[0]:
+                all_stims = res[1]
+            else:
+                print(res[1])
+        if not all_stims:
+            res = stim_feats_from_header(header)
+            if res[0]:
+                all_stims = res[1]
+            else:
+                pprint.pprint("No valid stimulus was found in metadata or files. \
+                        Skipping current file")
+                return
 
     # for all segments in file
     for i_seg, seg in enumerate(bl.segments):
 
-        voltage = numpy.array(seg.analogsignals[0]).astype(numpy.float64)
-        #current = numpy.array(seg.analogsignals[1]).astype(numpy.float64)
         #dt = 1./int(seg.analogsignals[0].sampling_rate) * 1e3
 
-        t = numpy.arange(len(voltage)) * dt
+        if stim_info is not None:
 
-        # when does voltage change
-        #c_changes = numpy.where(abs(numpy.gradient(current, 1.)) > 0.0 )[0]
+            voltage = numpy.array(seg.analogsignals[0]).astype(numpy.float64).flatten()
+            current = numpy.array(seg.analogsignals[1]).astype(numpy.float64).flatten()
+            t = numpy.arange(len(voltage)) * dt
 
-        # detect on and off of current
-        #c_changes2 = numpy.where(abs(numpy.gradient(c_changes, 1.)) > 10.0 )[0]
+            ton = stim_info['ton']
+            toff = stim_info['toff']
+            ion = int(ton / dt)
+            ioff = int(toff / dt)
 
-        #ion = c_changes[c_changes2[0]]
-        #ioff = c_changes[-1]
-        #ton = ion * dt
-        #toff = ioff * dt
+            if 'tamp' in stim_info:
+                tamp = [int(stim_info['tamp'][0]/dt),int(stim_info['tamp'][1]/dt)]
+            else:
+                tamp = [ion, ioff]
 
-        ton = all_stims[i_seg][1]
-        toff = all_stims[i_seg][2]
-        ion = int(ton / dt)
-        ioff = int(toff / dt)
-        amp = numpy.float64(all_stims[i_seg][3])
+            i_unit = stim_info['i_unit']
 
-        current = []
-        current = numpy.zeros(len(voltage))
-        current[ion:ioff] = amp
+            if i_unit == 'A':
+                current = current * 1e9 # nA
+            elif i_unit == 'pA':
+                current = current * 1e-3 # nA
+            else:
+                raise Exception(
+                    "Unit current not configured!")
 
-        # estimate hyperpolarization current
-        hypamp = numpy.mean( current[0:ion] )
+            amp = numpy.nanmean( current[tamp[0]:tamp[1]] )
+            hypamp = numpy.nanmean( current[0:ion] )
 
-        # 10% distance to measure step current
-        iborder = int((ioff-ion)*0.1)
+            # when does voltage change
+            #c_changes = numpy.where(abs(numpy.gradient(current, 1.)) > 0.0 )[0]
 
-        # depolarization amplitude
-        #amp = numpy.mean( current[ion+iborder:ioff-iborder] )
-        voltage_dirty = voltage[:]
+            # detect on and off of current
+            #c_changes2 = numpy.where(abs(numpy.gradient(c_changes, 1.)) > 10.0 )[0]
 
-        # clean voltage from transients
-        voltage[ion:ion+int(numpy.ceil(0.4/dt))] = \
-                voltage[ion+int(numpy.ceil(0.4/dt))]
-        voltage[ioff:ioff+int(numpy.ceil(0.4/dt))] = \
-                voltage[ioff+int(numpy.ceil(0.4/dt))]
+            #ion = c_changes[c_changes2[0]]
+            #ioff = c_changes[-1]
+            #ton = ion * dt
+            #toff = ioff * dt
+
+        else:
+
+            voltage = numpy.array(seg.analogsignals[0]).astype(numpy.float64)
+            t = numpy.arange(len(voltage)) * dt
+
+            ton = all_stims[i_seg][1]
+            toff = all_stims[i_seg][2]
+            amp = numpy.float64(all_stims[i_seg][3])
+
+            ion = int(ton / dt)
+            ioff = int(toff / dt)
+
+            current = []
+            current = numpy.zeros(len(voltage))
+            current[ion:ioff] = amp
+
+            # estimate hyperpolarization current
+            hypamp = numpy.mean( current[0:ion] )
+
+            # 10% distance to measure step current
+            iborder = int((ioff-ion)*0.1)
+
+            # depolarization amplitude
+            #amp = numpy.mean( current[ion+iborder:ioff-iborder] )
+            voltage_dirty = voltage[:]
+
+            # clean voltage from transients
+            voltage[ion:ion+int(numpy.ceil(0.4/dt))] = \
+                    voltage[ion+int(numpy.ceil(0.4/dt))]
+            voltage[ioff:ioff+int(numpy.ceil(0.4/dt))] = \
+                    voltage[ioff+int(numpy.ceil(0.4/dt))]
+
 
         # normalize membrane potential to known value (given in UCL excel sheet)
         if v_corr:
@@ -223,7 +263,7 @@ def stim_feats_from_header(header):
                         i['nDACNum']) for i in header['listDACInfo'] \
                         if bool(i['nWaveformEnable'])]
 
-                # if epoch initial levels and increment are not 
+                # if epoch initial levels and increment are not
                 # compatible with a step stimulus
                 if (stim_epochs[0]['fEpochInitLevel'] != \
                         stim_epochs[2]['fEpochInitLevel'] or
@@ -249,15 +289,15 @@ def stim_feats_from_header(header):
 
                     # read first stimulus epoch
                     e_zero = header['dictEpochInfoPerDAC']\
-                            [stim_ch_info[0][2]][0] 
+                            [stim_ch_info[0][2]][0]
                     # read second stimulus epoch
-                    e_one = header['dictEpochInfoPerDAC'][stim_ch_info[0][2]][1] 
+                    e_one = header['dictEpochInfoPerDAC'][stim_ch_info[0][2]][1]
                     # read third stimulus epoch
-                    e_two = header['dictEpochInfoPerDAC'][stim_ch_info[0][2]][2] 
+                    e_two = header['dictEpochInfoPerDAC'][stim_ch_info[0][2]][2]
                     # index of stimulus beginning
                     i_last = int(nSam*15625/10**6)
                     # create array for all stimulus info
-                    all_stim_info = [] 
+                    all_stim_info = []
 
                     # step increment
                     e_one_inc = float(format(e_one['fEpochLevelInc'],\

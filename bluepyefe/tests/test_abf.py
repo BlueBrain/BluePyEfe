@@ -31,7 +31,7 @@ config = {
  "format": "axon",
  "options": {"delay": 500,
              "logging": False,
-             "nanmean": False,
+             "nanmean": True,
              "relative": False,
              "target": [-2.0,0.0,1.0],
              "tolerance": 0.02},
