@@ -1,42 +1,33 @@
+# pylint: disable=line-too-long
 
 import matplotlib
-matplotlib.use('Agg', warn=True)
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-
-#try:
-#    plt.style.use('classic')
-#except:
-#    pass
 
 import numpy
 import sys
 import efel
-#import igorpy
 import os
-import fnmatch
-import itertools
-import collections
 from itertools import cycle
-import pprint
-try:
-    import cPickle as pickle
-except:
-    import pickle
 
 import json
 from collections import OrderedDict
 
+
+import tools
+import plottools
+import extra
+import sh
+
 import logging
+
+import gzip
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout)
 logger = logging.getLogger()
 
-import tools
-import plottools
-from extra import *
-import sh
-from scipy import stats
+matplotlib.use('Agg', warn=True)
 
 try:
     USE_YEO = True
@@ -45,16 +36,15 @@ try:
     from rpy2.robjects.packages import importr
 
     base = importr('base')
-    #r_caret = importr("caret")
     r_stats = importr("stats")
     r_car = importr("car")
 
-except:
+except BaseException:
     USE_YEO = False
     print "Cannot load R, you will not be able to use BoxCox/YeoJohnson"
 
-from tools.YeoJohnson import YeoJohnson
-import gzip
+from tools.YeoJohnson import YeoJohnson  # noqa
+
 
 class Extractor(object):
 
@@ -68,7 +58,8 @@ class Extractor(object):
 
         for experiment in self.features:
             f = self.features[experiment]
-            self.features[experiment] = sorted(set(f), key=lambda x: f.index(x))
+            self.features[experiment] = sorted(
+                set(f), key=lambda x: f.index(x))
 
         self.format = config['format']
 
@@ -79,13 +70,21 @@ class Extractor(object):
 
             try:
                 sh.git('add', '-A')
-                sh.git('commit', '-a', '-m \"Running feature extraction %s\"' % mainname)
-            except:
+                sh.git(
+                    'commit',
+                    '-a',
+                    '-m \"Running feature extraction %s\"' %
+                    mainname)
+            except BaseException:
                 pass
 
             try:
-                self.githash = str(sh.git('rev-parse', '--short', 'HEAD')).rstrip()
-            except:
+                self.githash = str(
+                    sh.git(
+                        'rev-parse',
+                        '--short',
+                        'HEAD')).rstrip()
+            except BaseException:
                 self.githash = "None"
 
         else:
@@ -97,10 +96,11 @@ class Extractor(object):
             self.options["relative"] = False
 
         if "amp_min" not in self.options:
-            self.options["amp_min"] = 0.001 # minimum current amplitude used
+            self.options["amp_min"] = 0.001  # minimum current amplitude used
 
         if "peak_min" not in self.options:
-            self.options["peak_min"] = 0.001 # minimum current amplitude used for spike detection
+            # minimum current amplitude used for spike detection
+            self.options["peak_min"] = 0.001
 
         if "target" not in self.options:
             self.options["target"] = [100., 150., 200., 250.]
@@ -113,8 +113,8 @@ class Extractor(object):
 
         if isinstance(self.options["tolerance"], list) is False:
             self.options["tolerance"] =\
-                        numpy.ones(len(self.options["target"]))\
-                        * self.options["tolerance"]
+                numpy.ones(len(self.options["target"]))\
+                * self.options["tolerance"]
 
         if "nanmean" not in self.options:
             self.options["nanmean"] = False
@@ -147,15 +147,15 @@ class Extractor(object):
             self.saveraw = True
 
         self.colors = OrderedDict()
-        self.colors['b1'] = '#1F78B4' #377EB8
+        self.colors['b1'] = '#1F78B4'  # 377EB8
         self.colors['b2'] = '#A6CEE3'
-        self.colors['g1'] = '#33A02C' #4DAF4A
+        self.colors['g1'] = '#33A02C'  # 4DAF4A
         self.colors['g2'] = '#B2DF8A'
-        self.colors['r1'] = '#E31A1C' #E41A1C
+        self.colors['r1'] = '#E31A1C'  # E41A1C
         self.colors['r2'] = '#FB9A99'
-        self.colors['o1'] = '#FF7F00' #FF7F00
+        self.colors['o1'] = '#FF7F00'  # FF7F00
         self.colors['o2'] = '#FDBF6F'
-        self.colors['p1'] = '#6A3D9A' #984EA3
+        self.colors['p1'] = '#6A3D9A'  # 984EA3
         self.colors['p2'] = '#CAB2D6'
 
         self.colors['ye1'] = '#FFFF33'
@@ -165,42 +165,45 @@ class Extractor(object):
         self.colors['k1'] = '#000000'
 
         self.markerlist = ['o', '*', '^', 'H', 'D', 's', 'p', '.', '8', '+']
-        self.colorlist = [self.colors['b1'], self.colors['g1'], self.colors['r1'],
-                            self.colors['o1'], self.colors['p1'], self.colors['ye1']]
+        self.colorlist = [
+            self.colors['b1'],
+            self.colors['g1'],
+            self.colors['r1'],
+            self.colors['o1'],
+            self.colors['p1'],
+            self.colors['ye1']]
         self.experiments = []
 
         self.mainname = mainname
-        self.maindirname = mainname + os.sep # llb
+        self.maindirname = mainname + os.sep  # llb
         tools.makedir(self.maindirname)
 
         self.thresholds_per_cell = OrderedDict()
         self.hypamps_per_cell = OrderedDict()
 
         self.extra_features = ['spikerate_tau_jj', 'spikerate_drop',
-                                'spikerate_tau_log', 'spikerate_tau_fit',
-                                'spikerate_tau_slope']
-
+                               'spikerate_tau_log', 'spikerate_tau_fit',
+                               'spikerate_tau_slope']
 
     def newmeancell(self, a):
         if (self.options["nanmean_cell"] or
-            (numpy.sum(numpy.isnan(a)) <= self.options["nangrace"])):
+                (numpy.sum(numpy.isnan(a)) <= self.options["nangrace"])):
             return numpy.nanmean(a)
         else:
             return numpy.mean(a)
 
-
     def newstdcell(self, a):
         if (self.options["nanmean_cell"]
-            or (numpy.sum(numpy.isnan(a)) <= self.options["nangrace"])):
+                or (numpy.sum(numpy.isnan(a)) <= self.options["nangrace"])):
             return numpy.nanstd(a)
         else:
             return numpy.std(a)
 
-
-    def boxcoxcell(self, a, nanopt="nanmean_cell", lm_vec=numpy.linspace(-3,3,41)):
+    def boxcoxcell(self, a, nanopt="nanmean_cell",
+                   lm_vec=numpy.linspace(-3, 3, 41)):
         if ((self.options[nanopt] or
-            (numpy.sum(numpy.isnan(a)) <= self.options["nangrace"])) and
-            (len(a) > 0) ):
+             (numpy.sum(numpy.isnan(a)) <= self.options["nangrace"])) and
+                (len(a) > 0)):
             a = numpy.array(a)
             a = a[~numpy.isnan(a)]
         else:
@@ -213,11 +216,12 @@ class Extractor(object):
             env['x'] = data
             fit = r_stats.lm(fmla)
 
-            r_car.boxCox = SignatureTranslatedFunction(r_car.boxCox, {'r_lambda': 'lambda'})
+            r_car.boxCox = SignatureTranslatedFunction(
+                r_car.boxCox, {'r_lambda': 'lambda'})
             yj = r_car.boxCox(fit,
-                        family = robjects.StrVector(["yjPower"]),
-                        r_lambda = robjects.FloatVector(lm_vec),
-                        plotit = False)
+                              family=robjects.StrVector(["yjPower"]),
+                              r_lambda=robjects.FloatVector(lm_vec),
+                              plotit=False)
 
             x_ = numpy.array(yj.rx('x')[0])
             y_ = numpy.array(yj.rx('y')[0])
@@ -235,22 +239,19 @@ class Extractor(object):
         else:
             return float('NaN'), float('NaN'), float('NaN'), float('NaN')
 
-
     def newmean(self, a):
         if (self.options["nanmean"] or
-            (numpy.sum(numpy.isnan(a)) <= self.options["nangrace"])):
+                (numpy.sum(numpy.isnan(a)) <= self.options["nangrace"])):
             return numpy.nanmean(a)
         else:
             return numpy.mean(a)
 
-
     def newstd(self, a):
         if (self.options["nanmean"]
-            or (numpy.sum(numpy.isnan(a)) <= self.options["nangrace"])):
+                or (numpy.sum(numpy.isnan(a)) <= self.options["nangrace"])):
             return numpy.nanstd(a)
         else:
             return numpy.std(a)
-
 
     def create_dataset(self):
 
@@ -272,14 +273,17 @@ class Extractor(object):
             dataset_cell_exp = OrderedDict()
             self.dataset[cellname]['experiments'] = dataset_cell_exp
 
-            for i_exp, expname in enumerate(self.cells[cellname]['experiments']):
+            for i_exp, expname in enumerate(
+                    self.cells[cellname]['experiments']):
 
                 files = self.cells[cellname]['experiments'][expname]['files']
 
                 # read stimulus features if present
                 stim_feats = []
-                if 'stim_feats' in self.cells[cellname]['experiments'][expname]:
-                    stim_feats = self.cells[cellname]['experiments'][expname]['stim_feats']
+                if 'stim_feats' in self.cells[cellname]['experiments'][
+                        expname]:
+                    stim_feats = \
+                        self.cells[cellname]['experiments'][expname]['stim_feats']
 
                 if len(files) > 0:
                     logger.debug(" Adding experiment %s", expname)
@@ -289,7 +293,7 @@ class Extractor(object):
 
                     dataset_cell_exp[expname] = OrderedDict()
 
-                    dataset_cell_exp[expname]['location'] =\
+                    dataset_cell_exp[expname]['location'] = \
                         self.cells[cellname]['experiments'][expname]['location']
 
                     dataset_cell_exp[expname]['voltage'] = []
@@ -309,13 +313,13 @@ class Extractor(object):
                     for idx_file, filename in enumerate(files):
 
                         data = self.process_file(config=self.config,
-                                                filename=filename,
-                                                cellname=cellname,
-                                                expname=expname,
-                                                stim_feats=stim_feats,
-                                                idx_file=idx_file,
-                                                v_corr=v_corr,
-                                                ljp=ljp)
+                                                 filename=filename,
+                                                 cellname=cellname,
+                                                 expname=expname,
+                                                 stim_feats=stim_feats,
+                                                 idx_file=idx_file,
+                                                 v_corr=v_corr,
+                                                 ljp=ljp)
 
                         dataset_cell_exp[expname]['voltage'] += data['voltage']
                         dataset_cell_exp[expname]['current'] += data['current']
@@ -330,26 +334,22 @@ class Extractor(object):
                         dataset_cell_exp[expname]['amp'] += data['amp']
                         dataset_cell_exp[expname]['hypamp'] += data['hypamp']
 
-
     def process_file(self, **kwargs):
 
         if self.format == 'igor':
             import formats.igor
             return formats.igor.process(**kwargs)
-
         elif self.format == 'axon':
             import formats.axon
             return formats.axon.process(**kwargs)
-
         elif self.format == 'csv_lccr':
             import formats.csv_lccr
             return formats.csv_lccr.process(**kwargs)
-
         elif self.format == 'ibf_json':
             import bluepyefe.formats.ibf_json
             return bluepyefe.formats.ibf_json.process(**kwargs)
-
-
+        else:
+            raise ValueError('Unrecognized trace format: %s' % self.format)
 
     def plt_traces(self):
 
@@ -357,7 +357,7 @@ class Extractor(object):
 
         for i_cell, cellname in enumerate(self.dataset):
 
-            dirname = self.maindirname+cellname
+            dirname = self.maindirname + cellname
             tools.makedir(dirname)
             dataset_cell_exp = self.dataset[cellname]['experiments']
 
@@ -371,10 +371,10 @@ class Extractor(object):
 
                 colors = []
 
-                markercycler = cycle(self.markerlist)
                 colorcycler = cycle(self.colorlist)
 
-                color_dict = {u:next(colorcycler) for u in list(set(filenames))}
+                color_dict = {u: next(colorcycler)
+                              for u in list(set(filenames))}
                 colors = [color_dict[f] for f in filenames]
 
                 isort = numpy.argsort(amps)
@@ -392,7 +392,7 @@ class Extractor(object):
                     n_fig = 1
                 else:
                     frames = self.max_per_plot
-                    n_fig = int(numpy.ceil(n_plot/float(self.max_per_plot)))
+                    n_fig = int(numpy.ceil(n_plot / float(self.max_per_plot)))
 
                 axs = []
                 figs = OrderedDict()
@@ -401,44 +401,59 @@ class Extractor(object):
                 figs_c = OrderedDict()
 
                 for i_fig in range(n_fig):
-                    figname = cellname.split('/')[-1] + "_" + expname + "_" + str(i_fig)
-                    axs = plottools.tiled_figure(figname, frames=frames, columns=2,
-                                    figs=figs, axs=axs,
-                                    top=0.97, bottom=0.04, left=0.07, right=0.97, hspace=0.75, wspace=0.2)
+                    figname = cellname.split(
+                        '/')[-1] + "_" + expname + "_" + str(i_fig)
+                    axs = plottools.tiled_figure(
+                        figname, frames=frames, columns=2, figs=figs, axs=axs,
+                        top=0.97, bottom=0.04, left=0.07, right=0.97,
+                        hspace=0.75, wspace=0.2)
 
-                    figname_c = cellname.split('/')[-1] + "_" + expname + "_" + str(i_fig) + "_i"
-                    axs_c = plottools.tiled_figure(figname_c, frames=frames, columns=2,
-                                    figs=figs_c, axs=axs_c,
-                                    top=0.97, bottom=0.04, left=0.07, right=0.97, hspace=0.75, wspace=0.2)
+                    figname_c = cellname.split(
+                        '/')[-1] + "_" + expname + "_" + str(i_fig) + "_i"
+                    axs_c = plottools.tiled_figure(
+                        figname_c, frames=frames, columns=2, figs=figs_c,
+                        axs=axs_c, top=0.97, bottom=0.04, left=0.07,
+                        right=0.97, hspace=0.75, wspace=0.2)
 
                 for i_plot in range(n_plot):
-                    axs[i_plot].plot(ts[i_plot], voltages[i_plot], color=colors[i_plot], clip_on=False)
-                    axs[i_plot].set_title(cellname + " " + expname + " amp:" + str(amps[i_plot]) + " file:" + filenames[i_plot])
+                    axs[i_plot].plot(
+                        ts[i_plot],
+                        voltages[i_plot],
+                        color=colors[i_plot],
+                        clip_on=False)
+                    axs[i_plot].set_title(
+                        cellname + " " + expname + " amp:" + str(amps[i_plot]) +
+                        " file:" + filenames[i_plot])
 
-                    axs_c[i_plot].plot(ts[i_plot], currents[i_plot], color=colors[i_plot], clip_on=False)
-                    axs_c[i_plot].set_title(cellname + " " + expname + " amp:" + str(amps[i_plot]) + " file:" + filenames[i_plot])
+                    axs_c[i_plot].plot(
+                        ts[i_plot],
+                        currents[i_plot],
+                        color=colors[i_plot],
+                        clip_on=False)
+                    axs_c[i_plot].set_title(
+                        cellname + " " + expname + " amp:" + str(amps[i_plot]) +
+                        " file:" + filenames[i_plot])
 
-                #plt.show()
+                # plt.show()
 
                 for i_fig, figname in enumerate(figs):
                     fig = figs[figname]
-                    fig['fig'].savefig(dirname + '/' + figname + '.pdf', dpi=300)
+                    fig['fig'].savefig(
+                        dirname + '/' + figname + '.pdf', dpi=300)
                     plt.close(fig['fig'])
 
                 for i_fig, figname in enumerate(figs_c):
                     fig = figs_c[figname]
-                    fig['fig'].savefig(dirname + '/' + figname + '.pdf', dpi=300)
+                    fig['fig'].savefig(
+                        dirname + '/' + figname + '.pdf', dpi=300)
                     plt.close(fig['fig'])
-
 
     def extract_features(self, threshold=-20):
 
         logger.info(" Extracting features")
 
-        #efel.Settings.derivative_threshold = 5.0
         efel.setThreshold(threshold)
         logger.info(" Setting spike threshold to %.2f mV", threshold)
-
 
         for i_cell, cellname in enumerate(self.dataset):
 
@@ -446,19 +461,18 @@ class Extractor(object):
             for i_exp, expname in enumerate(dataset_cell_exp):
 
                 if expname in self.options["strict_stiminterval"].keys():
-                    strict_stiminterval = self.options["strict_stiminterval"][expname]
+                    strict_stiminterval = self.options["strict_stiminterval"][
+                        expname]
                 else:
-                    strict_stiminterval = self.options["strict_stiminterval"]['base']
-                efel.setIntSetting("strict_stiminterval",strict_stiminterval)
+                    strict_stiminterval = self.options["strict_stiminterval"][
+                        'base']
+                efel.setIntSetting("strict_stiminterval", strict_stiminterval)
 
                 ts = dataset_cell_exp[expname]['t']
                 voltages = dataset_cell_exp[expname]['voltage']
-                #currents = dataset_cell_exp[expname]['current']
-                #tends = dataset_cell_exp[expname]['tend']
                 tons = dataset_cell_exp[expname]['ton']
                 toffs = dataset_cell_exp[expname]['toff']
                 amps = dataset_cell_exp[expname]['amp']
-                #filenames = dataset_cell_exp[expname]['filename']
 
                 features_all = self.features[expname] + ['peak_time']
 
@@ -486,47 +500,51 @@ class Extractor(object):
 
                     efel.setDoubleSetting('stimulus_current', amp)
 
-                    features_all_ = [f for f in features_all if f not in self.extra_features]
+                    features_all_ = [
+                        f for f in features_all
+                        if f not in self.extra_features]
 
-                    fel_vals = efel.getFeatureValues(traces, features_all_, raise_warnings=False)
+                    fel_vals = efel.getFeatureValues(
+                        traces, features_all_, raise_warnings=False)
 
                     peak_times = fel_vals[0]['peak_time']
 
                     for feature in features_all:
 
                         if feature == 'peak_time':
-                            if (len(peak_times) > 0) and amp >= self.options["peak_min"]:
+                            if (len(peak_times) >
+                                    0) and amp >= self.options["peak_min"]:
                                 numspike = len(peak_times)
                             else:
                                 numspike = 0
 
                         elif feature == 'spikerate_tau_jj':
                             if len(peak_times) > 4:
-                                f = spikerate_tau_jj(peak_times)
+                                f = extra.spikerate_tau_jj(peak_times)
                             else:
                                 f = None
 
                         elif feature == 'spikerate_drop':
                             if len(peak_times) > 4:
-                                f = spikerate_drop(peak_times)
+                                f = extra.spikerate_drop(peak_times)
                             else:
                                 f = None
 
                         elif feature == 'spikerate_tau_log':
                             if len(peak_times) > 4:
-                                f = spikerate_tau_log(peak_times)
+                                f = extra.spikerate_tau_log(peak_times)
                             else:
                                 f = None
 
                         elif feature == 'spikerate_tau_fit':
                             if len(peak_times) > 4:
-                                f = spikerate_tau_fit(peak_times)
+                                f = extra.spikerate_tau_fit(peak_times)
                             else:
                                 f = None
 
                         elif feature == 'spikerate_tau_slope':
                             if len(peak_times) > 4:
-                                f = spikerate_tau_slope(peak_times)
+                                f = extra.spikerate_tau_slope(peak_times)
                             else:
                                 f = None
 
@@ -543,15 +561,17 @@ class Extractor(object):
                         if "trace_check" in self.options and self.options["trace_check"] is False:
                             pass
                         else:
-                            # exclude any activity outside stimulus (20 ms grace period)
-                            if (any(numpy.atleast_1d(peak_times) < trace['stim_start'][0]) or
-                               any(numpy.atleast_1d(peak_times) > trace['stim_end'][0]+20)):
-                               f = float('nan')
+                            # exclude any activity outside stimulus (20 ms
+                            # grace period)
+                            if (any(numpy.atleast_1d(peak_times) < trace['stim_start'][0]) or any(
+                                    numpy.atleast_1d(peak_times) > trace['stim_end'][0] + 20)):
+                                f = float('nan')
 
-                        dataset_cell_exp[expname]['features'][feature].append(f)
+                        dataset_cell_exp[expname]['features'][feature].append(
+                            f)
 
-                    dataset_cell_exp[expname]['features']['numspikes'].append(numspike)
-
+                    dataset_cell_exp[expname]['features']['numspikes'].append(
+                        numspike)
 
     def mean_features(self):
 
@@ -569,10 +589,12 @@ class Extractor(object):
                 numspikes = []
 
                 for i_exp, expname in enumerate(dataset_cell_exp):
-                    if expname in self.options['expthreshold']: # use to determine threshold
+                    # use to determine threshold
+                    if expname in self.options['expthreshold']:
                         hypamp = hypamp + dataset_cell_exp[expname]['hypamp']
                         amp = amp + dataset_cell_exp[expname]['amp']
-                        numspikes = numspikes + dataset_cell_exp[expname]['features']['numspikes']
+                        numspikes = numspikes + dataset_cell_exp[expname][
+                            'features']['numspikes']
 
                 mean_hypamp = self.newmeancell(numpy.array(hypamp))
                 amp_threshold = self.get_threshold(amp, numspikes)
@@ -580,7 +602,11 @@ class Extractor(object):
                 self.thresholds_per_cell[cellname] = amp_threshold
                 self.hypamps_per_cell[cellname] = mean_hypamp
 
-                logger.info(" %s threshold amplitude: %f hypamp: %f", cellname, amp_threshold, mean_hypamp)
+                logger.info(
+                    " %s threshold amplitude: %f hypamp: %f",
+                    cellname,
+                    amp_threshold,
+                    mean_hypamp)
 
             else:
                 self.thresholds_per_cell[cellname] = None
@@ -607,14 +633,19 @@ class Extractor(object):
                 dataset_cell_exp[expname]['bc_shift_features'] = OrderedDict()
                 dataset_cell_exp[expname]['bc_ld_features'] = OrderedDict()
 
-
                 for feature in self.features[expname]:
-                    dataset_cell_exp[expname]['mean_features'][feature] = OrderedDict()
-                    dataset_cell_exp[expname]['std_features'][feature] = OrderedDict()
-                    dataset_cell_exp[expname]['bc_mean_features'][feature] = OrderedDict()
-                    dataset_cell_exp[expname]['bc_std_features'][feature] = OrderedDict()
-                    dataset_cell_exp[expname]['bc_shift_features'][feature] = OrderedDict()
-                    dataset_cell_exp[expname]['bc_ld_features'][feature] = OrderedDict()
+                    dataset_cell_exp[expname]['mean_features'][feature] = \
+                        OrderedDict()
+                    dataset_cell_exp[expname]['std_features'][feature] = \
+                        OrderedDict()
+                    dataset_cell_exp[expname]['bc_mean_features'][feature] = \
+                        OrderedDict()
+                    dataset_cell_exp[expname]['bc_std_features'][feature] = \
+                        OrderedDict()
+                    dataset_cell_exp[expname]['bc_shift_features'][feature] = \
+                        OrderedDict()
+                    dataset_cell_exp[expname]['bc_ld_features'][feature] = \
+                        OrderedDict()
                     dataset_cell_exp[expname]['n'][feature] = OrderedDict()
                     dataset_cell_exp[expname]['raw'][feature] = OrderedDict()
 
@@ -635,13 +666,16 @@ class Extractor(object):
 
                 if self.options["relative"]:
                     amp_threshold = self.thresholds_per_cell[cellname]
-                    amp_rel = numpy.array(amp/amp_threshold * 100.)
+                    amp_rel = numpy.array(amp / amp_threshold * 100.)
                 else:
                     amp_rel = numpy.array(amp)
 
                 # absolute amplitude not relative to hypamp
-                amp_abs = numpy.abs(numpy.array(dataset_cell_exp[expname]['amp']) +
-                            numpy.array(dataset_cell_exp[expname]['hypamp']))
+                amp_abs = numpy.abs(
+                    numpy.array(
+                        dataset_cell_exp[expname]['amp']) +
+                    numpy.array(
+                        dataset_cell_exp[expname]['hypamp']))
 
                 i_noinput = numpy.argmin(amp_abs)
 
@@ -653,12 +687,19 @@ class Extractor(object):
                     elif target == 'all':
                         idx = numpy.ones(len(amp), dtype=bool)
                     else:
-                        idx = numpy.array((amp_rel >= (target - self.options["tolerance"][ti])) &\
-                                (amp_rel <= (target + self.options["tolerance"][ti])))
+                        idx = numpy.array(
+                            (amp_rel >= (
+                                target -
+                                self.options["tolerance"][ti])) & (
+                                amp_rel <= (
+                                    target +
+                                    self.options["tolerance"][ti])))
 
                     amp_target = numpy.atleast_1d(numpy.array(amp)[idx])
-                    # equal to amp_target if amplitude not measured relative to threshold
-                    amp_rel_target = numpy.atleast_1d(numpy.array(amp_rel)[idx])
+                    # equal to amp_target if amplitude not measured relative to
+                    # threshold
+                    amp_rel_target = numpy.atleast_1d(
+                        numpy.array(amp_rel)[idx])
                     hypamp_target = numpy.atleast_1d(numpy.array(hypamp)[idx])
 
                     if len(amp_target) > 0:
@@ -667,29 +708,40 @@ class Extractor(object):
                             if (amp_abs[i_noinput] < 0.01):
                                 meanamp_target = self.newmeancell(amp_target)
                                 stdamp_target = self.newstdcell(amp_target)
-                                meanamp_rel_target = self.newmeancell(amp_rel_target)
-                                stdamp_rel_target = self.newstdcell(amp_rel_target)
-                                meanhypamp_target = self.newmeancell(hypamp_target)
-                                stdhypamp_target = self.newstdcell(hypamp_target)
+                                meanamp_rel_target = self.newmeancell(
+                                    amp_rel_target)
+                                stdamp_rel_target = self.newstdcell(
+                                    amp_rel_target)
+                                meanhypamp_target = self.newmeancell(
+                                    hypamp_target)
+                                stdhypamp_target = self.newstdcell(
+                                    hypamp_target)
                             else:
                                 continue
 
                         else:
                             meanamp_target = self.newmeancell(amp_target)
                             stdamp_target = self.newstdcell(amp_target)
-                            meanamp_rel_target = self.newmeancell(amp_rel_target)
+                            meanamp_rel_target = self.newmeancell(
+                                amp_rel_target)
                             stdamp_rel_target = self.newstdcell(amp_rel_target)
                             meanhypamp_target = self.newmeancell(hypamp_target)
                             stdhypamp_target = self.newstdcell(hypamp_target)
 
-                        dataset_cell_exp[expname]['mean_amp'][str(target)] = meanamp_target
-                        dataset_cell_exp[expname]['std_amp'][str(target)] = stdamp_target
+                        dataset_cell_exp[expname]['mean_amp'][
+                            str(target)] = meanamp_target
+                        dataset_cell_exp[expname]['std_amp'][
+                            str(target)] = stdamp_target
 
-                        dataset_cell_exp[expname]['mean_amp_rel'][str(target)] = meanamp_rel_target
-                        dataset_cell_exp[expname]['std_amp_rel'][str(target)] = stdamp_rel_target
+                        dataset_cell_exp[expname]['mean_amp_rel'][
+                            str(target)] = meanamp_rel_target
+                        dataset_cell_exp[expname]['std_amp_rel'][
+                            str(target)] = stdamp_rel_target
 
-                        dataset_cell_exp[expname]['mean_hypamp'][str(target)] = meanhypamp_target
-                        dataset_cell_exp[expname]['std_hypamp'][str(target)] = stdhypamp_target
+                        dataset_cell_exp[expname]['mean_hypamp'][
+                            str(target)] = meanhypamp_target
+                        dataset_cell_exp[expname]['std_hypamp'][
+                            str(target)] = stdhypamp_target
 
                 dataset_cell_exp[expname]['mean_ton'] = ton
                 dataset_cell_exp[expname]['mean_toff'] = toff
@@ -705,15 +757,24 @@ class Extractor(object):
                         elif target == 'all':
                             idx = numpy.ones(len(amp), dtype=bool)
                         else:
-                            idx = numpy.array((amp_rel >= (target - self.options["tolerance"][ti])) &\
-                                    (amp_rel <= (target + self.options["tolerance"][ti])))
+                            idx = numpy.array(
+                                (amp_rel >= (
+                                    target -
+                                    self.options["tolerance"][ti])) & (
+                                    amp_rel <= (
+                                        target +
+                                        self.options["tolerance"][ti])))
 
                         feat = numpy.atleast_1d(numpy.array(feat_vals)[idx])
 
                         if self.saveraw:
-                            raw = numpy.atleast_1d(numpy.array(rawfiles_list)[idx]).tolist()
+                            raw = numpy.atleast_1d(
+                                numpy.array(rawfiles_list)[idx]).tolist()
 
-                        n = numpy.sum(numpy.invert(numpy.isnan(numpy.atleast_1d(feat))))
+                        n = numpy.sum(
+                            numpy.invert(
+                                numpy.isnan(
+                                    numpy.atleast_1d(feat))))
 
                         if n > 0:
 
@@ -721,31 +782,46 @@ class Extractor(object):
                                 if (amp_abs[i_noinput] < 0.01):
                                     meanfeat = self.newmeancell(feat)
                                     stdfeat = self.newstdcell(feat)
-                                    bcmean, bcstd, bcld, bcshift = self.boxcoxcell(feat, nanopt="nanmean_cell")
+                                    bcmean, bcstd, bcld, bcshift = self.boxcoxcell(
+                                        feat, nanopt="nanmean_cell")
                                 else:
                                     continue
                             else:
                                 meanfeat = self.newmeancell(feat)
                                 stdfeat = self.newstdcell(feat)
-                                bcmean, bcstd, bcld, bcshift = self.boxcoxcell(feat, nanopt="nanmean_cell")
+                                bcmean, bcstd, bcld, bcshift = self.boxcoxcell(
+                                    feat, nanopt="nanmean_cell")
 
-                            dataset_cell_exp[expname]['mean_features'][feature][str(target)] = meanfeat
-                            dataset_cell_exp[expname]['std_features'][feature][str(target)] = stdfeat
-                            dataset_cell_exp[expname]['n'][feature][str(target)] = n
+                            dataset_cell_exp[expname]['mean_features'][
+                                feature][
+                                str(target)] = meanfeat
+                            dataset_cell_exp[expname]['std_features'][
+                                feature][
+                                str(target)] = stdfeat
+                            dataset_cell_exp[expname]['n'][feature][
+                                str(target)] = n
 
                             if self.saveraw:
-                                dataset_cell_exp[expname]['raw'][feature][str(target)] = raw
+                                dataset_cell_exp[expname]['raw'][feature][
+                                    str(target)] = raw
 
-                            dataset_cell_exp[expname]['bc_mean_features'][feature][str(target)] = bcmean
-                            dataset_cell_exp[expname]['bc_std_features'][feature][str(target)] = bcstd
-                            dataset_cell_exp[expname]['bc_shift_features'][feature][str(target)] = bcshift
-                            dataset_cell_exp[expname]['bc_ld_features'][feature][str(target)] = bcld
-
+                            dataset_cell_exp[expname]['bc_mean_features'][
+                                feature][
+                                str(target)] = bcmean
+                            dataset_cell_exp[expname]['bc_std_features'][
+                                feature][
+                                str(target)] = bcstd
+                            dataset_cell_exp[expname]['bc_shift_features'][
+                                feature][
+                                str(target)] = bcshift
+                            dataset_cell_exp[expname]['bc_ld_features'][
+                                feature][
+                                str(target)] = bcld
 
         # mean for all cells
         for i_exp, expname in enumerate(self.experiments):
 
-            #collect everything in global structure
+            # collect everything in global structure
             self.dataset_mean[expname] = OrderedDict()
             self.dataset_mean[expname]['amp'] = OrderedDict()
             self.dataset_mean[expname]['amp_rel'] = OrderedDict()
@@ -762,20 +838,26 @@ class Extractor(object):
 
             for feature in self.features[expname]:
                 self.dataset_mean[expname]['features'][feature] = OrderedDict()
-                self.dataset_mean[expname]['cell_std_features'][feature] = OrderedDict()
-                self.dataset_mean[expname]['cell_bc_features'][feature] = OrderedDict()
+                self.dataset_mean[expname]['cell_std_features'][feature] = OrderedDict(
+                )
+                self.dataset_mean[expname]['cell_bc_features'][feature] = OrderedDict(
+                )
                 self.dataset_mean[expname]['cell_n'][feature] = OrderedDict()
                 self.dataset_mean[expname]['n'][feature] = OrderedDict()
                 self.dataset_mean[expname]['raw'][feature] = OrderedDict()
 
                 for target in self.options["target"]:
-                    self.dataset_mean[expname]['features'][feature][str(target)] = []
-                    self.dataset_mean[expname]['cell_std_features'][feature][str(target)] = []
-                    self.dataset_mean[expname]['cell_bc_features'][feature][str(target)] = []
-                    self.dataset_mean[expname]['cell_n'][feature][str(target)] = []
+                    self.dataset_mean[expname]['features'][feature][
+                        str(target)] = []
+                    self.dataset_mean[expname]['cell_std_features'][feature][str(target)] = [
+                    ]
+                    self.dataset_mean[expname]['cell_bc_features'][feature][str(target)] = [
+                    ]
+                    self.dataset_mean[expname]['cell_n'][feature][
+                        str(target)] = []
                     self.dataset_mean[expname]['n'][feature][str(target)] = []
-                    self.dataset_mean[expname]['raw'][feature][str(target)] = []
-
+                    self.dataset_mean[expname]['raw'][feature][
+                        str(target)] = []
 
             for target in self.options["target"]:
                 self.dataset_mean[expname]['amp'][str(target)] = []
@@ -788,7 +870,7 @@ class Extractor(object):
 
                 if expname in dataset_cell_exp:
                     self.dataset_mean[expname]['location'] =\
-                            dataset_cell_exp[expname]['location']
+                        dataset_cell_exp[expname]['location']
 
                     ton = dataset_cell_exp[expname]['mean_ton']
                     self.dataset_mean[expname]['ton'].append(ton)
@@ -800,38 +882,68 @@ class Extractor(object):
                     self.dataset_mean[expname]['tend'].append(tend)
 
                     for target in self.options["target"]:
-                        if str(target) in dataset_cell_exp[expname]['mean_amp']:
-                            amp = dataset_cell_exp[expname]['mean_amp'][str(target)]
-                            self.dataset_mean[expname]['amp'][str(target)].append(amp)
-                            amp_rel = dataset_cell_exp[expname]['mean_amp_rel'][str(target)]
-                            self.dataset_mean[expname]['amp_rel'][str(target)].append(amp_rel)
-                            hypamp = dataset_cell_exp[expname]['mean_hypamp'][str(target)]
-                            self.dataset_mean[expname]['hypamp'][str(target)].append(hypamp)
+                        if str(target) in dataset_cell_exp[expname][
+                                'mean_amp']:
+                            amp = dataset_cell_exp[expname]['mean_amp'][
+                                str(target)]
+                            self.dataset_mean[expname]['amp'][
+                                str(target)].append(amp)
+                            amp_rel = dataset_cell_exp[expname][
+                                'mean_amp_rel'][
+                                str(target)]
+                            self.dataset_mean[expname]['amp_rel'][
+                                str(target)].append(amp_rel)
+                            hypamp = dataset_cell_exp[expname]['mean_hypamp'][str(
+                                target)]
+                            self.dataset_mean[expname]['hypamp'][
+                                str(target)].append(hypamp)
 
                     for feature in self.features[expname]:
                         for target in self.options["target"]:
-                            if str(target) in dataset_cell_exp[expname]['mean_features'][feature]:
+                            if str(target) in dataset_cell_exp[expname][
+                                    'mean_features'][feature]:
 
-                                result = dataset_cell_exp[expname]['mean_features'][feature][str(target)]
-                                self.dataset_mean[expname]['features'][feature][str(target)].append(result)
+                                result = dataset_cell_exp[expname][
+                                    'mean_features'][feature][
+                                    str(target)]
+                                self.dataset_mean[expname]['features'][
+                                    feature][str(target)].append(result)
 
-                                cell_std_result = dataset_cell_exp[expname]['std_features'][feature][str(target)]
-                                self.dataset_mean[expname]['cell_std_features'][feature][str(target)].append(cell_std_result)
+                                cell_std_result = dataset_cell_exp[expname][
+                                    'std_features'][feature][str(target)]
+                                self.dataset_mean[expname][
+                                    'cell_std_features'][feature][
+                                    str(target)].append(cell_std_result)
 
-                                bcmean = dataset_cell_exp[expname]['bc_mean_features'][feature][str(target)]
-                                bcstd = dataset_cell_exp[expname]['bc_std_features'][feature][str(target)]
-                                bcshift = dataset_cell_exp[expname]['bc_shift_features'][feature][str(target)]
-                                bcld = dataset_cell_exp[expname]['bc_ld_features'][feature][str(target)]
-                                self.dataset_mean[expname]['cell_bc_features'][feature][str(target)].append([bcmean, bcstd, bcld, bcshift])
+                                bcmean = dataset_cell_exp[expname][
+                                    'bc_mean_features'][feature][
+                                    str(target)]
+                                bcstd = dataset_cell_exp[expname][
+                                    'bc_std_features'][feature][
+                                    str(target)]
+                                bcshift = dataset_cell_exp[expname][
+                                    'bc_shift_features'][feature][
+                                    str(target)]
+                                bcld = dataset_cell_exp[expname][
+                                    'bc_ld_features'][feature][
+                                    str(target)]
+                                self.dataset_mean[expname]['cell_bc_features'][feature][str(
+                                    target)].append([bcmean, bcstd, bcld, bcshift])
 
-                                n = dataset_cell_exp[expname]['n'][feature][str(target)]
-                                self.dataset_mean[expname]['cell_n'][feature][str(target)].append(n)
+                                n = dataset_cell_exp[expname]['n'][feature][
+                                    str(target)]
+                                self.dataset_mean[expname]['cell_n'][feature][str(
+                                    target)].append(n)
 
                                 if self.saveraw:
-                                    raw = dataset_cell_exp[expname]['raw'][feature][str(target)]
-                                    self.dataset_mean[expname]['raw'][feature][str(target)].append(raw)
+                                    raw = dataset_cell_exp[expname]['raw'][
+                                        feature][
+                                        str(target)]
+                                    self.dataset_mean[expname]['raw'][
+                                        feature][
+                                        str(target)].append(raw)
 
-            #create means
+            # create means
             self.dataset_mean[expname]['mean_amp'] = OrderedDict()
             self.dataset_mean[expname]['mean_amp_rel'] = OrderedDict()
             self.dataset_mean[expname]['mean_hypamp'] = OrderedDict()
@@ -847,13 +959,19 @@ class Extractor(object):
             self.dataset_mean[expname]['bc_ld_features'] = OrderedDict()
 
             for feature in self.features[expname]:
-                self.dataset_mean[expname]['mean_features'][feature] = OrderedDict()
-                self.dataset_mean[expname]['std_features'][feature] = OrderedDict()
+                self.dataset_mean[expname]['mean_features'][feature] = OrderedDict(
+                )
+                self.dataset_mean[expname]['std_features'][feature] = OrderedDict(
+                )
 
-                self.dataset_mean[expname]['bc_mean_features'][feature] = OrderedDict()
-                self.dataset_mean[expname]['bc_std_features'][feature] = OrderedDict()
-                self.dataset_mean[expname]['bc_shift_features'][feature] = OrderedDict()
-                self.dataset_mean[expname]['bc_ld_features'][feature] = OrderedDict()
+                self.dataset_mean[expname]['bc_mean_features'][feature] = OrderedDict(
+                )
+                self.dataset_mean[expname]['bc_std_features'][feature] = OrderedDict(
+                )
+                self.dataset_mean[expname]['bc_shift_features'][feature] = OrderedDict(
+                )
+                self.dataset_mean[expname]['bc_ld_features'][feature] = OrderedDict(
+                )
 
             ton = self.dataset_mean[expname]['ton']
             toff = self.dataset_mean[expname]['toff']
@@ -868,49 +986,72 @@ class Extractor(object):
                 amp_rel = self.dataset_mean[expname]['amp_rel'][str(target)]
                 hypamp = self.dataset_mean[expname]['hypamp'][str(target)]
 
-                self.dataset_mean[expname]['mean_amp'][str(target)] = self.newmean(amp)
-                self.dataset_mean[expname]['mean_amp_rel'][str(target)] = self.newmean(amp_rel)
-                self.dataset_mean[expname]['mean_hypamp'][str(target)] = self.newmean(hypamp)
-                self.dataset_mean[expname]['std_amp'][str(target)] = self.newstd(amp)
-                self.dataset_mean[expname]['std_amp_rel'][str(target)] = self.newstd(amp_rel)
-                self.dataset_mean[expname]['std_hypamp'][str(target)] = self.newstd(hypamp)
+                self.dataset_mean[expname]['mean_amp'][
+                    str(target)] = self.newmean(amp)
+                self.dataset_mean[expname]['mean_amp_rel'][
+                    str(target)] = self.newmean(amp_rel)
+                self.dataset_mean[expname]['mean_hypamp'][
+                    str(target)] = self.newmean(hypamp)
+                self.dataset_mean[expname]['std_amp'][
+                    str(target)] = self.newstd(amp)
+                self.dataset_mean[expname]['std_amp_rel'][
+                    str(target)] = self.newstd(amp_rel)
+                self.dataset_mean[expname]['std_hypamp'][
+                    str(target)] = self.newstd(hypamp)
 
             for feature in self.features[expname]:
                 for target in self.options["target"]:
-                    feat = self.dataset_mean[expname]['features'][feature][str(target)]
-                    cell_std_feat = self.dataset_mean[expname]['cell_std_features'][feature][str(target)]
-                    cell_n = self.dataset_mean[expname]['cell_n'][feature][str(target)]
+                    feat = self.dataset_mean[expname]['features'][feature][
+                        str(target)]
+                    cell_std_feat = self.dataset_mean[expname][
+                        'cell_std_features'][feature][str(target)]
+                    cell_n = self.dataset_mean[expname]['cell_n'][feature][
+                        str(target)]
 
-                    # added by Luca Leonardo Bologna to handle the case in which only one feature value is present at this point
-                    n = numpy.sum(numpy.invert(numpy.isnan(numpy.atleast_1d(feat)))) # count non Nan entries!
+                    # added by Luca Leonardo Bologna to handle the case in
+                    # which only one feature value is present at this point
+                    n = numpy.sum(
+                        numpy.invert(
+                            numpy.isnan(
+                                numpy.atleast_1d(feat))))  # count non Nan entries!
                     self.dataset_mean[expname]['n'][feature][str(target)] = n
 
-                    if n == 1: # only result from one cell in population
-                        if cell_n > 1: # pick values from this one cell instead if more than one sweep
-                            self.dataset_mean[expname]['mean_features'][feature][str(target)] = feat[0]
-                            self.dataset_mean[expname]['std_features'][feature][str(target)] = cell_std_feat[0]
-                            [bcmean, bcstd, bcld, bcshift] = self.dataset_mean[expname]['cell_bc_features'][feature][str(target)][0]
+                    if n == 1:  # only result from one cell in population
+                        if cell_n > 1:  # pick values from this one cell instead if more than one sweep
+                            self.dataset_mean[expname]['mean_features'][
+                                feature][
+                                str(target)] = feat[0]
+                            self.dataset_mean[expname]['std_features'][
+                                feature][str(target)] = cell_std_feat[0]
+                            [bcmean, bcstd, bcld, bcshift] = self.dataset_mean[expname]['cell_bc_features'][feature][str(
+                                target)][0]
                     else:
-                        self.dataset_mean[expname]['mean_features'][feature][str(target)] = self.newmean(feat)
-                        self.dataset_mean[expname]['std_features'][feature][str(target)] = self.newstd(feat)
-                        bcmean, bcstd, bcld, bcshift = self.boxcoxcell(feat, nanopt="nanmean")
+                        self.dataset_mean[expname]['mean_features'][feature][str(
+                            target)] = self.newmean(feat)
+                        self.dataset_mean[expname]['std_features'][feature][
+                            str(target)] = self.newstd(feat)
+                        bcmean, bcstd, bcld, bcshift = self.boxcoxcell(
+                            feat, nanopt="nanmean")
 
-                    self.dataset_mean[expname]['bc_mean_features'][feature][str(target)] = bcmean
-                    self.dataset_mean[expname]['bc_std_features'][feature][str(target)] = bcstd
-                    self.dataset_mean[expname]['bc_shift_features'][feature][str(target)] = bcshift
-                    self.dataset_mean[expname]['bc_ld_features'][feature][str(target)] = bcld
-
+                    self.dataset_mean[expname]['bc_mean_features'][feature][
+                        str(target)] = bcmean
+                    self.dataset_mean[expname]['bc_std_features'][feature][
+                        str(target)] = bcstd
+                    self.dataset_mean[expname]['bc_shift_features'][feature][str(
+                        target)] = bcshift
+                    self.dataset_mean[expname]['bc_ld_features'][feature][
+                        str(target)] = bcld
 
     def get_threshold(self, amp, numspikes):
 
         isort = numpy.argsort(amp)
         amps_sort = numpy.array(amp)[isort]
         numspikes_sort = numpy.array(numspikes)[isort]
-        i_threshold = numpy.where(numspikes_sort>=self.options["spike_threshold"])[0][0]
+        i_threshold = numpy.where(
+            numspikes_sort >= self.options["spike_threshold"])[0][0]
         amp_threshold = amps_sort[i_threshold]
 
         return amp_threshold
-
 
     def plt_features(self):
 
@@ -924,7 +1065,7 @@ class Extractor(object):
 
             cellfigs = OrderedDict()
 
-            dirname = self.maindirname+cellname
+            dirname = self.maindirname + cellname
             tools.makedir(dirname)
 
             colorcell = next(colorcyclercell)
@@ -935,29 +1076,40 @@ class Extractor(object):
 
                 figname = "features_" + expname
                 if figname not in figs:
-                    plottools.tiled_figure(figname, frames=len(self.features[expname]),
-                                    columns=3, figs=figs, dirname=self.maindirname,
-                                    top=0.97, bottom=0.04, left=0.07, right=0.97, hspace=0.75, wspace=0.3)
-
+                    plottools.tiled_figure(
+                        figname, frames=len(self.features[expname]),
+                        columns=3, figs=figs, dirname=self.maindirname,
+                        top=0.97, bottom=0.04, left=0.07, right=0.97,
+                        hspace=0.75, wspace=0.3)
 
                 figname = "features_" + cellname.split('/')[-1] + "_" + expname
-                axs_cell = plottools.tiled_figure(figname, frames=len(self.features[expname]),
-                                    columns=3, figs=cellfigs, dirname=dirname,
-                                    top=0.97, bottom=0.04, left=0.07, right=0.97, hspace=0.75, wspace=0.3)
+                axs_cell = plottools.tiled_figure(
+                    figname,
+                    frames=len(
+                        self.features[expname]),
+                    columns=3,
+                    figs=cellfigs,
+                    dirname=dirname,
+                    top=0.97,
+                    bottom=0.04,
+                    left=0.07,
+                    right=0.97,
+                    hspace=0.75,
+                    wspace=0.3)
 
                 amp = dataset_cell_exp[expname]['amp']
-                numspikes = dataset_cell_exp[expname]['features']['numspikes']
                 feature_array = dataset_cell_exp[expname]['features']
                 filenames = dataset_cell_exp[expname]['filename']
 
                 markercycler = cycle(self.markerlist)
                 colorcycler = cycle(self.colorlist)
 
-                colormarker_dict = {u:[next(colorcycler),next(markercycler)] for u in list(set(filenames))}
+                colormarker_dict = {u: [next(colorcycler), next(
+                    markercycler)] for u in list(set(filenames))}
 
                 if self.options["relative"]:
                     amp_threshold = self.thresholds_per_cell[cellname]
-                    amp_rel = amp/amp_threshold * 100.
+                    amp_rel = amp / amp_threshold * 100.
                 else:
                     amp_rel = amp
 
@@ -972,20 +1124,30 @@ class Extractor(object):
                         amp_rel_ = numpy.float64(amp_rel[i_feat])
                         is_not_nan = ~numpy.isnan(feat_vals_)
 
-                        axs_cell[fi].plot(amp_rel_[is_not_nan], feat_vals_[is_not_nan], "",
-                                    linestyle='None',
-                                    marker=marker, color=color, markersize=5, zorder=1,
-                                    linewidth=1, markeredgecolor = 'none', clip_on=False)
-                        #axs_cell[fi].set_xticks(self.options["target"])
-                        #axs_cell[fi].set_xticklabels(())
+                        axs_cell[fi].plot(
+                            amp_rel_[is_not_nan],
+                            feat_vals_[is_not_nan],
+                            "",
+                            linestyle='None',
+                            marker=marker,
+                            color=color,
+                            markersize=5,
+                            zorder=1,
+                            linewidth=1,
+                            markeredgecolor='none',
+                            clip_on=False)
+                        # axs_cell[fi].set_xticks(self.options["target"])
+                        # axs_cell[fi].set_xticklabels(())
                         axs_cell[fi].set_title(feature)
 
                         figname = "features_" + expname
-                        figs[figname]['axs'][fi].plot(amp_rel_[is_not_nan], feat_vals_[is_not_nan], "",
-                                    linestyle='None',
-                                    marker=markercell, color=colorcell, markersize=3, zorder=1,
-                                    linewidth=1, markeredgecolor = 'none', clip_on=False)
-                        #figs[figname]['axs'][fi].set_xticks(self.options["target"])
+                        figs[figname]['axs'][fi].plot(
+                            amp_rel_[is_not_nan],
+                            feat_vals_[is_not_nan],
+                            "", linestyle='None', marker=markercell,
+                            color=colorcell, markersize=3, zorder=1,
+                            linewidth=1, markeredgecolor='none', clip_on=False)
+                        # figs[figname]['axs'][fi].set_xticks(self.options["target"])
                         figs[figname]['axs'][fi].set_title(feature)
 
                     if 'mean_features' in dataset_cell_exp[expname]:
@@ -994,11 +1156,16 @@ class Extractor(object):
                         mean_list = []
                         std_list = []
                         for target in self.options["target"]:
-                            if str(target) in dataset_cell_exp[expname]['mean_features'][feature]:
-                                a = dataset_cell_exp[expname]['mean_amp_rel'][str(target)]
-                                m = dataset_cell_exp[expname]['mean_features'][feature][str(target)]
-                                s = dataset_cell_exp[expname]['std_features'][feature][str(target)]
-                                if ~numpy.isnan(m) and ((s > 0.0) or (m == 0.0) ):
+                            if str(target) in dataset_cell_exp[expname][
+                                    'mean_features'][feature]:
+                                a = dataset_cell_exp[expname]['mean_amp_rel'][str(
+                                    target)]
+                                m = dataset_cell_exp[expname]['mean_features'][feature][str(
+                                    target)]
+                                s = dataset_cell_exp[expname]['std_features'][feature][str(
+                                    target)]
+                                if ~numpy.isnan(m) and(
+                                        (s > 0.0) or(m == 0.0)):
                                     amp_rel_list.append(a)
                                     mean_list.append(m)
                                     std_list.append(s)
@@ -1007,20 +1174,21 @@ class Extractor(object):
                         std_array = numpy.array(std_list)
                         amp_rel_array = numpy.array(amp_rel_list)
 
-                        e = axs_cell[fi].errorbar(amp_rel_array, mean_array, yerr=std_array,
-                                    marker='s', color='k',
-                                    linewidth=1, linestyle='None',
-                                    markersize=6, zorder=10, clip_on = False)
-                        #axs_cell[fi].set_xticks(self.options["target"])
+                        e = axs_cell[fi].errorbar(
+                            amp_rel_array, mean_array, yerr=std_array,
+                            marker='s', color='k', linewidth=1,
+                            linestyle='None', markersize=6, zorder=10,
+                            clip_on=False)
+                        # axs_cell[fi].set_xticks(self.options["target"])
                         for b in e[1]:
                             b.set_clip_on(False)
 
             # close single cell figures
             for i_fig, figname in enumerate(cellfigs):
                 fig = cellfigs[figname]
-                fig['fig'].savefig(fig['dirname'] + '/' + figname + '.pdf', dpi=300)
+                fig['fig'].savefig(
+                    fig['dirname'] + '/' + figname + '.pdf', dpi=300)
                 plt.close(fig['fig'])
-
 
         for i_exp, expname in enumerate(self.experiments):
 
@@ -1030,11 +1198,17 @@ class Extractor(object):
                     mean_list = []
                     std_list = []
                     for target in self.options["target"]:
-                        if str(target) in self.dataset_mean[expname]['mean_features'][feature]:
-                            a = self.dataset_mean[expname]['mean_amp_rel'][str(target)]
-                            m = self.dataset_mean[expname]['mean_features'][feature][str(target)]
-                            s = self.dataset_mean[expname]['std_features'][feature][str(target)]
-                            if ~numpy.isnan(m) and ((s > 0.0) or (m == 0.0) ):
+                        if str(target) in self.dataset_mean[expname][
+                                'mean_features'][feature]:
+                            a = self.dataset_mean[expname]['mean_amp_rel'][
+                                str(target)]
+                            m = self.dataset_mean[expname]['mean_features'][
+                                feature][
+                                str(target)]
+                            s = self.dataset_mean[expname]['std_features'][
+                                feature][
+                                str(target)]
+                            if ~numpy.isnan(m) and ((s > 0.0) or (m == 0.0)):
                                 amp_rel_list.append(a)
                                 mean_list.append(m)
                                 std_list.append(s)
@@ -1042,22 +1216,24 @@ class Extractor(object):
                     mean_array = numpy.array(mean_list)
                     std_array = numpy.array(std_list)
                     amp_rel_array = numpy.array(amp_rel_list)
-                    #is_not_nan = ~numpy.isnan(mean_array)
 
                     figname = "features_" + expname
-                    e = figs[figname]['axs'][fi].errorbar(amp_rel_list, mean_array,
-                            yerr=std_array, marker='s', color='k',
-                            linewidth=1, linestyle='None',
-                            markersize=6, zorder=10, clip_on=False)
+                    e = figs[figname]['axs'][fi].errorbar(
+                        amp_rel_list, mean_array, yerr=std_array, marker='s',
+                        color='k', linewidth=1, linestyle='None', markersize=6,
+                        zorder=10, clip_on=False)
                     for b in e[1]:
                         b.set_clip_on(False)
 
-
         for i_fig, figname in enumerate(figs):
             fig = figs[figname]
-            fig['fig'].savefig(fig['dirname'] + '/' + figname + '.pdf', dpi=300)
+            fig['fig'].savefig(
+                fig['dirname'] +
+                '/' +
+                figname +
+                '.pdf',
+                dpi=300)
             plt.close(fig['fig'])
-
 
     def plt_features_dist(self):
 
@@ -1075,29 +1251,42 @@ class Extractor(object):
             for feature in self.features[expname]:
 
                 figname = "features_" + expname + "_" + feature
-                axs = plottools.tiled_figure(figname, frames=2*len(self.options["target"]),
-                                    columns=6, figs=figs, dirname=dirname,
-                                    top=0.92, bottom=0.04, left=0.07, right=0.97, hspace=0.75, wspace=0.3)
+                axs = plottools.tiled_figure(
+                    figname, frames=2 * len(self.options["target"]),
+                    columns=6, figs=figs, dirname=dirname, top=0.92,
+                    bottom=0.04, left=0.07, right=0.97, hspace=0.75,
+                    wspace=0.3)
 
                 for it, target in enumerate(self.options["target"]):
 
-                    feat = numpy.array(self.dataset_mean[expname]['features'][feature][str(target)])
+                    feat = numpy.array(
+                        self.dataset_mean[expname]['features'][feature]
+                        [str(target)])
 
-                    ax = axs[2*it]
-                    ax_bc = axs[2*it+1]
+                    ax = axs[2 * it]
+                    ax_bc = axs[2 * it + 1]
                     ax.set_title(str(target))
-                    ax_bc.set_title(str(target) + " boxcox" )
+                    ax_bc.set_title(str(target) + " boxcox")
                     feat[numpy.isinf(feat)] = float('nan')
 
-                    bcmean = self.dataset_mean[expname]['bc_mean_features'][feature][str(target)]
-                    bcstd = self.dataset_mean[expname]['bc_std_features'][feature][str(target)]
-                    bcshift = self.dataset_mean[expname]['bc_shift_features'][feature][str(target)]
-                    bcld = self.dataset_mean[expname]['bc_ld_features'][feature][str(target)]
+                    bcshift = \
+                        self.dataset_mean[expname]['bc_shift_features'][feature][str(
+                            target)]
+                    bcld = self.dataset_mean[expname]['bc_ld_features'][
+                        feature][
+                        str(target)]
 
                     if (all(numpy.isnan(feat)) is False):
 
-                        ax.hist(feat, max(1, int(len(feat)/2)), histtype='stepfilled', color='b', edgecolor='none')
-                        ax_bc.set_title(str(target) + " boxcox\nld:" + str(bcld) + "\nshift:" + str(bcshift) )
+                        ax.hist(feat, max(1, int(len(feat) / 2)),
+                                histtype='stepfilled', color='b',
+                                edgecolor='none')
+                        ax_bc.set_title(
+                            str(target) +
+                            " boxcox\nld:" +
+                            str(bcld) +
+                            "\nshift:" +
+                            str(bcshift))
 
                         if (bcshift is not False):
 
@@ -1105,9 +1294,12 @@ class Extractor(object):
                             feat_bc = yj.fit(feat, bcld)
                             feat_bc[numpy.isinf(feat_bc)] = float('nan')
 
-                            if (all(numpy.isnan(feat_bc)) is False) and all(numpy.array(feat_bc) < 2**53):
-                                ax_bc.hist(feat_bc, max(1, int(len(feat)/2)), histtype='stepfilled', color='r', edgecolor='none')
-
+                            if (all(numpy.isnan(feat_bc)) is False) and all(
+                                    numpy.array(feat_bc) < 2**53):
+                                ax_bc.hist(
+                                    feat_bc, max(1, int(len(feat) / 2)),
+                                    histtype='stepfilled', color='r',
+                                    edgecolor='none')
 
                 fig = figs[figname]
                 fig['fig'].suptitle(feature)
@@ -1115,40 +1307,52 @@ class Extractor(object):
 
             pdf_pages.close()
 
-
     def feature_config_all(self, version=None):
 
         self.create_feature_config(self.maindirname,
-                            self.dataset_mean, version=version)
-
+                                   self.dataset_mean, version=version)
 
     def feature_config_cells(self, version=None):
         for i_cell, cellname in enumerate(self.dataset):
-            dirname = self.maindirname+cellname
+            dirname = self.maindirname + cellname
             tools.makedir(dirname)
             dataset_cell_exp = self.dataset[cellname]['experiments']
-            self.create_feature_config(self.maindirname+cellname+os.sep,
-                            dataset_cell_exp, version=version)
-
+            self.create_feature_config(self.maindirname + cellname + os.sep,
+                                       dataset_cell_exp, version=version)
 
     def analyse_threshold(self):
 
-        logger.info(" Analysing threshold and hypamp and saving files to %s", self.maindirname)
+        logger.info(
+            " Analysing threshold and hypamp and saving files to %s",
+            self.maindirname)
 
         hyp_th = {}
         for cellname in self.thresholds_per_cell:
             hyp_th[cellname] = OrderedDict()
-            hyp_th[cellname]['threshold'] = round(self.thresholds_per_cell[cellname],4)
-            hyp_th[cellname]['hypamp'] = round(self.hypamps_per_cell[cellname],4)
+            hyp_th[cellname]['threshold'] = round(
+                self.thresholds_per_cell[cellname], 4)
+            hyp_th[cellname]['hypamp'] = round(
+                self.hypamps_per_cell[cellname], 4)
 
         thresholds = [d for k, d in self.thresholds_per_cell.iteritems()]
         hypamps = [d for k, d in self.hypamps_per_cell.iteritems()]
         hyp_th['all'] = OrderedDict()
-        hyp_th['all']['threshold'] = [round(numpy.mean(thresholds),4), round(numpy.std(thresholds),4)]
-        hyp_th['all']['hypamp'] = [round(numpy.mean(hypamps),4), round(numpy.std(hypamps),4)]
+        hyp_th['all']['threshold'] = [
+            round(
+                numpy.mean(thresholds), 4), round(
+                numpy.std(thresholds), 4)]
+        hyp_th['all']['hypamp'] = [
+            round(
+                numpy.mean(hypamps), 4), round(
+                numpy.std(hypamps), 4)]
 
-        json.dump(hyp_th, open(self.maindirname + "hypamp_threshold.json", 'w'), indent=4)
-
+        json.dump(
+            hyp_th,
+            open(
+                self.maindirname +
+                "hypamp_threshold.json",
+                'w'),
+            indent=4)
 
     def create_feature_config(self, directory, dataset, version=None):
 
@@ -1167,18 +1371,27 @@ class Extractor(object):
                     for fi, feature in enumerate(self.features[expname]):
                         for it, target in enumerate(self.options["target"]):
 
-                            if str(target) in dataset[expname]['mean_features'][feature]:
+                            if str(target) in dataset[expname][
+                                    'mean_features'][feature]:
 
                                 t = str(target)
                                 stimname = expname + '_' + t
 
-                                m = round(dataset[expname]['mean_features'][feature][str(target)],4)
-                                s = round(dataset[expname]['std_features'][feature][str(target)],4)
-                                n = int(dataset[expname]['n'][feature][str(target)])
+                                m = round(
+                                    dataset[expname]['mean_features']
+                                    [feature][str(target)],
+                                    4)
+                                s = round(
+                                    dataset[expname]['std_features']
+                                    [feature][str(target)],
+                                    4)
+                                n = int(dataset[expname]['n']
+                                        [feature][str(target)])
 
-                                if ~numpy.isnan(m) and ((s > 0.0) or (m == 0.0) ):
+                                if ~numpy.isnan(m) and(
+                                        (s > 0.0) or(m == 0.0)):
 
-                                    if s == 0.0: # prevent divison by 0
+                                    if s == 0.0:  # prevent divison by 0
                                         s = 1e-3
 
                                     if stimname not in stim:
@@ -1192,8 +1405,14 @@ class Extractor(object):
 
                                     feat[stimname][location][feature] = [m, s]
 
-                                    a = round(dataset[expname]['mean_amp'][str(target)],6)
-                                    h = round(dataset[expname]['mean_hypamp'][str(target)],6)
+                                    a = round(
+                                        dataset[expname]['mean_amp']
+                                        [str(target)],
+                                        6)
+                                    h = round(
+                                        dataset[expname]['mean_hypamp']
+                                        [str(target)],
+                                        6)
                                     ton = dataset[expname]['mean_ton']
                                     toff = dataset[expname]['mean_toff']
                                     tend = dataset[expname]['mean_tend']
@@ -1201,27 +1420,27 @@ class Extractor(object):
                                     if 'stimuli' not in stim[stimname]:
 
                                         totduration = round(tend)
-                                        delay = round(self.options["delay"] + ton)
-                                        duration = round(toff-ton)
+                                        delay = round(
+                                            self.options["delay"] + ton)
+                                        duration = round(toff - ton)
 
                                         stim[stimname]['stimuli'] = [
-                                                        OrderedDict([
-                                                            ("delay", delay),
-                                                            ("amp", a),
-                                                            ("duration", duration),
-                                                            ("totduration", totduration),
-                                                        ]),
-                                                        OrderedDict([
-                                                            ("delay", 0.0),
-                                                            ("amp", h),
-                                                            ("duration", totduration),
-                                                            ("totduration", totduration),
-                                                        ]),
-                                                    ]
+                                            OrderedDict([
+                                                ("delay", delay),
+                                                ("amp", a),
+                                                ("duration", duration),
+                                                ("totduration", totduration),
+                                            ]),
+                                            OrderedDict([
+                                                ("delay", 0.0),
+                                                ("amp", h),
+                                                ("duration", totduration),
+                                                ("totduration", totduration),
+                                            ]),
+                                        ]
 
-
-            stim = OrderedDict([ (self.mainname, stim) ])
-            feat = OrderedDict([ (self.mainname, feat) ])
+            stim = OrderedDict([(self.mainname, stim)])
+            feat = OrderedDict([(self.mainname, feat)])
 
         else:
 
@@ -1234,7 +1453,6 @@ class Extractor(object):
             if ('boxcox' in self.options) and self.options['boxcox']:
                 boxcox = True
 
-
             fid = 0
             for i_exp, expname in enumerate(self.experiments):
                 if expname in dataset:
@@ -1243,34 +1461,53 @@ class Extractor(object):
                     for fi, feature in enumerate(self.features[expname]):
                         for it, target in enumerate(self.options["target"]):
 
-                            if str(target) in dataset[expname]['mean_features'][feature]:
+                            if str(target) in dataset[expname][
+                                    'mean_features'][feature]:
 
                                 t = str(target)
                                 stimname = expname + '_' + t
 
-                                m = round(dataset[expname]['mean_features'][feature][str(target)],4)
-                                s = round(dataset[expname]['std_features'][feature][str(target)],4)
-                                n = int(dataset[expname]['n'][feature][str(target)])
+                                m = round(
+                                    dataset[expname]['mean_features']
+                                    [feature][str(target)],
+                                    4)
+                                s = round(
+                                    dataset[expname]['std_features']
+                                    [feature][str(target)],
+                                    4)
+                                n = int(dataset[expname]['n']
+                                        [feature][str(target)])
 
                                 if self.saveraw:
-                                    raw = dataset[expname]['raw'][feature][str(target)]
+                                    raw = dataset[expname]['raw'][feature][
+                                        str(target)]
 
-                                bcm = dataset[expname]['bc_mean_features'][feature][str(target)]
-                                bcs = dataset[expname]['bc_std_features'][feature][str(target)]
-                                bcshift = dataset[expname]['bc_shift_features'][feature][str(target)]
-                                bcld = dataset[expname]['bc_ld_features'][feature][str(target)]
+                                bcm = dataset[expname]['bc_mean_features'][
+                                    feature][
+                                    str(target)]
+                                bcs = dataset[expname]['bc_std_features'][
+                                    feature][
+                                    str(target)]
+                                bcshift = dataset[expname][
+                                    'bc_shift_features'][feature][
+                                    str(target)]
+                                bcld = dataset[expname]['bc_ld_features'][
+                                    feature][
+                                    str(target)]
 
                                 if boxcox:
-                                    do_add = ~numpy.isnan(bcm) and ( (bcs > 0.0) or (bcm == 0.0) )
+                                    do_add = ~numpy.isnan(bcm) and (
+                                        (bcs > 0.0) or (bcm == 0.0))
                                 else:
-                                    do_add = ~numpy.isnan(m) and ( (s > 0.0) or (m == 0.0) )
+                                    do_add = ~numpy.isnan(m) and (
+                                        (s > 0.0) or (m == 0.0))
 
                                 if do_add:
 
-                                    if s == 0.0: # prevent divison by 0
+                                    if s == 0.0:  # prevent divison by 0
                                         s = 1e-3
 
-                                    if bcs == 0.0: # prevent divison by 0
+                                    if bcs == 0.0:  # prevent divison by 0
                                         bcs = 1e-3
 
                                     if stimname not in stim:
@@ -1286,46 +1523,47 @@ class Extractor(object):
 
                                     if boxcox and (bcshift is not False):
                                         feat[stimname][location].append(
-                                                        OrderedDict([
-                                                        ("feature",feature),
-                                                        ("val",[m, s, bcm, bcs, bcld, bcshift]),
-                                                        ("n",n),
-                                                        ("fid",fid)
-                                                        ]) )
+                                            OrderedDict([
+                                                ("feature", feature),
+                                                ("val", [m, s, bcm, bcs, bcld, bcshift]),
+                                                ("n", n),
+                                                ("fid", fid)
+                                            ]))
 
                                         if self.saveraw:
                                             featraw[stimname][location].append(
-                                                            OrderedDict([
-                                                            ("feature",feature),
-                                                            ("val",[m, s, bcm, bcs, bcld, bcshift]),
-                                                            ("n",n),
-                                                            ("fid",fid),
-                                                            ("raw",raw)
-                                                            ]) )
+                                                OrderedDict([
+                                                    ("feature", feature),
+                                                    ("val", [m, s, bcm, bcs, bcld, bcshift]),
+                                                    ("n", n),
+                                                    ("fid", fid),
+                                                    ("raw", raw)
+                                                ]))
 
                                     else:
 
                                         feat[stimname][location].append(
-                                                        OrderedDict([
-                                                        ("feature",feature),
-                                                        ("val",[m, s]),
-                                                        ("n",n),
-                                                        ("fid",fid)
-                                                        ]) )
+                                            OrderedDict([
+                                                ("feature", feature),
+                                                ("val", [m, s]),
+                                                ("n", n),
+                                                ("fid", fid)
+                                            ]))
 
                                         if self.saveraw:
                                             featraw[stimname][location].append(
-                                                            OrderedDict([
-                                                            ("feature",feature),
-                                                            ("val",[m, s]),
-                                                            ("n",n),
-                                                            ("fid",fid),
-                                                            ("raw",raw)
-                                                            ]) )
+                                                OrderedDict([
+                                                    ("feature", feature),
+                                                    ("val", [m, s]),
+                                                    ("n", n),
+                                                    ("fid", fid),
+                                                    ("raw", raw)
+                                                ]))
 
                                     fid += 1
 
-                                    if expname in self.options["strict_stiminterval"].keys():
+                                    if expname in self.options["strict_stiminterval"].keys(
+                                    ):
                                         strict_stiminterval = self.options["strict_stiminterval"][expname]
                                     else:
                                         strict_stiminterval = self.options["strict_stiminterval"]['base']
@@ -1334,10 +1572,19 @@ class Extractor(object):
                                     if self.saveraw:
                                         featraw[stimname][location][-1]["strict_stim"] = strict_stiminterval
 
-
-                                    a = round(dataset[expname]['mean_amp'][str(target)],6)
-                                    h = round(dataset[expname]['mean_hypamp'][str(target)],6)
-                                    threshold = round(dataset[expname]['mean_amp_rel'][str(target)],4)
+                                    a = round(
+                                        dataset[expname]['mean_amp']
+                                        [str(target)],
+                                        6)
+                                    h = round(
+                                        dataset[expname]['mean_hypamp']
+                                        [str(target)],
+                                        6)
+                                    threshold = round(
+                                        dataset[expname]
+                                        ['mean_amp_rel']
+                                        [str(target)],
+                                        4)
                                     ton = dataset[expname]['mean_ton']
                                     toff = dataset[expname]['mean_toff']
                                     tend = dataset[expname]['mean_tend']
@@ -1345,10 +1592,11 @@ class Extractor(object):
                                     if 'stimuli' not in stim[stimname]:
 
                                         totduration = round(tend)
-                                        delay = round(self.options["delay"] + ton)
-                                        duration = round(toff-ton)
+                                        delay = round(
+                                            self.options["delay"] + ton)
+                                        duration = round(toff - ton)
 
-                                        if expname == 'H40S8': # special frequency pulse stimulus
+                                        if expname == 'H40S8':  # special frequency pulse stimulus
 
                                             n = 8
                                             duration = 2.5
@@ -1356,12 +1604,12 @@ class Extractor(object):
                                             stim[stimname]['stimuli'] = OrderedDict()
                                             stim[stimname]['stimuli']['step'] = []
                                             totduration = delay + n * 25.
-                                            threshold = 600. # threshold not estimated, used fixed values
+                                            threshold = 600.  # threshold not estimated, used fixed values
 
                                             for s in range(n):
                                                 stim[stimname]['stimuli']['step'].append(
                                                     OrderedDict([
-                                                        ("delay", delay + s*25.),
+                                                        ("delay", delay + s * 25.),
                                                         ("amp", a),
                                                         ("thresh_perc", threshold),
                                                         ("duration", duration),
@@ -1369,32 +1617,32 @@ class Extractor(object):
                                                     ]))
 
                                             stim[stimname]['stimuli']['holding'] = OrderedDict([
-                                                    ("delay", 0.0),
-                                                    ("amp", h),
-                                                    ("duration", totduration),
-                                                    ("totduration", totduration),
-                                                ])
+                                                ("delay", 0.0),
+                                                ("amp", h),
+                                                ("duration", totduration),
+                                                ("totduration", totduration),
+                                            ])
 
                                         else:
 
                                             stim[stimname]['type'] = 'StepProtocol'
                                             stim[stimname]['stimuli'] = OrderedDict([
-                                                            ('step',
-                                                            OrderedDict([
-                                                                ("delay", delay),
-                                                                ("amp", a),
-                                                                ("thresh_perc", threshold),
-                                                                ("duration", duration),
-                                                                ("totduration", totduration),
-                                                            ])),
-                                                            ('holding',
-                                                            OrderedDict([
-                                                                ("delay", 0.0),
-                                                                ("amp", h),
-                                                                ("duration", totduration),
-                                                                ("totduration", totduration),
-                                                            ])),
-                                                        ])
+                                                ('step',
+                                                 OrderedDict([
+                                                     ("delay", delay),
+                                                     ("amp", a),
+                                                     ("thresh_perc", threshold),
+                                                     ("duration", duration),
+                                                     ("totduration", totduration),
+                                                 ])),
+                                                ('holding',
+                                                 OrderedDict([
+                                                     ("delay", 0.0),
+                                                     ("amp", h),
+                                                     ("duration", totduration),
+                                                     ("totduration", totduration),
+                                                 ])),
+                                            ])
 
         meta = OrderedDict()
         meta['version'] = self.githash
@@ -1420,5 +1668,5 @@ class Extractor(object):
             with gzip.open(directory + "features_sources.json.gz", "wb") as f:
                 f.write(s)
 
-        #tools.print_dict(stimulus_dict)
-        #tools.print_dict(feature_dict)
+        # tools.print_dict(stimulus_dict)
+        # tools.print_dict(feature_dict)

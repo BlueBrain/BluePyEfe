@@ -21,5 +21,5 @@ Copyright (c) 2016, EPFL/Blue Brain Project
 
 # pylint: disable=W0611
 
-from bluepyefe.extractor import *
-from bluepyefe.tools import *
+from bluepyefe.extractor import *  # NOQA
+from bluepyefe.tools import *  # NOQA
