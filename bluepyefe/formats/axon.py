@@ -6,6 +6,8 @@ logger = logging.getLogger(__name__)
 import numpy
 import os
 import pprint
+import neo.rawio.axonrawio
+
 
 def process(config=None,
             filename=None,
@@ -17,8 +19,8 @@ def process(config=None,
 
     path = config['path']
     cells = config['cells']
-    features = config['features']
-    options = config['options']
+    # features = config['features']
+    # options = config['options']
 
     data = OrderedDict()
     data['voltage'] = []
@@ -36,16 +38,21 @@ def process(config=None,
     logger.debug(" Adding axon file %s", filename)
 
     f = os.path.join(path, cellname, filename + '.abf')
-    r = io.AxonIO(filename = f)
+    r = io.AxonIO(filename=f)
 
     # read header
-    header = r.read_header()
+
+    # Below line doesn't work anymore due to api change
+    # Now using rawio
+    # header = r.read_header()
+
+    header = neo.rawio.axonrawio.parse_axon_soup(f)
 
     # read sampling rate
     sampling_rate = 1.e6 / header['protocol']['fADCSequenceInterval']
 
-    dt = 1./int(sampling_rate) * 1e3
-    version = header['fFileVersionNumber'] # read file version
+    dt = 1. / int(sampling_rate) * 1e3
+    # version = header['fFileVersionNumber']  # read file version
     bl = r.read_block(lazy=False, cascade=True)
 
     stim_info = None
@@ -71,19 +78,24 @@ def process(config=None,
             if res[0]:
                 all_stims = res[1]
             else:
-                pprint.pprint("No valid stimulus was found in metadata or files. \
+                pprint.pprint(
+                    "No valid stimulus was found in metadata or files. \
                         Skipping current file")
                 return
 
     # for all segments in file
     for i_seg, seg in enumerate(bl.segments):
 
-        #dt = 1./int(seg.analogsignals[0].sampling_rate) * 1e3
+        # dt = 1./int(seg.analogsignals[0].sampling_rate) * 1e3
 
         if stim_info is not None:
 
-            voltage = numpy.array(seg.analogsignals[0]).astype(numpy.float64).flatten()
-            current = numpy.array(seg.analogsignals[1]).astype(numpy.float64).flatten()
+            voltage = numpy.array(
+                seg.analogsignals[0]).astype(
+                numpy.float64).flatten()
+            current = numpy.array(
+                seg.analogsignals[1]).astype(
+                numpy.float64).flatten()
             t = numpy.arange(len(voltage)) * dt
 
             ton = stim_info['ton']
@@ -92,33 +104,23 @@ def process(config=None,
             ioff = int(toff / dt)
 
             if 'tamp' in stim_info:
-                tamp = [int(stim_info['tamp'][0]/dt),int(stim_info['tamp'][1]/dt)]
+                tamp = [int(stim_info['tamp'][0] / dt),
+                        int(stim_info['tamp'][1] / dt)]
             else:
                 tamp = [ion, ioff]
 
             i_unit = stim_info['i_unit']
 
             if i_unit == 'A':
-                current = current * 1e9 # nA
+                current = current * 1e9  # nA
             elif i_unit == 'pA':
-                current = current * 1e-3 # nA
+                current = current * 1e-3  # nA
             else:
                 raise Exception(
                     "Unit current not configured!")
 
-            amp = numpy.nanmean( current[tamp[0]:tamp[1]] )
-            hypamp = numpy.nanmean( current[0:ion] )
-
-            # when does voltage change
-            #c_changes = numpy.where(abs(numpy.gradient(current, 1.)) > 0.0 )[0]
-
-            # detect on and off of current
-            #c_changes2 = numpy.where(abs(numpy.gradient(c_changes, 1.)) > 10.0 )[0]
-
-            #ion = c_changes[c_changes2[0]]
-            #ioff = c_changes[-1]
-            #ton = ion * dt
-            #toff = ioff * dt
+            amp = numpy.nanmean(current[tamp[0]:tamp[1]])
+            hypamp = numpy.nanmean(current[0:ion])
 
         else:
 
@@ -137,29 +139,22 @@ def process(config=None,
             current[ion:ioff] = amp
 
             # estimate hyperpolarization current
-            hypamp = numpy.mean( current[0:ion] )
-
-            # 10% distance to measure step current
-            iborder = int((ioff-ion)*0.1)
-
-            # depolarization amplitude
-            #amp = numpy.mean( current[ion+iborder:ioff-iborder] )
-            voltage_dirty = voltage[:]
+            hypamp = numpy.mean(current[0:ion])
 
             # clean voltage from transients
-            voltage[ion:ion+int(numpy.ceil(0.4/dt))] = \
-                    voltage[ion+int(numpy.ceil(0.4/dt))]
-            voltage[ioff:ioff+int(numpy.ceil(0.4/dt))] = \
-                    voltage[ioff+int(numpy.ceil(0.4/dt))]
+            voltage[ion:ion + int(numpy.ceil(0.4 / dt))] = \
+                voltage[ion + int(numpy.ceil(0.4 / dt))]
+            voltage[ioff:ioff + int(numpy.ceil(0.4 / dt))] = \
+                voltage[ioff + int(numpy.ceil(0.4 / dt))]
 
-
-        # normalize membrane potential to known value (given in UCL excel sheet)
+        # normalize membrane potential to known value (given in UCL excel
+        # sheet)
         if v_corr:
             if len(v_corr) == 1 and v_corr[0] != 0.0:
                 voltage = voltage - numpy.mean(voltage[0:ion]) + v_corr[0]
             elif len(v_corr) - 1 >= idx_file and v_corr[idx_file] != 0.0:
                 voltage = voltage - numpy.mean(voltage[0:ion]) \
-                        + v_corr[idx_file]
+                    + v_corr[idx_file]
 
         voltage = voltage - ljp
 
@@ -167,8 +162,8 @@ def process(config=None,
         voltage[ioff:] = numpy.clip(voltage[ioff:], -300, -40)
 
         if ('exclude' in cells[cellname] and
-            any(abs(cells[cellname]['exclude'][idx_file] - amp) < 1e-4)):
-            continue # llb
+                any(abs(cells[cellname]['exclude'][idx_file] - amp) < 1e-4)):
+            continue  # llb
 
         else:
             data['voltage'].append(voltage)
@@ -190,7 +185,7 @@ def process(config=None,
 def stim_feats_from_meta(stim_feats, num_segments, idx_file):
     if not stim_feats:
         return (0, "Empty metadata in file")
-    elif len(stim_feats) - 1 < idx_file and len(stim_feats) !=1:
+    elif len(stim_feats) - 1 < idx_file and len(stim_feats) != 1:
         return (0, "Stimulus dictionaries are different \
                 from the number of files")
     else:
@@ -214,8 +209,6 @@ def stim_feats_from_meta(stim_feats, num_segments, idx_file):
             u = str(crr_dict['stimulus_unit'])
             fa = float(format(crr_dict['stimulus_first_amplitude'], '.3f'))
             inc = float(format(crr_dict['stimulus_increment'], '.3f'))
-            ru = crr_dict['sampling_rate_unit']
-            r = crr_dict['sampling_rate']
             if tu == 's':
                 st = st * 1e3
                 en = en * 1e3
@@ -239,8 +232,9 @@ def stim_feats_from_header(header):
 
     # extract protocol for version >=.2
     if version >= 2.:
-        #prot = r.read_protocol() # read protocol
-        dictEpochInfoPerDAC = header['dictEpochInfoPerDAC'] # read info for DAC
+        # prot = r.read_protocol() # read protocol
+        # read info for DAC
+        dictEpochInfoPerDAC = header['dictEpochInfoPerDAC']
 
         # if field is empty
         if not (dictEpochInfoPerDAC):
@@ -248,8 +242,8 @@ def stim_feats_from_header(header):
 
         # if field is not empty, read all stimulus segments
         else:
-            valid_epoch_dicts = [k for k, v in dictEpochInfoPerDAC.iteritems()\
-                    if bool(v)]
+            valid_epoch_dicts = [k for k, v in dictEpochInfoPerDAC.iteritems()
+                                 if bool(v)]
 
             # if more than one channel is activated for the stimulus
             # or a number of epochs different than 3 is found
@@ -257,66 +251,64 @@ def stim_feats_from_header(header):
                 return (0, 'Exiting. More than one channel used \
                         for stimulation')
             else:
-                stim_epochs = dictEpochInfoPerDAC[k] # read all stimulus epochs
+                # read all stimulus epochs
+                stim_epochs = dictEpochInfoPerDAC[k]
                 # read enabled waveforms
-                stim_ch_info = [(i['DACChNames'], i['DACChUnits'], \
-                        i['nDACNum']) for i in header['listDACInfo'] \
-                        if bool(i['nWaveformEnable'])]
+                stim_ch_info = [(i['DACChNames'], i['DACChUnits'],
+                                 i['nDACNum']) for i in header['listDACInfo']
+                                if bool(i['nWaveformEnable'])]
 
                 # if epoch initial levels and increment are not
                 # compatible with a step stimulus
-                if (stim_epochs[0]['fEpochInitLevel'] != \
+                if (stim_epochs[0]['fEpochInitLevel'] !=
                         stim_epochs[2]['fEpochInitLevel'] or
-                    stim_epochs[0]['fEpochLevelInc'] != \
-                            stim_epochs[2]['fEpochLevelInc'] or
-                    float(format(stim_epochs[0]['fEpochLevelInc'], '.3f')) != 0\
-                            or (len(stim_ch_info) != 1 or \
-                            stim_ch_info[0][2] != k)):
-                        # return 0 with message
-                        return (0, "A stimulus different from the steps \
+                    stim_epochs[0]['fEpochLevelInc'] !=
+                    stim_epochs[2]['fEpochLevelInc'] or
+                    float(format(stim_epochs[0]['fEpochLevelInc'], '.3f')) != 0
+                    or (len(stim_ch_info) != 1 or
+                        stim_ch_info[0][2] != k)):
+                    # return 0 with message
+                    return (0, "A stimulus different from the steps \
                                 has been detected")
                 else:
                     ty = "step"
                     u = stim_ch_info[0][1]
                     # number of ADC channels
                     nADC = header['sections']['ADCSection']['llNumEntries']
-                    # number of DAC channels
-                    nDAC = header['sections']['DACSection']['llNumEntries']
                     # number of samples per episode
-                    nSam = header['protocol']['lNumSamplesPerEpisode']/nADC
+                    nSam = header['protocol']['lNumSamplesPerEpisode'] / nADC
                     # number of actual episodes
                     nEpi = header['lActualEpisodes']
 
                     # read first stimulus epoch
-                    e_zero = header['dictEpochInfoPerDAC']\
-                            [stim_ch_info[0][2]][0]
+                    e_zero = header['dictEpochInfoPerDAC'][
+                        stim_ch_info[0][2]][0]
                     # read second stimulus epoch
-                    e_one = header['dictEpochInfoPerDAC'][stim_ch_info[0][2]][1]
-                    # read third stimulus epoch
-                    e_two = header['dictEpochInfoPerDAC'][stim_ch_info[0][2]][2]
+                    e_one = header['dictEpochInfoPerDAC'][
+                        stim_ch_info[0][2]][1]
                     # index of stimulus beginning
-                    i_last = int(nSam*15625/10**6)
+                    i_last = int(nSam * 15625 / 10**6)
                     # create array for all stimulus info
                     all_stim_info = []
 
                     # step increment
-                    e_one_inc = float(format(e_one['fEpochLevelInc'],\
-                            '.3f'))
+                    e_one_inc = float(format(e_one['fEpochLevelInc'],
+                                             '.3f'))
                     # step initial level
-                    e_one_init_level = float(format(e_one['fEpochInitLevel'], \
-                            '.3f'))
+                    e_one_init_level = float(format(e_one['fEpochInitLevel'],
+                                                    '.3f'))
 
                     # for every episode, compute stimulus start, stimulus end,
                     # stimulus value
                     for epiNum in range(nEpi):
                         st = i_last + e_zero['lEpochInitDuration'] + \
-                                e_zero['lEpochDurationInc'] * epiNum
+                            e_zero['lEpochDurationInc'] * epiNum
                         en = st + e_one['lEpochInitDuration'] +  \
-                                e_one['lEpochDurationInc'] * epiNum
-                        crr_val_full = float(format(e_one_init_level + \
-                                e_one_inc * epiNum, '.3f'))
+                            e_one['lEpochDurationInc'] * epiNum
+                        crr_val_full = float(format(e_one_init_level +
+                                                    e_one_inc * epiNum, '.3f'))
                         crr_val = float(format(crr_val_full, '.3f'))
-                        st = 1/sampling_rate * st * 1e3
-                        en = 1/sampling_rate * en * 1e3
+                        st = 1 / sampling_rate * st * 1e3
+                        en = 1 / sampling_rate * en * 1e3
                         all_stim_info.append((ty, st, en, crr_val, u))
                     return (1, all_stim_info)
