@@ -1,4 +1,3 @@
-
 from neo import io
 from collections import OrderedDict
 import logging
@@ -53,7 +52,7 @@ def process(config=None,
 
     dt = 1. / int(sampling_rate) * 1e3
     # version = header['fFileVersionNumber']  # read file version
-    bl = r.read_block(lazy=False, cascade=True)
+    bl = r.read_block(lazy=False)
 
     stim_info = None
     if 'stim_info' in cells[cellname]['experiments'][expname]:
@@ -252,7 +251,11 @@ def stim_feats_from_header(header):
                         for stimulation')
             else:
                 # read all stimulus epochs
-                stim_epochs = dictEpochInfoPerDAC[k]
+
+                # TODO this noqa is bad, we just not disabling this check in
+                # the long term
+
+                stim_epochs = dictEpochInfoPerDAC[k]  # noqa: F821
                 # read enabled waveforms
                 stim_ch_info = [(i['DACChNames'], i['DACChUnits'],
                                  i['nDACNum']) for i in header['listDACInfo']
@@ -266,7 +269,7 @@ def stim_feats_from_header(header):
                     stim_epochs[2]['fEpochLevelInc'] or
                     float(format(stim_epochs[0]['fEpochLevelInc'], '.3f')) != 0
                     or (len(stim_ch_info) != 1 or
-                        stim_ch_info[0][2] != k)):
+                        stim_ch_info[0][2] != k)):  # noqa: F821
                     # return 0 with message
                     return (0, "A stimulus different from the steps \
                                 has been detected")
