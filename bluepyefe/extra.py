@@ -127,7 +127,7 @@ def spikerate_slope(peaktimes):
     slope_log, _ = numpy.polyfit(log_x, log_isi, 1)
     slope_semilog, _ = numpy.polyfit(x, log_isi, 1)
 
-    print slope_log, slope_semilog
+    print(slope_log, slope_semilog)
 
     return slope_log
 
@@ -238,23 +238,23 @@ def main():
         peaktime += 1. / (next_freq + r)
     peaktimes = numpy.array(peaktimes) + 200.
 
-    print "target tau:", tau * 1e3
+    print("target tau:", tau * 1e3)
 
     tau = spikerate_tau_jj(peaktimes * 1e3)  # convert from s to ms
-    print "jj:", tau
+    print("jj:", tau)
 
     tau = spikerate_tau_log(peaktimes * 1e3)  # convert from s to ms
-    print "log:", tau
+    print("log:", tau)
 
     tau = spikerate_tau_fit(peaktimes * 1e3)  # convert from s to ms
-    print "fit:", tau
+    print("fit:", tau)
 
     tau = spikerate_slope(peaktimes * 1e3)  # convert from s to ms
-    print "slope:", tau
+    print("slope:", tau)
 
-    print "target drop:", drop
+    print("target drop:", drop)
     drop = spikerate_drop(peaktimes * 1e3)  # convert from s to ms
-    print drop
+    print(drop)
 
     f = 1. / numpy.diff(peaktimes)
     times = peaktimes[:-1]

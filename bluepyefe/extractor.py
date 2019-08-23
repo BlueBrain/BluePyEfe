@@ -1,6 +1,8 @@
 # pylint: disable=line-too-long
 
 import matplotlib
+matplotlib.use('Agg', warn=True)  # noqa
+
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
@@ -14,9 +16,9 @@ import json
 from collections import OrderedDict
 
 
-import tools
-import plottools
-import extra
+from . import tools
+from . import plottools
+from . import extra
 import sh
 
 import logging
@@ -27,7 +29,6 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout)
 logger = logging.getLogger()
 
-matplotlib.use('Agg', warn=True)
 
 try:
     USE_YEO = True
@@ -41,9 +42,9 @@ try:
 
 except BaseException:
     USE_YEO = False
-    print "Cannot load R, you will not be able to use BoxCox/YeoJohnson"
+    print("Cannot load R, you will not be able to use BoxCox/YeoJohnson")
 
-from tools.YeoJohnson import YeoJohnson  # noqa
+from .tools.YeoJohnson import YeoJohnson  # noqa
 
 
 class Extractor(object):
@@ -346,8 +347,8 @@ class Extractor(object):
             import formats.csv_lccr
             return formats.csv_lccr.process(**kwargs)
         elif self.format == 'ibf_json':
-            import bluepyefe.formats.ibf_json
-            return bluepyefe.formats.ibf_json.process(**kwargs)
+            import formats.ibf_json
+            return formats.ibf_json.process(**kwargs)
         else:
             raise ValueError('Unrecognized trace format: %s' % self.format)
 

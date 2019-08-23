@@ -1,3 +1,3 @@
 """Init script"""
 
-from tools import *
+from .tools import *  # noqa
