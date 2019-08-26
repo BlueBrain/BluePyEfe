@@ -7,3 +7,5 @@ load_module
 .tox
 .coverage
 .python-version
+dist
+BluePyEfe.egg-info
