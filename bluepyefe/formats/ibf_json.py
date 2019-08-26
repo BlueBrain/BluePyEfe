@@ -45,12 +45,12 @@ def process(config=None,
     with open(f, 'r') as crr_file:
         f_data = json.load(crr_file)
 
-    sampling_rate = f_data['sampling_rate'] 
+    sampling_rate = f_data['sampling_rate']
 
     dt = 1./int(sampling_rate) * 1e3
 
     # for all segments in file
-    for idx, value in f_data['traces'].iteritems():
+    for idx, value in f_data['traces'].items():
         crr_amp = idx
         voltage = numpy.array(value).astype(numpy.float64)
         t = numpy.arange(len(voltage)) * dt
@@ -60,7 +60,7 @@ def process(config=None,
         ion = int(ton / dt)
         ioff = int(toff / dt)
         amp = numpy.float64(idx)
-                
+
         current = []
         current = numpy.zeros(len(voltage))
         current[ion:ioff] = amp
@@ -107,6 +107,6 @@ def process(config=None,
             data['amp'].append(amp)
             data['hypamp'].append(hypamp)
             data['filename'].append(filename)
-            
-            
+
+
     return data
