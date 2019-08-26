@@ -17,7 +17,7 @@ def adjust_spines(ax, spines, color='k', d_out=10, d_down=[]):
     ax.set_frame_on(True)
     ax.patch.set_visible(False)
 
-    for loc, spine in ax.spines.iteritems():
+    for loc, spine in ax.spines.items():
         if loc in spines:
             if loc == 'bottom':
                 spine.set_position(('outward', d_down))  # outward by 10 points

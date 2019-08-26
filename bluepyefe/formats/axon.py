@@ -241,7 +241,7 @@ def stim_feats_from_header(header):
 
         # if field is not empty, read all stimulus segments
         else:
-            valid_epoch_dicts = [k for k, v in dictEpochInfoPerDAC.iteritems()
+            valid_epoch_dicts = [k for k, v in dictEpochInfoPerDAC.items()
                                  if bool(v)]
 
             # if more than one channel is activated for the stimulus
@@ -252,10 +252,9 @@ def stim_feats_from_header(header):
             else:
                 # read all stimulus epochs
 
-                # TODO this noqa is bad, we just not disabling this check in
-                # the long term
-
-                stim_epochs = dictEpochInfoPerDAC[k]  # noqa: F821
+                # TODO IS THIS CORRECT ?
+                k = valid_epoch_dicts[-1]
+                stim_epochs = dictEpochInfoPerDAC[k]
                 # read enabled waveforms
                 stim_ch_info = [(i['DACChNames'], i['DACChUnits'],
                                  i['nDACNum']) for i in header['listDACInfo']
@@ -269,7 +268,7 @@ def stim_feats_from_header(header):
                     stim_epochs[2]['fEpochLevelInc'] or
                     float(format(stim_epochs[0]['fEpochLevelInc'], '.3f')) != 0
                     or (len(stim_ch_info) != 1 or
-                        stim_ch_info[0][2] != k)):  # noqa: F821
+                        stim_ch_info[0][2] != k)):
                     # return 0 with message
                     return (0, "A stimulus different from the steps \
                                 has been detected")
