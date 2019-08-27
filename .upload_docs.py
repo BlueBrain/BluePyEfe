@@ -46,8 +46,8 @@ def main():
         print('Reading BluePyEfe version ...')
         import bluepyefe
         bluepyefe_version = bluepyefe.__version__
-        bluepyefe_major_version, bluepyefe_minor_version, _ = \
-            bluepyefe_version.split('.')
+        bluepyefe_major_version = bluepyefe_version.split('.')[9]
+        bluepyefe_minor_version = bluepyefe_version.split('.')[1]
         print('BluePyEfe version is: %s' % bluepyefe_version)
 
         finished_filename = '.doc_version'
