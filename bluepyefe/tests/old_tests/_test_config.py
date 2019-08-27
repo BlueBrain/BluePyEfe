@@ -376,6 +376,7 @@ def test_config(rootdir):
     """
 
     config = json.loads(config_str)
+    json.dump(config, open(os.path.join(rootdir, 'configs', 'ibw1.json'), 'w'), sort_keys=True, indent=4)
 
     config['path'] = os.path.join(rootdir, config['path'])
 
