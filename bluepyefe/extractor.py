@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout)
 logger = logging.getLogger()
 
-
+'''
 try:
     USE_YEO = True
     from rpy2.robjects.functions import SignatureTranslatedFunction
@@ -43,6 +43,9 @@ try:
 except BaseException:
     USE_YEO = False
     print("Cannot load R, you will not be able to use BoxCox/YeoJohnson")
+'''
+
+USE_YEO = False
 
 from .tools.YeoJohnson import YeoJohnson  # noqa
 
@@ -210,6 +213,7 @@ class Extractor(object):
         else:
             return float('NaN'), float('NaN'), float('NaN'), float('NaN')
 
+        '''
         if USE_YEO:
             data = robjects.FloatVector(a)
             fmla = robjects.Formula('x~1')
@@ -236,9 +240,11 @@ class Extractor(object):
             shift = 0
 
             return mean, std, lmbda, shift
-
         else:
             return float('NaN'), float('NaN'), float('NaN'), float('NaN')
+
+        '''
+        return float('NaN'), float('NaN'), float('NaN'), float('NaN')
 
     def newmean(self, a):
         if (self.options["nanmean"] or
