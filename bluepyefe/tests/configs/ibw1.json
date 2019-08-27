@@ -1,0 +1,358 @@
+{
+    "cells": {
+        "C060109A1-SR-C1": {
+            "experiments": {
+                "IDthresh": {
+                    "files": [
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_349.ibw",
+                            "i_unit": "A",
+                            "ordinal": "349",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_349.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_350.ibw",
+                            "i_unit": "A",
+                            "ordinal": "350",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_350.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_351.ibw",
+                            "i_unit": "A",
+                            "ordinal": "351",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_351.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_352.ibw",
+                            "i_unit": "A",
+                            "ordinal": "352",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_352.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_353.ibw",
+                            "i_unit": "A",
+                            "ordinal": "353",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_353.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_354.ibw",
+                            "i_unit": "A",
+                            "ordinal": "354",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_354.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_355.ibw",
+                            "i_unit": "A",
+                            "ordinal": "355",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_355.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_356.ibw",
+                            "i_unit": "A",
+                            "ordinal": "356",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_356.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_357.ibw",
+                            "i_unit": "A",
+                            "ordinal": "357",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_357.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_362.ibw",
+                            "i_unit": "A",
+                            "ordinal": "362",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_362.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_363.ibw",
+                            "i_unit": "A",
+                            "ordinal": "363",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_363.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_364.ibw",
+                            "i_unit": "A",
+                            "ordinal": "364",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_364.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_365.ibw",
+                            "i_unit": "A",
+                            "ordinal": "365",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_365.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_366.ibw",
+                            "i_unit": "A",
+                            "ordinal": "366",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_366.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_367.ibw",
+                            "i_unit": "A",
+                            "ordinal": "367",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_367.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_368.ibw",
+                            "i_unit": "A",
+                            "ordinal": "368",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_368.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_369.ibw",
+                            "i_unit": "A",
+                            "ordinal": "369",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_369.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A1-SR-C1/X_IDthresh_ch0_370.ibw",
+                            "i_unit": "A",
+                            "ordinal": "370",
+                            "t_unit": "s",
+                            "v_file": "C060109A1-SR-C1/X_IDthresh_ch1_370.ibw",
+                            "v_unit": "V"
+                        }
+                    ],
+                    "location": "soma.v"
+                }
+            },
+            "ljp": 14,
+            "v_corr": false
+        },
+        "C060109A2-SR-C1": {
+            "experiments": {
+                "IDthresh": {
+                    "files": [
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_348.ibw",
+                            "i_unit": "A",
+                            "ordinal": "348",
+                            "t_unit": "s",
+                            "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_348.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_349.ibw",
+                            "i_unit": "A",
+                            "ordinal": "349",
+                            "t_unit": "s",
+                            "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_349.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_350.ibw",
+                            "i_unit": "A",
+                            "ordinal": "350",
+                            "t_unit": "s",
+                            "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_350.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_351.ibw",
+                            "i_unit": "A",
+                            "ordinal": "351",
+                            "t_unit": "s",
+                            "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_351.ibw",
+                            "v_unit": "V"
+                        },
+                        {
+                            "dt": 0.00025,
+                            "i_file": "C060109A2-SR-C1/X_IDthresh_ch0_352.ibw",
+                            "i_unit": "A",
+                            "ordinal": "352",
+                            "t_unit": "s",
+                            "v_file": "C060109A2-SR-C1/X_IDthresh_ch1_352.ibw",
+                            "v_unit": "V"
+                        }
+                    ],
+                    "location": "soma.v"
+                }
+            },
+            "ljp": 14,
+            "v_corr": false
+        }
+    },
+    "comment": [
+        "v_corr: normalize membrane potential to this value",
+        "ljp: set so to 14mV",
+        "etype: was defined individually by eye from plotted traces"
+    ],
+    "features": {
+        "IDthresh": [
+            "adaptation_index2",
+            "mean_frequency",
+            "time_to_first_spike",
+            "ISI_log_slope",
+            "ISI_log_slope_skip",
+            "time_to_last_spike",
+            "inv_time_to_first_spike",
+            "inv_first_ISI",
+            "inv_second_ISI",
+            "inv_third_ISI",
+            "inv_fourth_ISI",
+            "inv_fifth_ISI",
+            "inv_last_ISI",
+            "voltage_deflection",
+            "voltage_deflection_begin",
+            "steady_state_voltage",
+            "decay_time_constant_after_stim",
+            "AP_amplitude"
+        ]
+    },
+    "format": "igor",
+    "options": {
+        "amp_min": 0,
+        "boxcox": false,
+        "delay": 0,
+        "expthreshold": [
+            "IDrest",
+            "IDthresh"
+        ],
+        "logging": true,
+        "nangrace": 0,
+        "nanmean": false,
+        "onoff": {
+            "APDrop": [
+                10.0,
+                15.0
+            ],
+            "APThreshold": [
+                0.0,
+                2000.0
+            ],
+            "APWaveform": [
+                5.0,
+                55.0
+            ],
+            "Delta": [
+                10.0,
+                60.0
+            ],
+            "IDdepol": [
+                700.0,
+                2700.0
+            ],
+            "IDrest": [
+                700.0,
+                2700.0
+            ],
+            "IDthresh": [
+                700.0,
+                2700.0
+            ],
+            "IRdepol": [
+                500.0,
+                700.0
+            ],
+            "IRhyperpol": [
+                500.0,
+                700.0
+            ],
+            "IV": [
+                20.0,
+                1020.0
+            ],
+            "SpikeRec": [
+                10.0,
+                13.5
+            ],
+            "SpontAPs": [
+                100.0,
+                10100.0
+            ],
+            "Spontaneous": [
+                100.0,
+                10100.0
+            ],
+            "Step": [
+                700.0,
+                2700.0
+            ],
+            "TesteCode": [
+                100.0,
+                600.0
+            ]
+        },
+        "relative": true,
+        "spike_threshold": 1,
+        "strict_stiminterval": {
+            "SpikeRec": false,
+            "base": true
+        },
+        "target": [
+            -20,
+            "noinput",
+            50,
+            100,
+            120,
+            "all"
+        ],
+        "tolerance": [
+            5,
+            false,
+            5,
+            5,
+            5,
+            false
+        ]
+    },
+    "path": "./data/"
+}

@@ -142,6 +142,7 @@ def test_csv(rootdir):
     """
 
     config = json.loads(config_str)
+    json.dump(config, open(os.path.join(rootdir, 'configs', 'csv1.json'), 'w'), sort_keys=True, indent=4)
     config['path'] = os.path.join(rootdir, config['path'])
 
     import bluepyefe as bpefe

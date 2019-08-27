@@ -3,53 +3,33 @@ import json
 
 import pytest
 
-import bluepyefe as bpefe
-
 
 @pytest.fixture
 def rootdir():
     return os.path.dirname(os.path.abspath(__file__))
 
 
-def test_abf(rootdir):
-    """Test loading of abf"""
+def test_ibf_json(rootdir):
+    """Test ibf json"""
 
     config_str = """
     {
       "cells": {
-        "cell01": {
+        "970509hp2": {
           "etype": "etype",
           "exclude": [
             [
-              -2.0
+              -1.8
             ],
             [
-              -2.0
+              -1.8
             ]
           ],
           "experiments": {
             "step": {
               "files": [
-                "96711008",
-                "96711009"
-              ],
-              "location": "soma"
-            }
-          },
-          "ljp": 0,
-          "v_corr": 0
-        },
-        "cell02": {
-          "etype": "etype",
-          "exclude": [
-            [],
-            []
-          ],
-          "experiments": {
-            "step": {
-              "files": [
-                "98205017",
-                "98205018"
+                "rattus-norvegicus____hippocampus____ca1____interneuron____cac____970509hp2____97509008",
+                "rattus-norvegicus____hippocampus____ca1____interneuron____cac____970509hp2____97509009"
               ],
               "location": "soma"
             }
@@ -67,32 +47,33 @@ def test_abf(rootdir):
           "voltage_base"
         ]
       },
-      "format": "axon",
+      "format": "ibf_json",
       "options": {
         "delay": 500,
         "logging": false,
-        "nanmean": true,
+        "nanmean": false,
         "relative": false,
         "target": [
-          -2.0,
-          0.0,
-          1.0
+          "all"
         ],
         "tolerance": 0.02
       },
-      "path": "./data_abf/"
+      "path": "./data_ibf_json/eg_json_data/traces"
     }
     """
 
     config = json.loads(config_str)
-
+    json.dump(config, open(os.path.join(rootdir, 'configs', 'ibf_json1.json'), 'w'), sort_keys=True, indent=4)
     config['path'] = os.path.join(rootdir, config['path'])
 
-    extractor = bpefe.Extractor('testtype_abf', config, use_git=False)
+    import bluepyefe as bpefe
+
+    extractor = bpefe.Extractor(
+        'temptype_ibf', config, use_git=False)
     extractor.create_dataset()
     extractor.plt_traces()
     extractor.extract_features(threshold=-30)
     extractor.mean_features()
     extractor.plt_features()
-    extractor.feature_config_cells()
-    extractor.feature_config_all()
+    extractor.feature_config_cells(version='legacy')
+    extractor.feature_config_all(version='legacy')
