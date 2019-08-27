@@ -9,3 +9,4 @@ load_module
 .python-version
 dist
 BluePyEfe.egg-info
+/testrun
