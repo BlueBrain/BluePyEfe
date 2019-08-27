@@ -14,7 +14,7 @@ then
     tox_args="${tox_args} -e py3-functional"
 elif  [ "${os}" = "Ubuntu-18.04" ]
 then
-    tox_args="${tox_args} -e py3-functional-devpi"
+    tox_args="${tox_args} -e py3-functional-devpi-upload_docs"
 else
     tox_args="${tox_args} -e py27-functional"
 fi
