@@ -1,8 +1,11 @@
 import setuptools
 
+import versioneer
+
 setuptools.setup(
     name='BluePyEfe',
-    version='0.1.2dev',
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     description='bluepyefe',
     packages=setuptools.find_packages(),
     install_requires=[
