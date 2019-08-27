@@ -32,9 +32,11 @@ def process(config=None,
     data['filename'] = []
 
     fln = os.path.join(path, cellname, filename + '.txt')
-    if isinstance(fln, str) is False:
+    if not os.path.exists(fln):
         raise Exception(
-            'Please provide a string with filename of csv file')
+            'Please provide a string with filename of csv file, '
+            'current path not found: %s',
+            fln)
 
     exp_options = cells[cellname]['experiments'][expname]
 
