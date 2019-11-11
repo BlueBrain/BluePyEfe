@@ -1723,4 +1723,4 @@ class Extractor(object):
             s = json.dumps(featraw, indent=2, cls=tools.NumpyEncoder)
             s = tools.collapse_json(s, indent=indent)
             with gzip.open(directory + "features_sources.json.gz", "wb") as f:
-                f.write(s)
+                f.write(s.encode('utf-8'))
