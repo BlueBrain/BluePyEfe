@@ -9,7 +9,7 @@ setuptools.setup(
     description='bluepyefe',
     packages=setuptools.find_packages(),
     install_requires=[
-        'igorpy',
+        'igor',
         'neo',
         'matplotlib',
         'efel',
