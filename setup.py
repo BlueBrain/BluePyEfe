@@ -15,6 +15,6 @@ setuptools.setup(
         'matplotlib',
         'efel',
         'sh',
-        'pandas',
+        'pandas==0.23.1',
         'scipy'],
 )
