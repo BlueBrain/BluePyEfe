@@ -1,5 +1,5 @@
 
-import igorpy
+from . import igorpy
 from collections import OrderedDict
 import logging
 logger = logging.getLogger(__name__)
