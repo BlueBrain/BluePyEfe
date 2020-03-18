@@ -1,3 +1,24 @@
+"""Test extractor functions with csv"""
+
+"""
+Copyright (c) 2020, EPFL/Blue Brain Project
+
+ This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
+
+ This library is free software; you can redistribute it and/or modify it under
+ the terms of the GNU Lesser General Public License version 3.0 as published
+ by the Free Software Foundation.
+
+ This library is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ details.
+
+ You should have received a copy of the GNU Lesser General Public License
+ along with this library; if not, write to the Free Software Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+"""
+
 import os
 import json
 
@@ -59,8 +80,9 @@ def test_csv(rootdir):
       "format": "csv_lccr",
       "comment": [
         "cells named using name of first trace file belonging to this cell",
-        "v_corr: normalize membrane potential to this value (given in UCL excel sheet)",
-        "ljp: set so that RMP (UCL) - 10mV ljp = RMP (Golding 2001) - 14mV ljp",
+        "v_corr: normalize membrane potential to this value
+        (given in UCL excel sheet)",
+        "ljp: set so that RMP (UCL) - 10mV ljp = RMP (Golding 2001) -14mV ljp",
         "etype: was defined individually by eye from plotted traces"
       ],
       "cells": {
@@ -142,7 +164,8 @@ def test_csv(rootdir):
     """
 
     config = json.loads(config_str)
-    json.dump(config, open(os.path.join(rootdir, 'configs', 'csv1.json'), 'w'), sort_keys=True, indent=4)
+    json.dump(config, open(os.path.join(rootdir, 'configs', 'csv1.json'), 'w'),
+              sort_keys=True, indent=4)
     config['path'] = os.path.join(rootdir, config['path'])
 
     import bluepyefe as bpefe

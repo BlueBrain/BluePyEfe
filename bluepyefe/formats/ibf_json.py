@@ -1,10 +1,34 @@
+"""ibf json reader"""
 
+"""
+Copyright (c) 2020, EPFL/Blue Brain Project
+
+ This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
+
+ This library is free software; you can redistribute it and/or modify it under
+ the terms of the GNU Lesser General Public License version 3.0 as published
+ by the Free Software Foundation.
+
+ This library is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ details.
+
+ You should have received a copy of the GNU Lesser General Public License
+ along with this library; if not, write to the Free Software Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+"""
+
+import numpy
 import os
 import json
+
 from collections import OrderedDict
+
 import logging
+
 logger = logging.getLogger(__name__)
-import numpy
+
 
 def process(config=None,
             filename=None,
@@ -13,7 +37,6 @@ def process(config=None,
             stim_feats=None,
             idx_file=None,
             ljp=0, v_corr=0):
-
     path = config['path']
     cells = config['cells']
     features = config['features']
@@ -37,7 +60,6 @@ def process(config=None,
     if 'stim_feats' in cells[cellname]['experiments'][expname]:
         stim_feats = cells[cellname]['experiments'][expname]['stim_feats']
 
-
     logger.debug(" Adding ibf_json file %s", filename)
 
     f = path + os.sep + cellname + os.sep + filename + '.json'
@@ -47,7 +69,7 @@ def process(config=None,
 
     sampling_rate = f_data['sampling_rate']
 
-    dt = 1./int(sampling_rate) * 1e3
+    dt = 1. / int(sampling_rate) * 1e3
 
     # for all segments in file
     for idx, value in f_data['traces'].items():
@@ -66,25 +88,29 @@ def process(config=None,
         current[ion:ioff] = amp
 
         # estimate hyperpolarization current
-        hypamp = numpy.mean( current[0:ion] )
+        hypamp = numpy.mean(current[0:ion])
 
         # 10% distance to measure step current
-        iborder = int((ioff-ion)*0.1)
+        iborder = int((ioff - ion) * 0.1)
 
         # depolarization amplitude
-        #amp = numpy.mean( current[ion+iborder:ioff-iborder] )
+        # amp = numpy.mean( current[ion+iborder:ioff-iborder] )
         voltage_dirty = voltage[:]
 
         # clean voltage from transients
-        voltage[ion:ion+int(numpy.ceil(0.4/dt))] = voltage[ion+int(numpy.ceil(0.4/dt))]
-        voltage[ioff:ioff+int(numpy.ceil(0.4/dt))] = voltage[ioff+int(numpy.ceil(0.4/dt))]
+        voltage[ion:ion + int(numpy.ceil(0.4 / dt))] = voltage[
+            ion + int(numpy.ceil(0.4 / dt))]
+        voltage[ioff:ioff + int(numpy.ceil(0.4 / dt))] = voltage[
+            ioff + int(numpy.ceil(0.4 / dt))]
 
-        # normalize membrane potential to known value (given in UCL excel sheet)
+        # normalize membrane potential to known value (given in UCL
+        # excel sheet)
         if v_corr:
             if len(v_corr) == 1 and v_corr[0] != 0.0:
                 voltage = voltage - numpy.mean(voltage[0:ion]) + v_corr[0]
             elif len(v_corr) - 1 >= idx_file and v_corr[idx_file] != 0.0:
-                voltage = voltage - numpy.mean(voltage[0:ion]) + v_corr[idx_file]
+                voltage = voltage - numpy.mean(voltage[0:ion]) + v_corr[
+                    idx_file]
 
         voltage = voltage - ljp
 
@@ -92,8 +118,8 @@ def process(config=None,
         voltage[ioff:] = numpy.clip(voltage[ioff:], -300, -40)
 
         if ('exclude' in cells[cellname] and
-            any(abs(cells[cellname]['exclude'][idx_file] - amp) < 1e-4)):
-            continue # llb
+                any(abs(cells[cellname]['exclude'][idx_file] - amp) < 1e-4)):
+            continue  # llb
 
         else:
             data['voltage'].append(voltage)
@@ -107,6 +133,5 @@ def process(config=None,
             data['amp'].append(amp)
             data['hypamp'].append(hypamp)
             data['filename'].append(filename)
-
 
     return data

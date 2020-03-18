@@ -1,8 +1,26 @@
-# pylint: disable=line-too-long
+"""Extractor class"""
+
+"""
+Copyright (c) 2020, EPFL/Blue Brain Project
+
+ This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
+
+ This library is free software; you can redistribute it and/or modify it under
+ the terms of the GNU Lesser General Public License version 3.0 as published
+ by the Free Software Foundation.
+
+ This library is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ details.
+
+ You should have received a copy of the GNU Lesser General Public License
+ along with this library; if not, write to the Free Software Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+"""
 
 import matplotlib
 matplotlib.use('Agg', warn=True)  # noqa
-
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
@@ -10,44 +28,23 @@ import numpy
 import sys
 import efel
 import os
-from itertools import cycle
-
+import sh
+import logging
+import gzip
 import json
+
+from itertools import cycle
 from collections import OrderedDict
 
 
 from . import tools
 from . import plottools
 from . import extra
-import sh
 
-import logging
-
-import gzip
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout)
 logger = logging.getLogger()
-
-'''
-try:
-    USE_YEO = True
-    from rpy2.robjects.functions import SignatureTranslatedFunction
-    import rpy2.robjects as robjects
-    from rpy2.robjects.packages import importr
-
-    base = importr('base')
-    r_stats = importr("stats")
-    r_car = importr("car")
-
-except BaseException:
-    USE_YEO = False
-    print("Cannot load R, you will not be able to use BoxCox/YeoJohnson")
-'''
-
-USE_YEO = False
-
-from .tools.YeoJohnson import YeoJohnson  # noqa
 
 
 class Extractor(object):
@@ -213,37 +210,6 @@ class Extractor(object):
         else:
             return float('NaN'), float('NaN'), float('NaN'), float('NaN')
 
-        '''
-        if USE_YEO:
-            data = robjects.FloatVector(a)
-            fmla = robjects.Formula('x~1')
-            env = fmla.environment
-            env['x'] = data
-            fit = r_stats.lm(fmla)
-
-            r_car.boxCox = SignatureTranslatedFunction(
-                r_car.boxCox, {'r_lambda': 'lambda'})
-            yj = r_car.boxCox(fit,
-                              family=robjects.StrVector(["yjPower"]),
-                              r_lambda=robjects.FloatVector(lm_vec),
-                              plotit=False)
-
-            x_ = numpy.array(yj.rx('x')[0])
-            y_ = numpy.array(yj.rx('y')[0])
-            lmbda = x_[numpy.argmax(y_)]
-
-            yj = YeoJohnson()
-            at = yj.fit(a, lmbda)
-
-            mean = numpy.mean(at)
-            std = numpy.std(at)
-            shift = 0
-
-            return mean, std, lmbda, shift
-        else:
-            return float('NaN'), float('NaN'), float('NaN'), float('NaN')
-
-        '''
         return float('NaN'), float('NaN'), float('NaN'), float('NaN')
 
     def newmean(self, a):
@@ -1071,7 +1037,6 @@ class Extractor(object):
                         str(target)] = bcld
 
     def get_threshold(self, amp, numspikes):
-
         isort = numpy.argsort(amp)
         amps_sort = numpy.array(amp)[isort]
         numspikes_sort = numpy.array(numspikes)[isort]
@@ -1318,19 +1283,6 @@ class Extractor(object):
                             str(bcld) +
                             "\nshift:" +
                             str(bcshift))
-
-                        if (bcshift is not False):
-
-                            yj = YeoJohnson()
-                            feat_bc = yj.fit(feat, bcld)
-                            feat_bc[numpy.isinf(feat_bc)] = float('nan')
-
-                            if (all(numpy.isnan(feat_bc)) is False) and all(
-                                    numpy.array(feat_bc) < 2**53):
-                                ax_bc.hist(
-                                    feat_bc, max(1, int(len(feat) / 2)),
-                                    histtype='stepfilled', color='r',
-                                    edgecolor='none')
 
                 fig = figs[figname]
                 fig['fig'].suptitle(feature)

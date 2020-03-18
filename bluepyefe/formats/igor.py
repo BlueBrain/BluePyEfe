@@ -1,9 +1,32 @@
+"""Igor reader"""
 
+"""
+Copyright (c) 2020, EPFL/Blue Brain Project
+
+ This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
+
+ This library is free software; you can redistribute it and/or modify it under
+ the terms of the GNU Lesser General Public License version 3.0 as published
+ by the Free Software Foundation.
+
+ This library is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ details.
+
+ You should have received a copy of the GNU Lesser General Public License
+ along with this library; if not, write to the Free Software Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+"""
+
+import numpy
 from . import igorpy
 from collections import OrderedDict
+
 import logging
+
 logger = logging.getLogger(__name__)
-import numpy
+
 
 def process(config=None,
             filename=None,
@@ -12,7 +35,6 @@ def process(config=None,
             stim_feats=None,
             idx_file=None,
             ljp=0, v_corr=0):
-
     path = config['path']
     cells = config['cells']
     features = config['features']
@@ -56,7 +78,8 @@ def process(config=None,
         dt = filename['dt']
         if numpy.isclose(dt, notes.dx) is False:
             raise Exception(
-                "Given stepsize %f does not match stepsize from wavenotes %f" % (dt, notes.dt))
+                "Given stepsize %f does not match stepsize from "
+                "wavenotes %f" % (dt, notes.dt))
     else:
         dt = notes.dx
 
@@ -70,7 +93,7 @@ def process(config=None,
         filename['t_unit'] = "s"
 
     if (t_unit == "") or (t_unit == "s"):
-        dt = dt * 1e3 # convert to ms
+        dt = dt * 1e3  # convert to ms
     t = dt * numpy.arange(0, len(wave))
 
     notes, wave = igorpy.read(i_file)
@@ -81,9 +104,9 @@ def process(config=None,
         i_unit = filename['i_unit']
 
     if i_unit == 'A':
-        i = wave * 1e9 # nA
+        i = wave * 1e9  # nA
     elif i_unit == 'pA':
-        i = wave * 1e-3 # nA
+        i = wave * 1e-3  # nA
     else:
         raise Exception(
             "Unit current not configured!")
@@ -91,48 +114,49 @@ def process(config=None,
     ton = options['onoff'][expname][0]
     toff = options['onoff'][expname][1]
 
-    ion = int(ton/dt)
+    ion = int(ton / dt)
 
     if toff:
-        ioff = int(toff/dt)
+        ioff = int(toff / dt)
     else:
         ioff = False
 
-    hypamp = numpy.mean( i[0:ion] )  # estimate hyperpolarization current
-    iborder = int((ioff-ion)*0.1)  # 10% distance to measure step current
+    hypamp = numpy.mean(i[0:ion])  # estimate hyperpolarization current
+    iborder = int((ioff - ion) * 0.1)  # 10% distance to measure step current
     # depolarization amplitude starting from hypamp!!
 
     if expname in ['APThreshold']:
         imax = numpy.argmax(i)
         toff = t[imax]
         trun = toff - ton
-        ampoff = numpy.mean( i[int(imax-10./dt):imax] ) - hypamp
-        amp = ampoff/trun * 2000. # extrapolate to get expected amplitude at 1 sec
-        #amp = ampoff
+        ampoff = numpy.mean(i[int(imax - 10. / dt):imax]) - hypamp
+        # extrapolate to get expected amplitude at 1 sec
+        amp = ampoff / trun * 2000.
+        # amp = ampoff
     elif expname in ['H40S8']:
         amp = numpy.mean(i[i > 0.1])
     else:
-        amp = numpy.mean( i[ion+iborder:ioff-iborder] ) - hypamp
+        amp = numpy.mean(i[ion + iborder:ioff - iborder]) - hypamp
 
     # clean voltage from transients
     if expname in ['IDRest', 'IDrest', 'IDthresh', 'IDdepol']:
-        cut_start = int(ion+numpy.ceil(1.0/dt))
+        cut_start = int(ion + numpy.ceil(1.0 / dt))
         v[ion:cut_start] = v[cut_start]
-        cut_end0 = int(ioff-numpy.ceil(0.5/dt))
-        cut_end1 = int(ioff+numpy.ceil(2.0/dt))
+        cut_end0 = int(ioff - numpy.ceil(0.5 / dt))
+        cut_end1 = int(ioff + numpy.ceil(2.0 / dt))
         v[cut_end0:cut_end1] = v[cut_end1]
 
     # delete second pulse
     elif expname in ['SpikeRec']:
-        t = t[:int(50./dt)]
-        v = v[:int(50./dt)]
-        i = i[:int(50./dt)]
+        t = t[:int(50. / dt)]
+        v = v[:int(50. / dt)]
+        i = i[:int(50. / dt)]
 
     # normalize membrane potential to known value
     if v_corr:
         v = v - numpy.mean(v[0:ion]) + v_corr
 
-    v = v - ljp # correct junction potential
+    v = v - ljp  # correct junction potential
 
     data['voltage'].append(v)
     data['current'].append(i)
