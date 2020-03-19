@@ -60,6 +60,14 @@
 Introduction
 ============
 
+BluePyEfe aims at easing the process of reading experimental recordings and extracting 
+batches of efeatures from these recordings. To do so, it combines trace reading
+functions and features extraction functions from the [eFel library](https://github.com/BlueBrain/eFEL).
+
+BluePyEfe outputs protocols and features files in the format used
+by [BluePyOpt](https://github.com/BlueBrain/BluePyOpt) for neuron model
+ building.
+
 Support
 =======
 We are providing support using a chat channel on [Gitter](https://gitter.im/BlueBrain/BluePyEfe).
@@ -75,18 +83,18 @@ Requirements
 * [eFEL eFeature Extraction Library](https://github.com/BlueBrain/eFEL) (automatically installed by pip)
 * [Numpy](http://www.numpy.org) (automatically installed by pip)
 * [Pandas](http://pandas.pydata.org/) (automatically installed by pip)
+* [Scipy](https://www.scipy.org/) (automatically installed by pip)
+* [Neo](https://neo.readthedocs.io/en/stable/) (automatically installed by pip)
 * The instruction below are written assuming you have access to a command shell
 on Linux / UNIX / MacOSX / Cygwin
 
 Installation
 ============
 
-If you want to use the ephys module of BluePyEfe, you first need to install NEURON with Python support on your machine.
-
-And then bluepyopt itself:
+To install BluePyEfe run in the cloned directory:
 
 ```bash
-pip install bluepyefe
+pip install -e .
 ```
 
 Quick Start
