@@ -26,7 +26,7 @@ setuptools.setup(
     name='bluepyefe',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    description='bluepyefe',
+    description='Blue Brain Python E-feature extraction',
     packages=setuptools.find_packages(),
     author="BlueBrain Project, EPFL",
     author_email="werner.vangeit@epfl.ch",
@@ -35,6 +35,16 @@ setuptools.setup(
         'neuroscience',
         'BlueBrainProject'),
     url='https://github.com/BlueBrain/BluePyEfe',
+    classifiers=[
+    'Development Status :: 4 - Beta',
+    'Environment :: Console',
+    'License :: OSI Approved :: GNU Lesser General Public '
+    'License v3 (LGPLv3)',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3.6',
+    'Operating System :: POSIX',
+    'Topic :: Scientific/Engineering',
+    'Topic :: Utilities'],
     install_requires=[
         'igor',
         'neo',
