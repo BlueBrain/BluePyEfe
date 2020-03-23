@@ -91,7 +91,7 @@ on Linux / UNIX / MacOSX / Cygwin
 Installation
 ============
 
-To install BluePyEfe run in the cloned directory:
+To install BluePyEfe, cloned the directory, enter it, and run:
 
 ```bash
 pip install -e .
@@ -100,10 +100,7 @@ pip install -e .
 Quick Start
 ===========
 
-
-API documentation
-==================
-The API documentation can be found on [ReadTheDocs](http://bluepyefe.readthedocs.io/en/latest/).
+For a quick start, look at the notebook examples/example.ipynb
 
 Funding
 =======
