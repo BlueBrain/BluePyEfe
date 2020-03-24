@@ -65,12 +65,8 @@ batches of efeatures from these recordings. To do so, it combines trace reading
 functions and features extraction functions from the [eFel library](https://github.com/BlueBrain/eFEL).
 
 BluePyEfe outputs protocols and features files in the format used
-by [BluePyOpt](https://github.com/BlueBrain/BluePyOpt) for neuron model
- building.
-
-Support
-=======
-We are providing support using a chat channel on [Gitter](https://gitter.im/BlueBrain/BluePyEfe).
+by [BluePyOpt](https://github.com/BlueBrain/BluePyOpt) for neuron electrical
+ model building.
 
 News
 ====
@@ -91,7 +87,8 @@ on Linux / UNIX / MacOSX / Cygwin
 Installation
 ============
 
-To install BluePyEfe, cloned the directory, enter it, and run:
+To install BluePyEfe, clone the repository, enter the resulting directory, and
+ run:
 
 ```bash
 pip install -e .
@@ -100,7 +97,7 @@ pip install -e .
 Quick Start
 ===========
 
-For a quick start, look at the notebook examples/example.ipynb
+For a quick start, have a look at the notebook examples/example.ipynb
 
 Funding
 =======
