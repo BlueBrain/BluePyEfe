@@ -402,7 +402,7 @@ def test_config(rootdir):
 
     config['path'] = os.path.join(rootdir, config['path'])
 
-    extractor = bpefe.Extractor('testtype_legacy', config, use_git=False)
+    extractor = bpefe.Extractor('testtype_legacy', config)
     extractor.create_dataset()
     extractor.plt_traces()
     extractor.extract_features(threshold=-30)
@@ -412,7 +412,7 @@ def test_config(rootdir):
     extractor.feature_config_cells(version='legacy')
     extractor.feature_config_all(version='legacy')
 
-    extractor = bpefe.Extractor('testtype', config, use_git=False)
+    extractor = bpefe.Extractor('testtype', config)
     extractor.create_dataset()
     extractor.plt_traces()
     extractor.extract_features(threshold=-30)

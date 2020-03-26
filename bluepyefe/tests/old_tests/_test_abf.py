@@ -38,7 +38,7 @@ def test_abf(rootdir):
     config = json.load(open(os.path.join(rootdir, 'configs', 'abf1.json')))
     config['path'] = os.path.join(rootdir, config['path'])
 
-    extractor = bpefe.Extractor('testtype_abf', config, use_git=False)
+    extractor = bpefe.Extractor('testtype_abf', config)
     extractor.create_dataset()
     extractor.plt_traces()
     extractor.extract_features(threshold=-30)

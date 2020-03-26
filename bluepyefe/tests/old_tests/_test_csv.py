@@ -170,7 +170,7 @@ def test_csv(rootdir):
 
     import bluepyefe as bpefe
 
-    extractor = bpefe.Extractor('testtype_csv', config, use_git=False)
+    extractor = bpefe.Extractor('testtype_csv', config)
     extractor.create_dataset()
     extractor.plt_traces()
     extractor.extract_features()

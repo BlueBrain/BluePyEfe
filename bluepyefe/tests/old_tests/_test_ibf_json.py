@@ -93,7 +93,7 @@ def test_ibf_json(rootdir):
     import bluepyefe as bpefe
 
     extractor = bpefe.Extractor(
-        'temptype_ibf', config, use_git=False)
+        'temptype_ibf', config)
     extractor.create_dataset()
     extractor.plt_traces()
     extractor.extract_features(threshold=-30)
