@@ -190,7 +190,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
     ('index', 'BluePyEfe.tex', u'BluePyEfe Documentation',
-     u'Christian Roessert', 'manual'),
+     u'Blue Brain Project', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -220,7 +220,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'bluepyefe', u'BluePyEfe Documentation',
-     [u'Christian Roessert'], 1)
+     [u'Blue Brain Project'], 1)
 ]
 
 # If true, show URL addresses after external links.
