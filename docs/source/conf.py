@@ -45,7 +45,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'BluePyEfe'
-copyright = u'2020, Christian Roessert'
+copyright = u'2020, Blue Brain Project'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -234,7 +234,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     ('index', 'BluePyEfe', u'BluePyEfe Documentation',
-     u'Christian Roessert', 'BluePyEfe', 'One line description of project.',
+     u'Blue Brain Project', 'BluePyEfe', 'One line description of project.',
      'Miscellaneous'),
 ]
 
