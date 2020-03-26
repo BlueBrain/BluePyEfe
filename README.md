@@ -84,8 +84,7 @@ on Linux / UNIX / MacOSX / Cygwin
 Installation
 ============
 
-To install BluePyEfe, clone the repository, enter the resulting directory, and
- run:
+To install BluePyEfe run:
 
 ```bash
 pip install bluepyefe
