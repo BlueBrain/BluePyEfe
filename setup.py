@@ -29,7 +29,6 @@ setuptools.setup(
     description='Blue Brain Python E-feature extraction',
     packages=setuptools.find_packages(),
     author="BlueBrain Project, EPFL",
-    author_email="werner.vangeit@epfl.ch",
     license="LGPLv3",
     keywords=(
         'neuroscience',
