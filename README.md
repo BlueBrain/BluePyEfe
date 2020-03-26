@@ -4,58 +4,56 @@
 
 # BluePyEfe: Blue Brain Python E-feature extraction
 
-<!--
 <table>
 <tr>
   <td>Latest Release</td>
   <td>
-    <a href="https://pypi.org/project/bluepyopt/">
-    <img src="https://img.shields.io/pypi/v/bluepyopt.svg" alt="latest release" />
+    <a href="https://pypi.org/project/bluepyefe/">
+    <img src="https://img.shields.io/pypi/v/bluepyefe.svg" alt="latest release" />
     </a>
   </td>
 </tr>
 <tr>
   <td>Documentation</td>
   <td>
-    <a href="https://bluepyopt.readthedocs.io/">
-    <img src="https://readthedocs.org/projects/bluepyopt/badge/?version=latest" alt="latest documentation" />
+    <a href="https://bluepyefe.readthedocs.io/">
+    <img src="https://readthedocs.org/projects/bluepyefe/badge/?version=latest" alt="latest documentation" />
     </a>
   </td>
 </tr>
 <tr>
   <td>License</td>
   <td>
-    <a href="https://github.com/BlueBrain/bluepyopt/blob/master/LICENSE.txt">
-    <img src="https://img.shields.io/pypi/l/bluepyopt.svg" alt="license" />
+    <a href="https://github.com/BlueBrain/bluepyefe/blob/master/LICENSE.txt">
+    <img src="https://img.shields.io/pypi/l/bluepyefe.svg" alt="license" />
     </a>
 </td>
 </tr>
 <tr>
   <td>Build Status</td>
   <td>
-    <a href="https://travis-ci.org/BlueBrain/BluePyOpt">
-    <img src="https://travis-ci.org/BlueBrain/BluePyOpt.svg?branch=master" alt="travis build status" />
+    <a href="https://travis-ci.org/BlueBrain/BluePyEfe">
+    <img src="https://travis-ci.org/BlueBrain/BluePyEfe.svg?branch=master" alt="travis build status" />
     </a>
   </td>
 </tr>
 <tr>
   <td>Coverage</td>
   <td>
-    <a href="https://codecov.io/gh/BlueBrain/bluepyopt">
-    <img src="https://codecov.io/github/BlueBrain/BluePyOpt/coverage.svg?branch=master" alt="coverage" />
+    <a href="https://codecov.io/gh/BlueBrain/bluepyefe">
+    <img src="https://codecov.io/github/BlueBrain/BluePyefe/coverage.svg?branch=master" alt="coverage" />
     </a>
   </td>
 </tr>
 <tr>
 	<td>Gitter</td>
 	<td>
-		<a href="https://gitter.im/bluebrain/bluepyopt">
+		<a href="https://gitter.im/bluebrain/bluepyefe">
 		<img src="https://badges.gitter.im/Join%20Chat.svg"
 	</a>
 	</td>
 </tr>
 </table>
--->
 
 Introduction
 ============
