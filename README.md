@@ -38,14 +38,6 @@
   </td>
 </tr>
 <tr>
-  <td>Coverage</td>
-  <td>
-    <a href="https://codecov.io/gh/BlueBrain/bluepyefe">
-    <img src="https://codecov.io/github/BlueBrain/BluePyefe/coverage.svg?branch=master" alt="coverage" />
-    </a>
-  </td>
-</tr>
-<tr>
 	<td>Gitter</td>
 	<td>
 		<a href="https://gitter.im/bluebrain/bluepyefe">
