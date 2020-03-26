@@ -81,7 +81,7 @@ pip install -e .
 Quick Start
 ===========
 
-For a quick start, have a look at the notebook examples/example.ipynb
+For a quick start, have a look at the notebook [examples/example.ipynb](examples/example.ipynb)
 
 Funding
 =======
