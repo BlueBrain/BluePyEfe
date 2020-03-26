@@ -1,7 +1,3 @@
-<!-- <img src="docs/source/logo/BluePyOptBanner.png"/> -->
-
------------------
-
 # BluePyEfe: Blue Brain Python E-feature extraction
 
 <table>
