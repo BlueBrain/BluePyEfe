@@ -68,9 +68,6 @@ BluePyEfe outputs protocols and features files in the format used
 by [BluePyOpt](https://github.com/BlueBrain/BluePyOpt) for neuron electrical
  model building.
 
-News
-====
-
 Requirements
 ============
 
