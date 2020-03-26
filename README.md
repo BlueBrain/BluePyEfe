@@ -59,7 +59,8 @@ Introduction
 ============
 
 BluePyEfe aims at easing the process of reading experimental recordings and extracting 
-batches of efeatures from these recordings. To do so, it combines trace reading
+batches of electrical features from these recordings. To do so, it combines
+ trace reading
 functions and features extraction functions from the [eFel library](https://github.com/BlueBrain/eFEL).
 
 BluePyEfe outputs protocols and features files in the format used
