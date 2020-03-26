@@ -46,7 +46,7 @@ def test_config(rootdir, config_path):
 
     config['path'] = os.path.join(rootdir, config['path'])
 
-    extractor = bpefe.Extractor('test_run', config, use_git=False)
+    extractor = bpefe.Extractor('test_run', config)
     extractor.create_dataset()
     extractor.plt_traces()
     extractor.extract_features(threshold=-30)
@@ -58,7 +58,7 @@ def test_config(rootdir, config_path):
     extractor.plt_features_dist()
 
     '''
-    extractor = bpefe.Extractor('testtype_legacy', config, use_git=False)
+    extractor = bpefe.Extractor('testtype_legacy', config)
     extractor.create_dataset()
     extractor.plt_traces()
     extractor.extract_features(threshold=-30)
