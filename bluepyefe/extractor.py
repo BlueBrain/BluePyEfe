@@ -28,7 +28,6 @@ import numpy
 import sys
 import efel
 import os
-import sh
 import logging
 import gzip
 import json
@@ -49,7 +48,17 @@ logger = logging.getLogger()
 
 class Extractor(object):
 
-    def __init__(self, mainname='PC', config=OrderedDict(), use_git=True):
+    """Extractor class"""
+
+    def __init__(self, mainname='PC', config=OrderedDict()):
+        """Constructor
+
+        Args:
+            mainname (str): name of the cell type. Used to create the output
+            directory
+            config (dict): metadata containing the protocols and cells for
+                which to extract the efeatures.
+        """
 
         self.config = config
         self.path = config['path']
@@ -66,30 +75,6 @@ class Extractor(object):
 
         self.dataset = OrderedDict()
         self.dataset_mean = OrderedDict()
-
-        if use_git:
-
-            try:
-                sh.git('add', '-A')
-                sh.git(
-                    'commit',
-                    '-a',
-                    '-m \"Running feature extraction %s\"' %
-                    mainname)
-            except BaseException:
-                pass
-
-            try:
-                self.githash = str(
-                    sh.git(
-                        'rev-parse',
-                        '--short',
-                        'HEAD')).rstrip()
-            except BaseException:
-                self.githash = "None"
-
-        else:
-            self.githash = "None"
 
         self.max_per_plot = 16
 
@@ -227,7 +212,7 @@ class Extractor(object):
             return numpy.std(a)
 
     def create_dataset(self):
-
+        """Read the trace files and add them to the dictionnary self.dataset"""
         logger.info(" Filling dataset")
 
         for i_cell, cellname in enumerate(self.cells):
@@ -328,7 +313,7 @@ class Extractor(object):
             raise ValueError('Unrecognized trace format: %s' % self.format)
 
     def plt_traces(self):
-
+        """Plot traces"""
         logger.info(" Plotting traces")
 
         for i_cell, cellname in enumerate(self.dataset):
@@ -427,7 +412,7 @@ class Extractor(object):
                     plt.close(fig['fig'])
 
     def extract_features(self, threshold=-20):
-
+        """Extract features from the traces"""
         logger.info(" Extracting features")
 
         efel.setThreshold(threshold)
@@ -556,7 +541,7 @@ class Extractor(object):
                         numspike)
 
     def mean_features(self):
-
+        """Compute the mean for each features for each target"""
         logger.info(" Calculating mean features")
 
         # mean for each cell
@@ -1037,6 +1022,8 @@ class Extractor(object):
                         str(target)] = bcld
 
     def get_threshold(self, amp, numspikes):
+        """Get the spiking threshold of a cell by taking the smallest current
+        amplitude for which it fires"""
         isort = numpy.argsort(amp)
         amps_sort = numpy.array(amp)[isort]
         numspikes_sort = numpy.array(numspikes)[isort]
@@ -1047,7 +1034,7 @@ class Extractor(object):
         return amp_threshold
 
     def plt_features(self):
-
+        """Plot the features"""
         logger.info(" Plotting features")
         figs = OrderedDict()
 
@@ -1231,7 +1218,7 @@ class Extractor(object):
             plt.close(fig['fig'])
 
     def plt_features_dist(self):
-
+        """Plot the distribution of features"""
         logger.info(" Plotting feature distributions")
         figs = OrderedDict()
 
@@ -1339,7 +1326,8 @@ class Extractor(object):
             cls=tools.NumpyEncoder)
 
     def create_feature_config(self, directory, dataset, version=None):
-
+        """Save the efeatures and protocols for each protocol/target combo
+        in json file"""
         logger.info(" Saving config files to %s", directory)
 
         if version == 'legacy':
@@ -1652,14 +1640,6 @@ class Extractor(object):
                                                              totduration),
                                                      ])),
                                                 ])
-
-        meta = OrderedDict()
-        meta['version'] = self.githash
-
-        s = json.dumps(meta, indent=2, cls=tools.NumpyEncoder)
-        s = tools.collapse_json(s, indent=indent)
-        with open(directory + "meta.json", "w") as f:
-            f.write(s)
 
         s = json.dumps(stim, indent=2, cls=tools.NumpyEncoder)
         s = tools.collapse_json(s, indent=indent)

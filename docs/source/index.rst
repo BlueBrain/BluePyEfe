@@ -20,9 +20,10 @@ github directory of the repository.
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    installation
+   api
 
 
 Indices and tables

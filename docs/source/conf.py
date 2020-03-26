@@ -13,11 +13,12 @@
 
 import sys
 import os
+import bluepyefe
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('.'))
 
 # -- General configuration -----------------------------------------------
 
@@ -51,7 +52,6 @@ copyright = u'2020, Blue Brain Project'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-import bluepyefe
 
 # The short X.Y version.
 version = bluepyefe.__version__
@@ -92,6 +92,10 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
+autosummary_generate = True
+autodoc_default_flags = ['show-inheritance']
+autoclass_content = 'both'
+tolerate_sphinx_warnings = True
 
 # -- Options for HTML output ---------------------------------------------
 
