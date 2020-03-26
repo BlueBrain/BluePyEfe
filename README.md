@@ -75,7 +75,7 @@ To install BluePyEfe, clone the repository, enter the resulting directory, and
  run:
 
 ```bash
-pip install -e .
+pip install bluepyefe
 ```
 
 Quick Start
