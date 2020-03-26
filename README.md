@@ -71,7 +71,7 @@ by [BluePyOpt](https://github.com/BlueBrain/BluePyOpt) for neuron electrical
 Requirements
 ============
 
-* [Python 2.7+](https://www.python.org/download/releases/2.7/) or [Python 3.6+](https://www.python.org/downloads/release/python-360/)
+* [Python 3.6+](https://www.python.org/downloads/release/python-360/) (still compatible with [Python 2.7+](https://www.python.org/download/releases/2.7/)
 * [Pip](https://pip.pypa.io) (installed by default in newer versions of Python)
 * [eFEL eFeature Extraction Library](https://github.com/BlueBrain/eFEL) (automatically installed by pip)
 * [Numpy](http://www.numpy.org) (automatically installed by pip)
