@@ -36,7 +36,7 @@ def process(config=None,
             stim_feats=None,
             idx_file=None,
             ljp=0, v_corr=0):
-
+    """Read recordings from an axon file"""
     path = config['path']
     cells = config['cells']
     # features = config['features']
@@ -201,8 +201,9 @@ def process(config=None,
     return data
 
 
-# author Luca Leonardo Bologna
 def stim_feats_from_meta(stim_feats, num_segments, idx_file):
+    """Get stimulus features from metadata (author: Luca Leonardo
+        Bologna)"""
     if not stim_feats:
         return (0, "Empty metadata in file")
     elif len(stim_feats) - 1 < idx_file and len(stim_feats) != 1:
@@ -241,9 +242,9 @@ def stim_feats_from_meta(stim_feats, num_segments, idx_file):
         return (1, all_stim_feats)
 
 
-# author Luca Leonardo Bologna
 def stim_feats_from_header(header):
-
+    """Get stimulus features from the file header (author: Luca Leonardo
+    Bologna)"""
     # read sampling rate
     sampling_rate = 1.e6 / header['protocol']['fADCSequenceInterval']
 

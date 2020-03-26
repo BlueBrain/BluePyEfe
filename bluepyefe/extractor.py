@@ -57,7 +57,7 @@ class Extractor(object):
             mainname (str): name of the cell type. Used to create the output
             directory
             config (dict): metadata containing the protocols and cells for
-                which to extract the efeatures.
+            which to extract the efeatures.
         """
 
         self.config = config
@@ -296,7 +296,7 @@ class Extractor(object):
                         dataset_cell_exp[expname]['hypamp'] += data['hypamp']
 
     def process_file(self, **kwargs):
-
+        """Get data from a trace file"""
         if self.format == 'igor':
             from .formats import igor
             return igor.process(**kwargs)
@@ -1278,7 +1278,6 @@ class Extractor(object):
             pdf_pages.close()
 
     def feature_config_all(self, version=None):
-
         self.create_feature_config(self.maindirname,
                                    self.dataset_mean, version=version)
 
@@ -1291,7 +1290,8 @@ class Extractor(object):
                                        dataset_cell_exp, version=version)
 
     def analyse_threshold(self):
-
+        """Get the spiking threshold and holding current for  all cells. Save
+        them in hypamp_threshold.json"""
         logger.info(
             " Analysing threshold and hypamp and saving files to %s",
             self.maindirname)

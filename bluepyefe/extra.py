@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 
 
 def spikerate_tau_jj(peaktimes):
-    '''numpy implementation'''
+    """Spike rate tau feature"""
 
     peaktimes = numpy.array(peaktimes)  # keep ms
     freq = 1. / numpy.diff(peaktimes)
@@ -61,7 +61,7 @@ def spikerate_tau_jj(peaktimes):
 
 
 def spikerate_drop(peaktimes, nstart=1, nend=2):
-    '''numpy implementation'''
+    """Spike rate drop feature"""
 
     peaktimes = numpy.array(peaktimes) * 1e-3  # convert from ms to s
     freq = 1. / numpy.diff(peaktimes)
@@ -72,7 +72,7 @@ def spikerate_drop(peaktimes, nstart=1, nend=2):
 
 
 def spikerate_tau_log(peaktimes):
-    '''numpy implementation'''
+    """Spike rate tau log feature"""
 
     peaktimes = numpy.array(peaktimes)  # keep ms
     freq = 1. / numpy.diff(peaktimes)
@@ -119,7 +119,7 @@ def spikerate_tau_log(peaktimes):
 
 
 def spikerate_slope(peaktimes):
-    '''numpy implementation'''
+    """Spike rate slope feature"""
 
     peaktimes = numpy.array(peaktimes) * 1e-3
     isi = numpy.diff(peaktimes)
@@ -154,7 +154,7 @@ def spikerate_slope(peaktimes):
 
 
 def spikerate_tau_slope(peaktimes):
-    '''numpy implementation'''
+    """Spike rate tau slope feature"""
 
     peaktimes = numpy.array(peaktimes) * 1e-3
     freq = 1. / numpy.diff(peaktimes)
@@ -206,7 +206,7 @@ def spikerate_tau_slope(peaktimes):
 
 
 def spikerate_tau_fit(peaktimes, nstart=1, nend=2):
-    '''numpy implementation'''
+    """Spike rate tau fit feature"""
 
     from scipy.optimize import curve_fit
     from functools import partial
@@ -225,12 +225,6 @@ def spikerate_tau_fit(peaktimes, nstart=1, nend=2):
     func_ = partial(func, a=a, d=d)
 
     popt, pcov = curve_fit(func_, times, freq, p0=(1e9))
-
-    # xx = numpy.arange(0, times[-1], 1)
-    # yy = func_(xx, *popt)
-    # plt.plot(times, freq, 'ko')
-    # plt.plot(xx, yy)
-    # plt.show()
 
     tau = abs(popt[0])
 

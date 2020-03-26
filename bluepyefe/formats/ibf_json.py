@@ -37,6 +37,8 @@ def process(config=None,
             stim_feats=None,
             idx_file=None,
             ljp=0, v_corr=0):
+    """Read recordings from a json file"""
+
     path = config['path']
     cells = config['cells']
     features = config['features']
