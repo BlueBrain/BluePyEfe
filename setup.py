@@ -27,6 +27,13 @@ setuptools.setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description='Blue Brain Python E-feature extraction',
+    long_description="The Blue Brain Python E-feature extraction Library ("
+    "BluePyEfe) aims at easing the process of reading experimental recordings "
+    "and extracting batches of electrical features from them. To do so, it "
+    "combines trace reading functions and features extraction functions from "
+    "the eFel library. BluePyEfe outputs protocols and features files in a "
+    "format that can then be used by BluePyOpt for electrical model building "
+    "purposes.",
     packages=setuptools.find_packages(),
     author="BlueBrain Project, EPFL",
     license="LGPLv3",
