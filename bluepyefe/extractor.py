@@ -37,6 +37,7 @@ from collections import OrderedDict
 
 
 from . import tools
+from .tools import tabletools
 from . import plottools
 from . import extra
 
@@ -170,6 +171,7 @@ class Extractor(object):
         self.extra_features = ['spikerate_tau_jj', 'spikerate_drop',
                                'spikerate_tau_log', 'spikerate_tau_fit',
                                'spikerate_tau_slope']
+
 
     def newmeancell(self, a):
         if (self.options["nanmean_cell"] or
@@ -415,8 +417,17 @@ class Extractor(object):
         """Extract features from the traces"""
         logger.info(" Extracting features")
 
+
         efel.setThreshold(threshold)
         logger.info(" Setting spike threshold to %.2f mV", threshold)
+
+        if 'print_table' in self.options and self.options['print_table']['flag']:
+            print_table_flag = True
+            all_feat_filename = os.path.join(self.mainname, 'all_feature_table.txt')
+            if os.path.exists(all_feat_filename):
+                os.remove(all_feat_filename)
+            if not hasattr(self, "metadataset"):
+                self.create_metadataset()
 
         for i_cell, cellname in enumerate(self.dataset):
 
@@ -539,6 +550,29 @@ class Extractor(object):
 
                     dataset_cell_exp[expname]['features']['numspikes'].append(
                         numspike)
+
+                    # Print individual features to table if required
+                    if print_table_flag:
+
+                        crr_filename = dataset_cell_exp[expname]['filename'][i_seg]
+                        all_feat_filename = os.path.join(self.mainname, 'all_feature_table.txt')
+                        if not hasattr(self.options['print_table'], "num_events"):
+                            multvalnum = 5
+                        else:
+                            multvalnum = self.options['print_table']['num_events']
+                        tabletools.printFeatures.dump_features( \
+                                all_feat_filename = all_feat_filename, \
+                                cellname = cellname, \
+                                trace_filename = crr_filename, \
+                                features_name = features_all_,
+                                fel_vals = fel_vals,
+                                multvalnum = multvalnum, \
+                                metadata = \
+                                        self.metadataset[cellname]['experiments'][expname][crr_filename], \
+                                amp = amp, \
+                                stim_start = trace['stim_start'][0], \
+                                stim_end = trace['stim_end'][0], \
+                        )
 
     def mean_features(self):
         """Compute the mean for each features for each target"""
@@ -1656,3 +1690,41 @@ class Extractor(object):
             s = tools.collapse_json(s, indent=indent)
             with gzip.open(directory + "features_sources.json.gz", "wb") as f:
                 f.write(s.encode('utf-8'))
+
+
+    def create_metadataset(self):
+        """
+        Fill a dictionary with metadata for every file to be processed 
+        If no metadata file is present, default values are inserted
+        """
+
+        logger.info("Filling metadataset")
+        path = self.path
+
+        self.metadataset = OrderedDict()
+
+        for i_cell, cellname in enumerate(self.cells):
+
+            self.metadataset[cellname] = OrderedDict()
+            self.metadataset[cellname]['path'] = path
+
+            metadataset_cell_exp = OrderedDict()
+            self.metadataset[cellname]['experiments'] = metadataset_cell_exp
+
+            for i_exp, expname in enumerate(self.cells[cellname]['experiments']):
+
+                files = self.cells[cellname]['experiments'][expname]['files']
+
+                if len(files) > 0:
+                    logger.debug(" Adding experiment %s to metadata", expname)
+
+                    metadataset_cell_exp[expname] = OrderedDict()
+
+                    for idx_file, filename in enumerate(files):
+                        fullpath = os.path.join(self.path, cellname, \
+                                filename + '_' + 'metadata.json')
+
+                        from .formats import common
+                        metadataset_cell_exp[expname][filename] = \
+                                common.manageMetadata.get_metadata( \
+                                fullpath)

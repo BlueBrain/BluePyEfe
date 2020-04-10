@@ -59,4 +59,9 @@ setuptools.setup(
         'sh',
         'pandas',
         'scipy'],
+    data_files=[
+        ('bluepyefe/formats/configs', ['bluepyefe/formats/configs/metadata_template.json']),
+        ('bluepyefe/formats/configs', ['bluepyefe/formats/configs/features_default.json']),
+        ('bluepyefe/tools/configs', ['bluepyefe/tools/configs/tabletools_config.json']),
+    ],
 )

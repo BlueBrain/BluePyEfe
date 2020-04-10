@@ -1,0 +1,22 @@
+{ 
+"MULTVALFEAT": [ "AP_amplitude", "AP_begin_indices", "peak_voltage",
+    "AP_duration_change", "fast_AHP", "AP_fall_rate_change",
+    "AP_fall_indices", "AP_duration_half_width", "AP_fall_rate",
+    "AP_amplitude_from_voltagebase", "AHP_depth_abs_slow", 
+    "AP_rise_rate", "ISI_values", "AP_begin_voltage", 
+    "AHP_depth_from_peak", "AP_duration_half_width_change", 
+    "AHP_time_from_peak", "AP_begin_width", "min_voltage_between_spikes",
+    "peak_time", "spike_width2", "AHP_depth_diff", "fast_AHP_change", 
+    "min_AHP_values", "peak_indices", "AP_width", "min_AHP_indices", 
+    "AHP_depth", "AP_end_indices", "AP_height", "AP_amplitude_change", 
+    "AHP_slow_time", "AP_amplitude_diff", "all_ISI_values", 
+    "AP_duration", "AP_fall_time", "AHP_depth_abs", "AP_begin_time", 
+    "AP_rise_time", "AP_rise_indices", "spike_half_width", 
+    "AP_rise_rate_change", "burst_mean_freq", "interburst_voltage", 
+    "burst_ISI_indices", "voltage"],
+
+"CELLINFO" : [
+    "animal_species", "brain_structure", "cell_soma_location", "cell_type",
+    "etype", "cell_id", "filename"
+]
+}
