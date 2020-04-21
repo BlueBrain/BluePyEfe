@@ -420,7 +420,8 @@ class Extractor(object):
 
         efel.setThreshold(threshold)
         logger.info(" Setting spike threshold to %.2f mV", threshold)
-
+    
+        # if print_table flag is set, dump all extracted feature to a .csv file
         if 'print_table' in self.options and self.options['print_table']['flag']:
             print_table_flag = True
             all_feat_filename = os.path.join(self.mainname, 'all_feature_table.txt')
@@ -428,6 +429,12 @@ class Extractor(object):
                 os.remove(all_feat_filename)
             if not hasattr(self, "metadataset"):
                 self.create_metadataset()
+        
+        # set flag to convert zero value to nan for features set by the user
+        if 'featzerotonan' in self.options and hasattr(self.options['featzerotonan'],'flag'):
+            ZERO_TO_NAN = self.options['featzerotonan']['flag']
+        else:
+            ZERO_TO_NAN = False
 
         for i_cell, cellname in enumerate(self.dataset):
 
@@ -522,6 +529,15 @@ class Extractor(object):
                                 f = extra.spikerate_tau_slope(peak_times)
                             else:
                                 f = None
+                        elif fel_vals[0][feature] is not None and \
+                                len(fel_vals[0][feature]) == 1 and \
+                                fel_vals[0][feature] == 0 and ZERO_TO_NAN \
+                                and feature in self.option['featzerotonan']['mean_features_no_zeros']:
+                            print("####")
+                            print(fel_vals[0][feature])
+                            print(feature)
+                            fel_vals[0][feature] = None
+                            f = None
 
                         else:
                             f = fel_vals[0][feature]
