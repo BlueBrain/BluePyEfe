@@ -1410,9 +1410,15 @@ class Extractor(object):
                                 n = int(dataset[expname]['n']
                                         [feature][str(target)])
 
-                                if ~numpy.isnan(m) and(
-                                        (s > 0.0) or(m == 0.0)):
+                                if "zero_std" in self.options and self.options["zero_std"]:
+                                    rules = [~numpy.isnan(m)]
+                                else:
+                                    rules = [~numpy.isnan(m), (s > 0.0) or (m == 0.0)]
 
+                                #if ~numpy.isnan(m) and(
+                                #        (s > 0.0) or(m == 0.0)):
+
+                                if all(rules):
                                     if s == 0.0:  # prevent divison by 0
                                         s = 1e-3
 
