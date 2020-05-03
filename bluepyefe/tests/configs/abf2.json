@@ -8,25 +8,46 @@
                 ],
                 [
                     -2.0
+                ],
+                [
+                    -2.0
+                ],
+                [
+                    -2.0
                 ]
             ],
             "experiments": {
                 "step": {
                     "files": [
-                        "96711008",
-                        "96711009"
+                        "96711009",
+                        "96711008"
                     ],
-                    "location": "soma"
+                    "location": "soma",
+                    "stim_info": [{
+                    "stimulus_type":"step",
+                    "stimulus_time_unit":"ms",
+                    "stimulus_start":[88],
+                    "stimulus_end":[488],
+                    "stimulus_unit":"pA",
+                    "stimulus_first_amplitude":[-200],
+                    "stimulus_increment":[50],
+                    "sampling_rate":[10000]
+                    }
+                    ]
                 }
             },
             "ljp": 0,
-            "v_corr": 0
+            "v_corr": [4, 0, 6]
         },
         "cell02": {
             "etype": "etype",
             "exclude": [
                 [],
-                []
+                [],
+                [],
+                [
+                    -2.0
+                ]
             ],
             "experiments": {
                 "step": {
@@ -47,7 +68,10 @@
             "time_to_last_spike",
             "time_to_second_spike",
             "voltage",
-            "voltage_base"
+            "voltage_base",
+            "inv_first_ISI", "inv_second_ISI", 
+            "inv_third_ISI", "inv_fourth_ISI", "inv_fifth_ISI", 
+            "inv_last_ISI", "time_to_first_spike", "time_to_last_spike"
         ]
     },
     "format": "axon",
@@ -56,14 +80,37 @@
             "flag": true,
             "num_events": 5
         },
+        "zero_to_nan":{
+            "flag": true,
+            "value": "nan",
+            "mean_features_no_zeros":[
+                "inv_first_ISI", "inv_second_ISI", 
+                "inv_third_ISI", "inv_fourth_ISI", "inv_fifth_ISI", 
+                "inv_last_ISI", "time_to_first_spike", "time_to_last_spike"
+            ]
+        },
+        "strict_stiminterval": {
+            "base": true
+        },
+        "trace_check": false,
         "delay": 500,
         "logging": false,
         "nanmean": true,
         "relative": false,
+        "zero_std": true,
         "target": [
             -2.0,
+            -1.8,
             0.0,
-            1.0
+            0.2,
+            0.4,0.6,
+            0.8,
+            1.0,
+            1.2,
+            1.4,
+            1.6,
+            1.8,
+            2.0
         ],
         "tolerance": 0.02
     },

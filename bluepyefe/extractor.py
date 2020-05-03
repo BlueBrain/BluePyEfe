@@ -79,6 +79,8 @@ class Extractor(object):
 
         self.max_per_plot = 16
 
+        conv_fact = 1
+
         if "relative" not in self.options:
             self.options["relative"] = False
 
@@ -91,9 +93,21 @@ class Extractor(object):
 
         if "target" not in self.options:
             self.options["target"] = [100., 150., 200., 250.]
+        else:
+            if "target_unit" in self.options:
+                target_unit = self.options["target_unit"].lower()
+                conv_fact = common.manageConfig.conversion_factor(
+                        'nA', target_unit)
+                if conv_fact != 1:
+                    conv_target = [i * conv_fact for i in self.options["target"]]
+                    self.options["target"] = conv_target
 
         if "tolerance" not in self.options:
             self.options["tolerance"] = 10
+        else:
+            if conv_fact != 1:
+                tolerance = self.options["tolerance"]
+                self.options["tolerance"] = conv_fact * tolerance
 
         if "strict_stiminterval" not in self.options:
             self.options["strict_stiminterval"] = {'base': False}

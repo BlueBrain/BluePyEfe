@@ -23,10 +23,13 @@ from neo import io
 from collections import OrderedDict
 import logging
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 import numpy
 import os
-import pprint
+import sys
 import neo.rawio.axonrawio
+import json
+from . import common
 
 
 def process(config=None,
@@ -42,20 +45,19 @@ def process(config=None,
     # features = config['features']
     # options = config['options']
 
-    data = OrderedDict()
-    data['voltage'] = []
-    data['current'] = []
-    data['dt'] = []
+    # initialize data dictionary
+    data = common.manageDicts.initialize_data_dict()
 
-    data['t'] = []
-    data['ton'] = []
-    data['toff'] = []
-    data['tend'] = []
-    data['amp'] = []
-    data['hypamp'] = []
-    data['filename'] = []
+    # read metadata file if present
+    meta_dict = {}
 
-    logger.debug(" Adding axon file %s", filename)
+    f_meta = os.path.join(path, cellname, filename + '_metadata.json')
+    if os.path.exists(f_meta):
+        with open(f_meta) as json_metadata:
+            meta_dict = json.load(json_metadata)
+        json_metadata.close()
+
+    logger.info(" Adding axon file %s", filename)
 
     f = os.path.join(path, cellname, filename + '.abf')
     r = io.AxonIO(filename=f)
@@ -65,181 +67,201 @@ def process(config=None,
     # Below line doesn't work anymore due to api change
     # Now using rawio
     # header = r.read_header()
-
+    
     header = neo.rawio.axonrawio.parse_axon_soup(f)
 
-    # read sampling rate
-    sampling_rate = 1.e6 / header['protocol']['fADCSequenceInterval']
+    # get number of episodes from header
+    nbepisod = get_nbepisod(header)
 
-    dt = 1. / int(sampling_rate) * 1e3
-    # version = header['fFileVersionNumber']  # read file version
+    # read sampling rate
+    #sampling_rate = 1.e6 / header['protocol']['fADCSequenceInterval']
+    #dt = 1. / int(sampling_rate) * 1e3
+    # version = header['fFileVersionNumber']
+
+    # read data block
     bl = r.read_block(lazy=False)
 
-    stim_info = None
+    # initialize all stimuli data structure
+    all_stims = []
+
+    stim_feats = None
+    res = []
+
+    # read stimulus info from the parameters/options file if any
     if 'stim_info' in cells[cellname]['experiments'][expname]:
         stim_info = cells[cellname]['experiments'][expname]['stim_info']
+    
+        # extract stimulus info from the config file
+        if isinstance(stim_info, dict) is True:
+            stim_feats = stim_info
+        elif isinstance(stim_info, list) is True:
+            if len(stim_info) == 1:
+                stim_feats = stim_info[0]
+            elif len(stim_info) == len(cells[cellname]['experiments'][
+                    expname]['files']):
+                stim_feats = stim_info[idx_file] 
+            else:
+                raise ValueError("The stim_info list must have length " + \
+                        "equals to 1 or to the length of the 'files' list." + \
+                        "Please, check your configuration")
+        else:
+            raise ValueError("The stim_info value must be a list or \
+                a dictionary. Please, check your configuration")
 
-    else:
+        stim_feats['filename'] = filename
+        res = common.manageMetadata.stim_feats_from_meta(stim_feats, \
+            nbepisod)
 
-        # read stimulus features if present
-        stim_feats = []
-        if 'stim_feats' in cells[cellname]['experiments'][expname]:
-            stim_feats = cells[cellname]['experiments'][expname]['stim_feats']
+        if res[0]:
+            logger.info("File: %s. Found info in config file", filename)
 
-        all_stims = []
+    # extract stim from metadata file if any
+    if not res or not res[0]:
+        res = []
+
+        # read metadata file if present
+        stim_feats = {}
+
+        f_meta = os.path.join(path, cellname, filename + '_metadata.json')
+        if os.path.exists(f_meta):
+            with open(f_meta) as json_metadata:
+                stim_feats = json.load(json_metadata)
+            json_metadata.close()
+
+        # if metadata with stimulus info could be extracted
         if stim_feats:
-            res = stim_feats_from_meta(stim_feats, len(bl.segments), idx_file)
+            res = common.manageMetadata.stim_feats_from_meta(meta_dict, \
+                nbepisod)
             if res[0]:
-                all_stims = res[1]
-            else:
-                print(res[1])
-        if not all_stims:
-            res = stim_feats_from_header(header)
-            if res[0]:
-                all_stims = res[1]
-            else:
-                pprint.pprint(
-                    "No valid stimulus was found in metadata or files. \
-                        Skipping current file")
-                return
+                logger.info("File: %s. Found info in metadata file", filename)
+
+    # if stimulus has been extracted from config or metadata file
+    if res and res[0]:
+        # extract sampling rate from metadata
+        sampling_rate = res[1]["r"][0]
+        all_stims = res[1]
+
+    # extract stim from header if any
+    else:
+        logger.info(" File: %s. No stimulus info found in config or " + \
+                "metadata file. Extracting info from the file header.", 
+                filename)
+        res = stim_feats_from_header(header)
+        if res[0]:
+            all_stims = res[1]
+            
+            # extract sampling rate from header
+            sampling_rate = sampling_rate_from_header(header)[1]["r"]
+
+    # if no stimulus could be extracted
+    if not all_stims:
+        raise ValueError("No valid stimulus was found in metadata or files. \
+            Skipping current file")
+
+    dt = 1. / int(sampling_rate) * 1e3
 
     # for all segments in file
     for i_seg, seg in enumerate(bl.segments):
 
-        # dt = 1./int(seg.analogsignals[0].sampling_rate) * 1e3
+        # the following loop is needed because the voltage is not always in the
+        # first array of the segment
+        voltage = []
+        for i_asig, asig in enumerate(seg.analogsignals):
+            crr_unit = str(seg.analogsignals[i_asig].units.dimensionality)
+            if str(crr_unit.lower()) in common.manageConfig.vu:
+                voltage = numpy.array(asig).astype(numpy.float64).flatten()
 
-        if stim_info is not None:
+        if len(voltage) == 0:
+            continue
 
-            voltage = numpy.array(
-                seg.analogsignals[0]).astype(
-                numpy.float64).flatten()
-            current = numpy.array(
-                seg.analogsignals[1]).astype(
-                numpy.float64).flatten()
-            t = numpy.arange(len(voltage)) * dt
+        t = numpy.arange(len(voltage)) * dt
+        ton = all_stims["st"][i_seg]
+        toff = all_stims["en"][i_seg]
+        ion = int(ton / dt)
+        ioff = int(toff / dt)
+        amp = numpy.float64(all_stims["crr_val"][i_seg])
+        stim_u = all_stims["u"][i_seg]
 
-            ton = stim_info['ton']
-            toff = stim_info['toff']
-            ion = int(ton / dt)
-            ioff = int(toff / dt)
+        # the following lines have been integrated for compatibility in the 
+        # common.stim_feats_from_meta function
+        #
+        #if stim_feats and 'tamp' in stim_feats:
+        #    tamp = [int(stim_feats['tamp'][0] / dt),
+        #            int(stim_feats['tamp'][1] / dt)]
+        #else:
+        #    tamp = [ion, ioff]
+        #
+        #if stim_feats and 'i_unit' in stim_feats:
+        #    stim_u = stim_feats['i_unit']
+        #
+        #    current = current * 1e9  # nA
+        #elif i_unit == 'pA':
+        #    current = current * 1e-3  # nA
+        #else:
+        #    raise Exception(
+        #            "Unit current not configured!")
 
-            if 'tamp' in stim_info:
-                tamp = [int(stim_info['tamp'][0] / dt),
-                        int(stim_info['tamp'][1] / dt)]
-            else:
-                tamp = [ion, ioff]
 
-            i_unit = stim_info['i_unit']
+        # convert stimulus amplitude to nA
+        conv_fact = common.manageConfig.conversion_factor('nA', stim_u)
 
-            if i_unit == 'A':
-                current = current * 1e9  # nA
-            elif i_unit == 'pA':
-                current = current * 1e-3  # nA
-            else:
-                raise Exception(
-                    "Unit current not configured!")
+        amp = amp * conv_fact
+        if conv_fact != 1:
+            stim_u = "nA"
 
-            amp = numpy.nanmean(current[tamp[0]:tamp[1]])
-            hypamp = numpy.nanmean(current[0:ion])
+        current = []
+        current = numpy.zeros(len(voltage))
+        current[ion:ioff] = amp
 
-        else:
+        # estimate hyperpolarization current
+        hypamp = numpy.mean( current[0:ion] )
 
-            voltage = numpy.array(seg.analogsignals[0]).astype(numpy.float64)
-            t = numpy.arange(len(voltage)) * dt
+        # 10% distance to measure step current
+        iborder = int((ioff-ion)*0.1)
 
-            ton = all_stims[i_seg][1]
-            toff = all_stims[i_seg][2]
-            amp = numpy.float64(all_stims[i_seg][3])
+        # clean voltage from transients
+        voltage[ion:ion+int(numpy.ceil(0.4/dt))] = \
+                voltage[ion+int(numpy.ceil(0.4/dt))]
+        voltage[ioff:ioff+int(numpy.ceil(0.4/dt))] = \
+                voltage[ioff+int(numpy.ceil(0.4/dt))]
 
-            ion = int(ton / dt)
-            ioff = int(toff / dt)
-
-            current = []
-            current = numpy.zeros(len(voltage))
-            current[ion:ioff] = amp
-
-            # estimate hyperpolarization current
-            hypamp = numpy.mean(current[0:ion])
-
-            # clean voltage from transients
-            voltage[ion:ion + int(numpy.ceil(0.4 / dt))] = \
-                voltage[ion + int(numpy.ceil(0.4 / dt))]
-            voltage[ioff:ioff + int(numpy.ceil(0.4 / dt))] = \
-                voltage[ioff + int(numpy.ceil(0.4 / dt))]
-
-        # normalize membrane potential to known value (given in UCL excel
-        # sheet)
+        # normalize membrane potential to known value 
+        # (given in UCL excel sheet)
         if v_corr:
-            if len(v_corr) == 1 and v_corr[0] != 0.0:
+            if not isinstance(v_corr, list):
+                voltage = voltage - numpy.mean(voltage[0:ion]) + v_corr
+            elif len(v_corr) == 1:
                 voltage = voltage - numpy.mean(voltage[0:ion]) + v_corr[0]
-            elif len(v_corr) - 1 >= idx_file and v_corr[idx_file] != 0.0:
+            elif len(v_corr) == len(cells[cellname]['experiments'][
+                    expname]['files']):
                 voltage = voltage - numpy.mean(voltage[0:ion]) \
-                    + v_corr[idx_file]
+                        + v_corr[idx_file]
+            else:
+                raise ValueError("'v_corr' must have length 1 or be the " + \
+                        "same length as 'files'. Please check your " + \
+                        "configuration.")
 
         voltage = voltage - ljp
 
         # clip spikes after stimulus so they are not analysed
         voltage[ioff:] = numpy.clip(voltage[ioff:], -300, -40)
 
-        if ('exclude' in cells[cellname] and
-                any(abs(cells[cellname]['exclude'][idx_file] - amp) < 1e-4)):
-            continue  # llb
+        # extract stim traces to be excluded
+        [crr_exc, crr_exc_u] = common.manageConfig.get_exclude_values(
+                cells[cellname],idx_file)
 
+        if not len(crr_exc) == 0 and any(abs(crr_exc - amp) < 1e-4):
+            continue # llb
         else:
-            data['voltage'].append(voltage)
-            data['current'].append(current)
-            data['dt'].append(dt)
-
-            data['t'].append(t)
-            data['tend'].append(t[-1])
-            data['ton'].append(ton)
-            data['toff'].append(toff)
-            data['amp'].append(amp)
-            data['hypamp'].append(hypamp)
-            data['filename'].append(filename)
-
-    return data
-
-
-def stim_feats_from_meta(stim_feats, num_segments, idx_file):
-    """Get stimulus features from metadata (author: Luca Leonardo
-        Bologna)"""
-    if not stim_feats:
-        return (0, "Empty metadata in file")
-    elif len(stim_feats) - 1 < idx_file and len(stim_feats) != 1:
-        return (0, "Stimulus dictionaries are different \
-                from the number of files")
+            common.manageDicts.fill_dict_single_trace( \
+                    data=data, voltage=voltage, current=current, dt=dt, t=t, \
+                    ton=ton, toff=toff, amp=amp, hypamp=hypamp, \
+                    filename=filename)
+    resp_check = check_validity(data)
+    if not resp_check[0]:
+        return resp_check
     else:
-        # array for storing all stimulus features
-        all_stim_feats = []
-
-        # for every segment in the axon file
-        for i in range(num_segments):
-
-            # read current stimulus dict
-            if len(stim_feats) == 1:
-                crr_dict = stim_feats[0]
-            else:
-                crr_dict = stim_feats[idx_file]
-
-            # read stimulus information
-            ty = str(crr_dict['stimulus_type'])
-            tu = crr_dict['stimulus_time_unit']
-            st = crr_dict['stimulus_start']
-            en = crr_dict['stimulus_end']
-            u = str(crr_dict['stimulus_unit'])
-            fa = float(format(crr_dict['stimulus_first_amplitude'], '.3f'))
-            inc = float(format(crr_dict['stimulus_increment'], '.3f'))
-            if tu == 's':
-                st = st * 1e3
-                en = en * 1e3
-            # compute current stimulus amplitude
-            crr_val = float(format(fa + inc * float(format(i, '.3f')), '.3f'))
-            crr_stim_feats = (ty, st, en, crr_val, u)
-
-            # store current tuple
-            all_stim_feats.append(crr_stim_feats)
-        return (1, all_stim_feats)
+        return data
 
 
 def stim_feats_from_header(header):
@@ -275,8 +297,14 @@ def stim_feats_from_header(header):
                 # read all stimulus epochs
 
                 # TODO IS THIS CORRECT ?
-                k = valid_epoch_dicts[-1]
-                stim_epochs = dictEpochInfoPerDAC[k]
+                # being here, len(valid_epoch_dicts) == 1, so all the stimulus
+                # epochs should be contained in its first and only element
+                # (normally zero) 
+
+                k = valid_epoch_dicts[0]
+                
+                stim_epochs = dictEpochInfoPerDAC[valid_epoch_dicts[0]]
+
                 # read enabled waveforms
                 stim_ch_info = [(i['DACChNames'], i['DACChUnits'],
                                  i['nDACNum']) for i in header['listDACInfo']
@@ -286,10 +314,11 @@ def stim_feats_from_header(header):
                 # compatible with a step stimulus
                 if (stim_epochs[0]['fEpochInitLevel'] !=
                         stim_epochs[2]['fEpochInitLevel'] or
-                    stim_epochs[0]['fEpochLevelInc'] !=
-                    stim_epochs[2]['fEpochLevelInc'] or
-                    float(format(stim_epochs[0]['fEpochLevelInc'], '.3f')) != 0
-                    or (len(stim_ch_info) != 1 or
+                        stim_epochs[0]['fEpochLevelInc'] !=
+                        stim_epochs[2]['fEpochLevelInc'] or
+                        float(format(stim_epochs[0]['fEpochLevelInc'], '.3f'))\
+                                != 0 or 
+                        (len(stim_ch_info) != 1 or 
                         stim_ch_info[0][2] != k)):
                     # return 0 with message
                     return (0, "A stimulus different from the steps \
@@ -313,7 +342,13 @@ def stim_feats_from_header(header):
                     # index of stimulus beginning
                     i_last = int(nSam * 15625 / 10**6)
                     # create array for all stimulus info
-                    all_stim_info = []
+                    all_stim_feats = { 
+                            "ty": [],
+                            "st": [],
+                            "en": [],
+                            "crr_val": [],
+                            "u": [] 
+                    } 
 
                     # step increment
                     e_one_inc = float(format(e_one['fEpochLevelInc'],
@@ -334,5 +369,68 @@ def stim_feats_from_header(header):
                         crr_val = float(format(crr_val_full, '.3f'))
                         st = 1 / sampling_rate * st * 1e3
                         en = 1 / sampling_rate * en * 1e3
-                        all_stim_info.append((ty, st, en, crr_val, u))
-                    return (1, all_stim_info)
+
+                        # convert unit from bytes to string
+                        if sys.version_info[0] >= 3:
+                            ustr = str(u, 'utf-8')
+                        else:
+                            ustr = str(u)
+
+                        all_stim_feats["ty"].append(ty)
+                        all_stim_feats["st"].append(st)
+                        all_stim_feats["en"].append(en)
+                        all_stim_feats["crr_val"].append(crr_val)
+                        all_stim_feats["u"].append(ustr)
+
+                    return (1, all_stim_feats)
+
+
+
+def sampling_rate_from_header(header):
+    """
+    Extract sampling rate from the header of the abf.file
+    """
+
+    # read version
+    version = header['fFileVersionNumber'] # read file version
+
+    if version < 2.:
+        # read sampling rate
+        nbchannel = header['nADCNumChannels']
+        sampling_rate = 1. / (header['fADCSampleInterval'] * nbchannel * 1.e-6)
+
+    elif version >= 2.:
+        # read sampling rate
+        sampling_rate = 1.e6 / header['protocol']['fADCSequenceInterval']
+
+    return(1, {"r" : sampling_rate, "ru" : "Hz"})
+
+
+def get_nbepisod(header):
+    # read version
+    version = header['fFileVersionNumber'] # read file version
+
+    if version < 2.:
+        # read sampling rate
+        nbepisod = header['lActualEpisodes']
+
+    elif version >= 2.:
+        # read sampling rate
+        nbepisod = header['lActualEpisodes']
+
+    return nbepisod
+
+
+#
+def check_validity(data):
+    # extract number of traces
+    nb_traces = len(data["voltage"])
+
+    #extract number of stimuli
+    nb_stims = len(data['current'])  
+    
+    if nb_traces != nb_stims:
+        return (0, "number of traces and number of given \
+                stimuli are different. Excluding file: " + filename)
+    else:
+        return (1, "")

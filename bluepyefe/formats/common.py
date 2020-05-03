@@ -53,7 +53,8 @@ class manageMetadata:
                     c_area = data["brain_structure"]
                     c_area = cls.pattern.sub("-", c_area)
 
-                if "cell_soma_location" not in data or "cell_soma_location" is None:
+                if "cell_soma_location" not in data or \
+                        "cell_soma_location" is None:
                     c_region = "unknown_region"
                 else:
                     c_region = data["cell_soma_location"]
@@ -80,7 +81,8 @@ class manageMetadata:
 
 
                 if "cell_id" not in data or "cell_id" is None:
-                    head, c_name = os.path.split(os.path.split(filename_meta)[0])
+                    head, c_name = \
+                        os.path.split(os.path.split(filename_meta)[0])
                 else:
                     c_name = data["cell_id"]
                     c_name = cls.pattern.sub("-", c_name)
@@ -103,13 +105,14 @@ class manageMetadata:
             c_type = "unknown_type"
             c_etype = "unknown_etype"
             c_contrib = "unknown_contributors"
-
-            base = os.path.basename(os.path.normpath(cls.get_abf_filename(filename_meta)))
-            head, c_name = os.path.split(os.path.split(cls.get_abf_filename(filename_meta))[0])
+            
+            abf_meta_fn = cls.get_abf_filename(filename_meta)
+            base = os.path.basename(os.path.normpath(abf_meta_fn))
+            head, c_name = os.path.split(os.path.split(abf_meta_fn)[0])
             c_sample = os.path.splitext(base)[0]
         
-        print(c_species, c_area, c_region, c_type, c_etype, c_contrib, c_name, c_sample)
-        return (c_species, c_area, c_region, c_type, c_etype, c_contrib, c_name, c_sample)
+        return (c_species, c_area, c_region, c_type, c_etype, 
+                c_contrib, c_name, c_sample)
 
     @classmethod 
     def get_metadata(cls, metadata_file):
@@ -118,8 +121,9 @@ class manageMetadata:
         """
         logging.info("Reading metadata " + os.path.basename(metadata_file))
 
-
-        default_metadata_file = os.path.join(os.path.dirname(__file__), 'configs', 'metadata_template.json')
+        crr_file_dir = os.path.dirname(__file__)
+        default_metadata_file = os.path.join(crr_file_dir, 'configs', 
+                'metadata_template.json')
         with open(default_metadata_file, 'r') as mf:
             metadata = json.load(mf)
         mf.close()
@@ -188,120 +192,132 @@ class manageMetadata:
 
 
     @classmethod 
-    def generate_authorization_json(cls, final_json_name_list, metadatalist, final_dir):
+    def generate_authorization_json(cls, final_json_name_list, 
+            metadatalist, final_dir):
 
         files_authorization = {}
         crr_file_auth_collab = extract_authorized_collab(metadatalist)
         files_authorization[final_json_name_list] = crr_file_auth_collab
 
-        file_auth_fullpath = os.path.join(final_dir, "files_authorization.json")
+        file_auth_fullpath = os.path.join(final_dir, 
+                "files_authorization.json")
         with open(file_auth_fullpath, 'a') as fa:
             json.dump(files_authorization, fa)
 
         return True
 
 
-    # author Luca Leonardo Bologna
     @classmethod 
-    def stim_feats_from_meta(cls, stim_feats, num_segments, idx_file):
-
-        # check 
-        if len(stim_feats) - 1 < idx_file and len(stim_feats) !=1:
-            return (0, "Stimulus dictionaries are different \
-                    from the number of files")
-        else:
-            # read current stimulus dict
-            if len(stim_feats) == 1:
-                crr_dict = stim_feats[0]
-            else:
-                crr_dict = stim_feats[idx_file]
+    def stim_feats_from_meta(cls, crr_dict, num_segments):
 
         # read stimulus information
         try:
             if 'filename' not in crr_dict or not crr_dict['filename'] or \
                     crr_dict["filename"] == "unknown":
-                logging.info("filename key absent in metadata, skipping file: " + crr_dict['filename'])
+                logging.info("filename key absent in metadata, \
+                        skipping file: " + crr_dict['filename'])
                 return (0, [])
 
-            if 'stimulus_type' not in crr_dict or crr_dict['stimulus_type'] != "step" \
-                    or crr_dict["stimulus_type"] == "unknown":
-                logging.info("stimulus_type key absent in metadata, skipping file:" + crr_dict['filename'])
+            if 'stimulus_type' not in crr_dict or \
+                    crr_dict['stimulus_type'] != "step" or \
+                    crr_dict["stimulus_type"] == "unknown":
+                logging.info("stimulus_type key absent in metadata, \
+                        skipping file:" + crr_dict['filename'])
                 return (0, [])
             else:
                 ty = str(crr_dict['stimulus_type'])
-                logging.info("correctly extracted stimulus type")
+                logging.info("extracted stimulus type")
 
-            if 'stimulus_time_unit' not in crr_dict or not crr_dict['stimulus_time_unit'] \
-                    or crr_dict["stimulus_time_unit"] == "unknown":
-                logging.info("stimulus_time_unit key absent in metadata, skipping file:" + crr_dict['filename'])
+            if 'stimulus_time_unit' not in crr_dict or not \
+                    crr_dict['stimulus_time_unit'] or \
+                    crr_dict["stimulus_time_unit"] == "unknown":
+                logging.info("stimulus_time_unit key absent in metadata, \
+                    skipping file:" + crr_dict['filename'])
                 return (0, [])
             else:
                 tu = crr_dict['stimulus_time_unit']
-                logging.info("correctly computed stimulus unit")
+                logging.info("computed stimulus unit")
 
-            if 'stimulus_start' not in crr_dict or not crr_dict['stimulus_start'] \
-                    or crr_dict["stimulus_start"] == "unknown":
-                logging.info("stimulus_start key absent in metadata, skipping file:" + crr_dict['filename'])
-                return (0, [])
-            else:
+            if 'stimulus_start' in crr_dict \
+                    and crr_dict['stimulus_start'] and \
+                    crr_dict["stimulus_start"] != "unknown" and \
+                    'stimulus_end' in crr_dict and \
+                    crr_dict['stimulus_end'] and \
+                    crr_dict['stimulus_end'] != 'uknown':
                 st = crr_dict['stimulus_start'][0]
-                logging.info("correctly computed stimulus start")
-
-            if 'stimulus_end' not in crr_dict or not crr_dict['stimulus_end'] \
-                    or crr_dict["stimulus_end"] == "unknown":
-                logging.info("stimulus_end key absent in metadata, skipping file:" + crr_dict['filename'])
-                return (0, [])
-            else:
                 en = crr_dict['stimulus_end'][0]
-                logging.info("correctly computed stimulus end")
-
-            if 'stimulus_unit' not in crr_dict or not crr_dict['stimulus_unit'] \
-                    or crr_dict["stimulus_unit"] == "unknown":
-                logging.info("stimulus_unit key absent in metadata, skipping file:" + crr_dict['filename'])
-                return (0, [])
+                logging.info("extracted stimulus start and stimulus \
+                        end")
+            elif 'tamp' in crr_dict and crr_dict['tamp']:
+                st = crr_dict['tamp'][0]
+                en = crr_dict['tamp'][1]
+                logging.info("extracted stimulus start")
             else:
+                logging.info("stimulus_start and/or stimulus_end key absent \
+                        in metadata, skipping file:" + crr_dict['filename'])
+                return (0, [])
+
+            if 'stimulus_unit' in crr_dict and crr_dict['stimulus_unit'] and \
+                    crr_dict["stimulus_unit"] != "unknown":
                 u = str(crr_dict['stimulus_unit'])
-                logging.info("correctly computed stimulus unit")
+                logging.info("extracted stimulus unit")
+            elif 'i_unit' in crr_dict and crr_dict['i_unit'] and \
+                    crr_dict['i_unit'] != 'unknown':  
+                u = str(crr_dict['i_unit'])
+                logging.info("extracted stimulus unit")
+            else:
+                logging.info("stimulus_unit key absent in metadata, \
+                        skipping file:" + crr_dict['filename'])
+                return (0, [])
 
-            if 'stimulus_first_amplitude' not in crr_dict or not crr_dict['stimulus_first_amplitude'] \
-                    or crr_dict["stimulus_first_amplitude"] == "unknown":
-                logging.info(" key absent in metadata, skipping file:" + crr_dict['filename'])
+            if 'stimulus_first_amplitude' not in crr_dict or not \
+                    crr_dict['stimulus_first_amplitude'] or \
+                    crr_dict["stimulus_first_amplitude"] == "unknown":
+                logging.info(" key absent in metadata, skipping file:" + \
+                        crr_dict['filename'])
                 return (0, [])
             else:
-                fa = float(format(crr_dict['stimulus_first_amplitude'][0], '.3f'))
-                logging.info("correctly computed stimulus first amplitude")
+                fa = float(format(crr_dict['stimulus_first_amplitude'][0], \
+                    '.3f'))
+                logging.info("extracted stimulus first amplitude")
 
             if 'stimulus_increment' not in crr_dict \
                     or crr_dict["stimulus_increment"] == "unknown":
-                logging.info("stimulus_increment key absent in metadata, skipping file:" + crr_dict['filename'])
+                logging.info("stimulus_increment key absent in metadata, \
+                        skipping file:" + crr_dict['filename'])
                 return (0, [])
             elif not crr_dict['stimulus_increment']:
                 inc = float(format(0, '.3f'))
             else:
                 inc = float(format(crr_dict['stimulus_increment'][0], '.3f'))
-            logging.info("correctly computed stimulus increment")
+            logging.info("extracted stimulus increment")
 
-            if 'sampling_rate_unit' not in crr_dict or not crr_dict['sampling_rate_unit'] \
+            if 'sampling_rate_unit' not in crr_dict or not \
+                    crr_dict['sampling_rate_unit'] \
                     or crr_dict["sampling_rate_unit"] == "unknown":
-                logging.info("sampling_rate_unit key absent in metadata, skipping file:" + crr_dict['filename'])
-                return (0, [])
+                ru = 'Hz'
+                logging.info("extracted sampling rate unit")
             else:
                 ru = crr_dict['sampling_rate_unit'][0]
-                logging.info("correctly computed sampling rate unit")
+                logging.info("extracted sampling rate unit")
 
-            if 'sampling_rate' not in crr_dict or not crr_dict['sampling_rate'] \
-                    or crr_dict["sampling_rate"] == "unknown":
-                logging.info("sampling_rate key absent in metadata, skipping file:" + crr_dict['filename'])
+            if 'sampling_rate' not in crr_dict or not \
+                    crr_dict['sampling_rate'] or \
+                    crr_dict["sampling_rate"] == "unknown":
+                logging.info("sampling_rate key absent in metadata, skipping \
+                        file:" + crr_dict['filename'])
                 return (0, [])
             else:
                 r = crr_dict['sampling_rate'][0]
-                logging.info("correctly computed sampling rate")
+                logging.info("extracted sampling rate")
 
             if tu == 's':
                 st = st * 1e3
                 en = en * 1e3
-        except:
-            print('Error in reading keys for stimulus extraction in file: ' + crr_dict['filename'])
+        except Exception as e:
+            print('Error in reading keys for stimulus extraction in file: ' + \
+                    crr_dict['filename'])
+            print('ERROR ' + str(e))
             return (0, [])
 
         all_stim_feats = { 
@@ -309,7 +325,9 @@ class manageMetadata:
                 "st": [],
                 "en": [],
                 "crr_val": [],
-                "u": [] 
+                "u": [],
+                "ru": [],
+                "r": []
                 } 
 
         if not fa:
@@ -323,36 +341,15 @@ class manageMetadata:
             all_stim_feats["en"].append(en)
             all_stim_feats["crr_val"].append(crr_val)
             all_stim_feats["u"].append(u)
+            all_stim_feats["r"].append(r)
+            all_stim_feats["ru"].append(ru)
 
         return (1, all_stim_feats)
-
-
-    @classmethod
-    def get_sampling_rate(cls, meta_dict):
-        """
-        Extract sampling rate and sampling rate unit from metadata dictionary
-        """
-        
-        if "sampling_rate_unit" not in meta_dict:
-            logging.info(" sampling_rate_unit key absent in metadata," +\
-                    " skipping file:" + crr_dict['filename'])
-            return (0, [])
-        else:
-            ru = meta_dict["sampling_rate_unit"]
-        if "sampling_rate" not in meta_dict:
-            logging.info(" sampling_rate key absent in metadata," +\
-                    " skipping file:" + crr_dict['filename'])
-            return (0, [])
-        else:
-            r = meta_dict["sampling_rate"]
-
-        return(1, {"r" : r, "ru" : ru})
-
 
     @classmethod 
     def generate_citation_json(cls, jsonfilenamelist, metadatalist, final_dir):
         """
-        Generate a file with 'How to site' information
+        Generate a file with 'How to cite' information
         """
         citation_json = {}
         crrjsonfile = jsonfilenamelist
@@ -378,7 +375,8 @@ class manageMetadata:
         # fill contributors field
         if "contributors_affiliations" in crr_dict:
             crr_contr = crr_dict["contributors_affiliations"]
-            contributors = {'name': crr_contr, "message": "Data contributors: " + crr_contr}
+            contributors = {'name': crr_contr, 
+                    "message": "Data contributors: " + crr_contr}
         else:
             contributors = {}
 
@@ -394,14 +392,16 @@ class manageMetadata:
         ljp = {}
 
         # fill ljp (i.e. liquid junction potential) field
-        if "liquid_junction_potential" in crr_dict and "liquid_junction_potential_unit" in crr_dict:
+        if "liquid_junction_potential" in crr_dict and \
+                "liquid_junction_potential_unit" in crr_dict:
             crr_ljp = crr_dict["liquid_junction_potential"]
             crr_ljp_u = crr_dict["liquid_junction_potential_unit"]
 
             if crr_ljp and crr_ljp[0] != 0 and crr_ljp_u:
                 crr_ljp = crr_ljp * conversion_factor(volt_unit, crr_ljp_u)
                 ljp = {"ljp": {"value": crr_ljp, "unit": crr_ljp_u,
-                    "message": "Liquid junction potential value: " + str(crr_ljp[0]), "computedflag": ljpflag}}
+                    "message": "Liquid junction potential value: " + 
+                    str(crr_ljp[0]), "computedflag": ljpflag}}
 
                 return ljp
 
@@ -429,7 +429,8 @@ class manageMetadata:
 
             if chca and chcs and chce and chcu and chctu:
                 chca = chca[0] * conversion_factor(amp_unit, chcu)
-                holding_current = {"holdcurr": {"value": [chca], "holdcurrstart": chcs,"holdcurrend": chce,"holdcurru": chcu,"holdcurrtu": chctu,"message": "Applied holding current: " + str(chca) + " " + chcu,}}
+                holding_current = {"holdcurr": {"value": [chca], \
+                        "holdcurrstart": chcs,"holdcurrend": chce,"holdcurru": chcu,"holdcurrtu": chctu,"message": "Applied holding current: " + str(chca) + " " + chcu,}}
         return holding_current
 
 
@@ -488,33 +489,38 @@ class manageConfig():
     @classmethod
     def get_exclude_values(cls, cells_cellname, idx_file):
         """
-        Extract stimulus values to be excluded and corresponding units from \
-                the configuration dictionary (i.e. 'config')
+        Extract stimulus values to be excluded and corresponding units from 
+        the configuration dictionary (i.e. 'config')
         """
         # extract stim traces to be excluded
         crr_exc = []
         crr_exc_u = []
-        if "exclude" in cells_cellname and "exclude_unit" in cells_cellname:
+        if "exclude" in cells_cellname and len(cells_cellname["exclude"]):
+
             exclude_values = cells_cellname["exclude"]
-            exclude_units = cells_cellname["exclude_unit"]
-            
+
             if len(exclude_values) == 1:
                 crr_exc = exclude_values[0]
+                idx = 0
             elif len(exclude_values) - 1 >= idx_file:
                 crr_exc = exclude_values[idx_file]
+                idx = idx_file
+            else:
+                raise ValueError("'exclude' list length is shorter than " + \
+                    "the files list. Check your configuration. " + \
+                    "Program is exiting")
 
-            if len(exclude_units) == 1:
-                crr_exc_u = exclude_units[0]
-            elif len(exclude_units) - 1 >= idx_file:
-                crr_exc_u = exclude_units[idx_file]
+            if not "exclude_unit" in cells_cellname:
+                crr_exc_u = 'nA'
+            elif len(cells_cellname["exclude"]) == \
+                    len(cells_cellname["exclude_unit"]):
+                    crr_exc_u = exclude_units[idx] 
+            else: 
+                raise ValueError("'exclude' and 'exclude_unit' lists must \
+                        have the same length. Program is exiting")
 
-            if len(crr_exc) and not len(crr_exc_u):
-                raise ValueError("No exclude_unit parameter was given. Program \
-                    is exiting")
-
-            if crr_exc:
-                conv_fact = manageConfig.conversion_factor('nA', crr_exc_u)
-                crr_exc = [i * conv_fact for i in crr_exc]
+            conv_fact = manageConfig.conversion_factor('nA', crr_exc_u)
+            crr_exc = [i * conv_fact for i in crr_exc]
 
         return [crr_exc, crr_exc_u]
 
@@ -544,8 +550,9 @@ class manageDicts():
         return data
 
     @classmethod
-    def fill_dict_single_trace(cls, data={}, voltage=0.0, current=0.0, dt=0.0, t=0.0, \
-            ton=0.0, toff=0.0, amp=0.0, hypamp=0.0, filename=""):
+    def fill_dict_single_trace(cls, data={}, voltage=0.0, current=0.0, \
+            dt=0.0, t=0.0, ton=0.0, toff=0.0, amp=0.0, hypamp=0.0, \
+            filename=""):
 
         data['voltage'].append(voltage)
         data['current'].append(current)
