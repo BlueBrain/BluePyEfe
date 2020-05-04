@@ -40,6 +40,7 @@ from . import tools
 from .tools import tabletools
 from . import plottools
 from . import extra
+from .formats import common
 
 
 logger = logging.getLogger(__name__)
@@ -1781,7 +1782,6 @@ class Extractor(object):
                         fullpath = os.path.join(self.path, cellname, \
                                 filename + '_' + 'metadata.json')
 
-                        from .formats import common
                         metadataset_cell_exp[expname][filename] = \
                                 common.manageMetadata.get_metadata( \
                                 fullpath)
