@@ -437,6 +437,7 @@ class Extractor(object):
         logger.info(" Setting spike threshold to %.2f mV", threshold)
     
         # if print_table flag is set, dump all extracted feature to a .csv file
+        print_table_flag = False
         if 'print_table' in self.options and self.options['print_table'][
                 'flag']:
             print_table_flag = True
@@ -552,12 +553,12 @@ class Extractor(object):
                                 fel_vals[0][feature][0] == 0 and ZERO_TO_NAN \
                                 and feature in self.options['zero_to_nan'][
                                         'mean_features_no_zeros']:
-                                    if self.options['zero_to_nan']['value'] == \
-                                            'stim_end':
+                                    if self.options['zero_to_nan']['value'] \
+                                            == 'stim_end':
                                         fel_vals[0][feature] = [toffs[i_seg]]
                                         f = [toffs[i_seg]]
-                                    elif self.options['zero_to_nan']['value'] == \
-                                            'nan':
+                                    elif self.options['zero_to_nan']['value'] \
+                                            == 'nan':
                                         fel_vals[0][feature] = None
                                         f = None
                                     else:
