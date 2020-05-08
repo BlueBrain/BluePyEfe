@@ -13,14 +13,19 @@
             "experiments": {
                 "step": {
                     "files": [
-                        "96711008",
+                        "96711008_copy",
                         "96711009"
                     ],
-                    "location": "soma"
+                    "location": "soma",
+                    "stim_info":{
+                        "ton":31.2, 
+                        "toff":431.2,
+                        "i_unit":"nA"
+                    }
                 }
             },
             "ljp": 0,
-            "v_corr": 0
+            "v_corr": [0]
         },
         "cell02": {
             "etype": "etype",
@@ -47,20 +52,42 @@
             "time_to_last_spike",
             "time_to_second_spike",
             "voltage",
-            "voltage_base"
+            "voltage_base",
+            "inv_first_ISI", "inv_second_ISI", 
+            "inv_third_ISI", "inv_fourth_ISI", "inv_fifth_ISI", 
+            "inv_last_ISI", "time_to_first_spike", "time_to_last_spike"
         ]
     },
     "format": "axon",
     "options": {
+        "print_table": {
+            "flag": true,
+            "num_events": 5
+        },
+        "zero_to_nan":{
+            "flag": true,
+            "value": "stim_end",
+            "mean_features_no_zeros":[
+                "inv_first_ISI", "inv_second_ISI", 
+                "inv_third_ISI", "inv_fourth_ISI", "inv_fifth_ISI", 
+                "inv_last_ISI", "time_to_first_spike", "time_to_last_spike"
+            ]
+        },
+        "strict_stiminterval": {
+            "base": false 
+        },
+        "trace_check": false,
         "delay": 500,
         "logging": false,
         "nanmean": true,
         "relative": false,
+        "zero_std": true,
         "target": [
             -2.0,
             0.0,
             1.0
         ],
+        "target_unit": "nA",
         "tolerance": 0.02
     },
     "path": "./data_abf/"
