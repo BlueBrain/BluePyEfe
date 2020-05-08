@@ -214,16 +214,13 @@ class manageMetadata:
         try:
             if 'filename' not in crr_dict or not crr_dict['filename'] or \
                     crr_dict["filename"] == "unknown":
-                logging.info("filename key absent in metadata, \
-                        skipping file: " + crr_dict['filename'])
-                return (0, [])
+                raise Exception("'filename' key absent in metadata")
 
             if 'stimulus_type' not in crr_dict or \
                     crr_dict['stimulus_type'] != "step" or \
                     crr_dict["stimulus_type"] == "unknown":
-                logging.info("stimulus_type key absent in metadata, \
-                        skipping file:" + crr_dict['filename'])
-                return (0, [])
+                raise Exception("'stimulus_type' key absent in metadata \
+                        for file:" + crr_dict['filename'])
             else:
                 ty = str(crr_dict['stimulus_type'])
                 logging.info("extracted stimulus type")
@@ -231,12 +228,11 @@ class manageMetadata:
             if 'stimulus_time_unit' not in crr_dict or not \
                     crr_dict['stimulus_time_unit'] or \
                     crr_dict["stimulus_time_unit"] == "unknown":
-                logging.info("stimulus_time_unit key absent in metadata, \
-                    skipping file:" + crr_dict['filename'])
-                return (0, [])
+                raise Exception("'stimulus_time_unit' key absent in metadata \
+                    for file:" + crr_dict['filename'])
             else:
                 tu = crr_dict['stimulus_time_unit']
-                logging.info("computed stimulus unit")
+                logging.info("extracted stimulus unit")
 
             if 'stimulus_start' in crr_dict \
                     and crr_dict['stimulus_start'] and \
@@ -252,10 +248,13 @@ class manageMetadata:
                 st = crr_dict['tamp'][0]
                 en = crr_dict['tamp'][1]
                 logging.info("extracted stimulus start")
+            elif 'ton' in crr_dict and 'toff' in crr_dict:
+                st = crr_dict['ton']
+                en = crr_dict['toff']
+                logging.info("extracted stimulus start")
             else:
-                logging.info("stimulus_start and/or stimulus_end key absent \
-                        in metadata, skipping file:" + crr_dict['filename'])
-                return (0, [])
+                raise Exception("'stimulus_start' and/or 'stimulus_end' key \
+                        absent in metadata, for file:" + crr_dict['filename'])
 
             if 'stimulus_unit' in crr_dict and crr_dict['stimulus_unit'] and \
                     crr_dict["stimulus_unit"] != "unknown":
@@ -266,16 +265,14 @@ class manageMetadata:
                 u = str(crr_dict['i_unit'])
                 logging.info("extracted stimulus unit")
             else:
-                logging.info("stimulus_unit key absent in metadata, \
-                        skipping file:" + crr_dict['filename'])
-                return (0, [])
+                raise Exception("'stimulus_unit' key absent in metadata, \
+                        for file:" + crr_dict['filename'])
 
             if 'stimulus_first_amplitude' not in crr_dict or not \
                     crr_dict['stimulus_first_amplitude'] or \
                     crr_dict["stimulus_first_amplitude"] == "unknown":
-                logging.info(" key absent in metadata, skipping file:" + \
-                        crr_dict['filename'])
-                return (0, [])
+                raise Exception("'stimulus_first_amplitude' key absent in \
+                        metadata, for file:" + crr_dict['filename'])
             else:
                 fa = float(format(crr_dict['stimulus_first_amplitude'][0], \
                     '.3f'))
@@ -283,9 +280,8 @@ class manageMetadata:
 
             if 'stimulus_increment' not in crr_dict \
                     or crr_dict["stimulus_increment"] == "unknown":
-                logging.info("stimulus_increment key absent in metadata, \
-                        skipping file:" + crr_dict['filename'])
-                return (0, [])
+                raise Exception("'stimulus_increment' key absent in metadata, \
+                        for file:" + crr_dict['filename'])
             elif not crr_dict['stimulus_increment']:
                 inc = float(format(0, '.3f'))
             else:
@@ -304,9 +300,8 @@ class manageMetadata:
             if 'sampling_rate' not in crr_dict or not \
                     crr_dict['sampling_rate'] or \
                     crr_dict["sampling_rate"] == "unknown":
-                logging.info("sampling_rate key absent in metadata, skipping \
+                raise Exception("sampling_rate key absent in metadata, for \
                         file:" + crr_dict['filename'])
-                return (0, [])
             else:
                 r = crr_dict['sampling_rate'][0]
                 logging.info("extracted sampling rate")
@@ -318,7 +313,6 @@ class manageMetadata:
             print('Error in reading keys for stimulus extraction in file: ' + \
                     crr_dict['filename'])
             print('ERROR ' + str(e))
-            return (0, [])
 
         all_stim_feats = { 
                 "ty": [],
