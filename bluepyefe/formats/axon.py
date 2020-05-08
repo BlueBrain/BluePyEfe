@@ -86,39 +86,52 @@ def process(config=None,
 
     stim_feats = None
     res = []
+    stim_info_flag = False
 
-    # read stimulus info from the parameters/options file if any
-    if 'stim_info' in cells[cellname]['experiments'][expname]:
-        stim_info = cells[cellname]['experiments'][expname]['stim_info']
+    if 'stim_info' in cells[cellname]['experiments'][expname] and \
+            'stim_feats' in cells[cellname]['experiments'][expname]:
+        raise Exception("Both 'stim_info' and 'stim_feats' are given in" +\
+                " the configuration parameters. Only one or none is allowed.")
+
+    # read stimulus info from the option stim_feats if any
+    if 'stim_feats' in cells[cellname]['experiments'][expname]:
+        stim_feats_crr = cells[cellname]['experiments'][expname]['stim_feats']
     
         # extract stimulus info from the config file
-        if isinstance(stim_info, dict) is True:
-            stim_feats = stim_info
-        elif isinstance(stim_info, list) is True:
-            if len(stim_info) == 1:
-                stim_feats = stim_info[0]
-            elif len(stim_info) == len(cells[cellname]['experiments'][
-                    expname]['files']):
-                stim_feats = stim_info[idx_file] 
+        if isinstance(stim_feats_crr, dict) is True:
+            stim_feats = stim_feats_crr
+        elif isinstance(stim_feats_crr, list) is True:
+            if len(stim_feats_crr) == 1:
+                stim_feats = stim_feats_crr[0]
+            elif len(stim_feats_crr) == len(cells[cellname][
+                    'experiments'][expname]['files']):
+                stim_feats = stim_feats_crr[idx_file] 
             else:
-                raise ValueError("The stim_info list must have length " + \
+                raise ValueError("The 'stim_feats' list must have length " + \
                         "equals to 1 or to the length of the 'files' list." + \
                         "Please, check your configuration")
         else:
-            raise ValueError("The stim_info value must be a list or \
+            raise ValueError("'stim_feats' must be a list or \
                 a dictionary. Please, check your configuration")
 
         stim_feats['filename'] = filename
         res = common.manageMetadata.stim_feats_from_meta(stim_feats, \
             nbepisod)
 
-        if res[0]:
-            logger.info("File: %s. Found info in config file", filename)
+        logger.info("File: %s. Found info in config file", filename)
 
     # extract stim from metadata file if any
-    if not res or not res[0]:
-        res = []
+    elif 'stim_info' in cells[cellname]['experiments'][expname] and \
+            cells[cellname]['experiments'][expname]['stim_info'] is not None:
+        stim_info = cells[cellname]['experiments'][expname]['stim_info']
+        stim_info_flag = True
+        try:
+            sampling_rate = 1.e6 / header['protocol']['fADCSequenceInterval']
+        except Exception as e:
+            logger.info("Unable to find recording frequency in file: %s." + \
+                    "The ABF file version is probably older than v2", filename)
 
+    else:
         # read metadata file if present
         stim_feats = {}
 
@@ -132,29 +145,26 @@ def process(config=None,
         if stim_feats:
             res = common.manageMetadata.stim_feats_from_meta(meta_dict, \
                 nbepisod)
-            if res[0]:
-                logger.info("File: %s. Found info in metadata file", filename)
+            logger.info("File: %s. Found info in metadata file", filename)
 
-    # if stimulus has been extracted from config or metadata file
+    # if stimulus has been extracted from stim_feats or metadata file
     if res and res[0]:
         # extract sampling rate from metadata
         sampling_rate = res[1]["r"][0]
         all_stims = res[1]
-
-    # extract stim from header if any
-    else:
+    elif not stim_info_flag:
+        # extract stim from header if any
         logger.info(" File: %s. No stimulus info found in config or " + \
                 "metadata file. Extracting info from the file header.", 
                 filename)
         res = stim_feats_from_header(header)
-        if res[0]:
-            all_stims = res[1]
+        all_stims = res[1]
             
-            # extract sampling rate from header
-            sampling_rate = sampling_rate_from_header(header)[1]["r"]
+        # extract sampling rate from header
+        sampling_rate = sampling_rate_from_header(header)[1]["r"]
 
     # if no stimulus could be extracted
-    if not all_stims:
+    if not all_stims and not stim_info_flag:
         raise ValueError("No valid stimulus was found in metadata or files. \
             Skipping current file")
 
@@ -163,83 +173,94 @@ def process(config=None,
     # for all segments in file
     for i_seg, seg in enumerate(bl.segments):
 
-        # the following loop is needed because the voltage is not always in the
-        # first array of the segment
-        voltage = []
-        for i_asig, asig in enumerate(seg.analogsignals):
-            crr_unit = str(seg.analogsignals[i_asig].units.dimensionality)
-            if str(crr_unit.lower()) in common.manageConfig.vu:
-                voltage = numpy.array(asig).astype(numpy.float64).flatten()
+        if stim_info_flag:
+            voltage = numpy.array(
+                seg.analogsignals[0]).astype(
+                numpy.float64).flatten()
+            current = numpy.array(
+                seg.analogsignals[1]).astype(
+                numpy.float64).flatten()
+            t = numpy.arange(len(voltage)) * dt
 
-        if len(voltage) == 0:
-            continue
+            ton = stim_info['ton']
+            toff = stim_info['toff']
+            ion = int(ton / dt)
+            ioff = int(toff / dt)
 
-        t = numpy.arange(len(voltage)) * dt
-        ton = all_stims["st"][i_seg]
-        toff = all_stims["en"][i_seg]
-        ion = int(ton / dt)
-        ioff = int(toff / dt)
-        amp = numpy.float64(all_stims["crr_val"][i_seg])
-        stim_u = all_stims["u"][i_seg]
+            if 'tamp' in stim_info:
+                tamp = [int(stim_info['tamp'][0] / dt),
+                    int(stim_info['tamp'][1] / dt)]
+            else:
+                tamp = [ion, ioff]
 
-        # the following lines have been integrated for compatibility in the 
-        # common.stim_feats_from_meta function
-        #
-        #if stim_feats and 'tamp' in stim_feats:
-        #    tamp = [int(stim_feats['tamp'][0] / dt),
-        #            int(stim_feats['tamp'][1] / dt)]
-        #else:
-        #    tamp = [ion, ioff]
-        #
-        #if stim_feats and 'i_unit' in stim_feats:
-        #    stim_u = stim_feats['i_unit']
-        #
-        #    current = current * 1e9  # nA
-        #elif i_unit == 'pA':
-        #    current = current * 1e-3  # nA
-        #else:
-        #    raise Exception(
-        #            "Unit current not configured!")
+            i_unit = stim_info['i_unit']
 
+            if i_unit.lower() == 'a':
+                current = current * 1e9  # nA
+            elif i_unit.lower() == 'pa':
+                current = current * 1e-3  # nA
+            elif i_unit.lower() == 'na':
+                pass
+            else:
+                raise Exception(
+                    "Unit current not configured!")
 
-        # convert stimulus amplitude to nA
-        conv_fact = common.manageConfig.conversion_factor('nA', stim_u)
+            amp = numpy.nanmean(current[tamp[0]:tamp[1]])
+            hypamp = numpy.nanmean(current[0:ion])
 
-        amp = amp * conv_fact
-        if conv_fact != 1:
-            stim_u = "nA"
+        else: 
+            # the following loop is needed because the voltage is not always in the
+            # first array of the segment
+            voltage = []
+            for i_asig, asig in enumerate(seg.analogsignals):
+                crr_unit = str(seg.analogsignals[i_asig].units.dimensionality)
+                if str(crr_unit.lower()) in common.manageConfig.vu:
+                    voltage = numpy.array(asig).astype(numpy.float64).flatten()
 
-        current = []
-        current = numpy.zeros(len(voltage))
-        current[ion:ioff] = amp
+            if len(voltage) == 0:
+                continue
 
-        # estimate hyperpolarization current
-        hypamp = numpy.mean( current[0:ion] )
+            t = numpy.arange(len(voltage)) * dt
+            ton = all_stims["st"][i_seg]
+            toff = all_stims["en"][i_seg]
+            ion = int(ton / dt)
+            ioff = int(toff / dt)
+            amp = numpy.float64(all_stims["crr_val"][i_seg])
+            stim_u = all_stims["u"][i_seg]
 
-        # 10% distance to measure step current
-        iborder = int((ioff-ion)*0.1)
+            # convert stimulus amplitude to nA
+            conv_fact = common.manageConfig.conversion_factor('nA', stim_u)
 
-        # clean voltage from transients
-        voltage[ion:ion+int(numpy.ceil(0.4/dt))] = \
+            amp = amp * conv_fact
+            if conv_fact != 1:
+                stim_u = "nA"
+
+            current = []
+            current = numpy.zeros(len(voltage))
+            current[ion:ioff] = amp
+
+            # estimate hyperpolarization current
+            hypamp = numpy.mean( current[0:ion] )
+
+            # 10% distance to measure step current
+            iborder = int((ioff-ion)*0.1)
+
+            # clean voltage from transients
+            voltage[ion:ion+int(numpy.ceil(0.4/dt))] = \
                 voltage[ion+int(numpy.ceil(0.4/dt))]
-        voltage[ioff:ioff+int(numpy.ceil(0.4/dt))] = \
+            voltage[ioff:ioff+int(numpy.ceil(0.4/dt))] = \
                 voltage[ioff+int(numpy.ceil(0.4/dt))]
 
         # normalize membrane potential to known value 
         # (given in UCL excel sheet)
-        if v_corr:
-            if not isinstance(v_corr, list):
-                voltage = voltage - numpy.mean(voltage[0:ion]) + v_corr
-            elif len(v_corr) == 1:
+        if isinstance(v_corr, list):
+            if len(v_corr) == 1 and v_corr[0] != 0.0:
                 voltage = voltage - numpy.mean(voltage[0:ion]) + v_corr[0]
-            elif len(v_corr) == len(cells[cellname]['experiments'][
-                    expname]['files']):
+            elif len(v_corr) - 1 >= idx_file and v_corr[0] != 0.0:
                 voltage = voltage - numpy.mean(voltage[0:ion]) \
-                        + v_corr[idx_file]
-            else:
-                raise ValueError("'v_corr' must have length 1 or be the " + \
-                        "same length as 'files'. Please check your " + \
-                        "configuration.")
+                    + v_corr[idx_file]
+        elif v_corr != 0.0:
+            voltage = voltage - numpy.mean(voltage[0:ion]) + v_corr
 
         voltage = voltage - ljp
 
@@ -258,10 +279,8 @@ def process(config=None,
                     ton=ton, toff=toff, amp=amp, hypamp=hypamp, \
                     filename=filename)
     resp_check = check_validity(data)
-    if not resp_check[0]:
-        return resp_check
-    else:
-        return data
+    
+    return data
 
 
 def stim_feats_from_header(header):
@@ -383,6 +402,8 @@ def stim_feats_from_header(header):
                         all_stim_feats["u"].append(ustr)
 
                     return (1, all_stim_feats)
+    else:
+        return (0, {})
 
 
 
@@ -430,7 +451,7 @@ def check_validity(data):
     nb_stims = len(data['current'])  
     
     if nb_traces != nb_stims:
-        return (0, "number of traces and number of given \
-                stimuli are different. Excluding file: " + filename)
+        raise Exception("Number of traces and number of given \
+                stimuli are different for file: " + filename)
     else:
         return (1, "")
