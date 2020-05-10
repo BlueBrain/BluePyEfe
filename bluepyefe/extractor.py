@@ -396,9 +396,9 @@ class Extractor(object):
                 for i_plot in range(n_plot):
                     # reduce figure title length if too long
                     filename_string = filenames[i_plot]
-                    if len(filename_string) > 60:
-                        filename_fin = filename_string[:22] + ' ... ' + \
-                            filename_string[-22:]
+                    if len(filename_string) > 50:
+                        filename_fin = filename_string[:18] + ' ... ' + \
+                            filename_string[-18:]
                     else:
                         filename_fin = filename_string
 
