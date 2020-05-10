@@ -394,6 +394,14 @@ class Extractor(object):
                         right=0.97, hspace=0.75, wspace=0.2)
 
                 for i_plot in range(n_plot):
+                    # reduce figure title length if too long
+                    filename_string = filenames[i_plot]
+                    if len(filename_string) > 60:
+                        filename_fin = filename_string[:22] + ' ... ' + \
+                            filename_string[-22:]
+                    else:
+                        filename_fin = filename_string
+
                     axs[i_plot].plot(
                         ts[i_plot],
                         voltages[i_plot],
@@ -402,7 +410,7 @@ class Extractor(object):
                     axs[i_plot].set_title(
                         cellname + " " + expname + " amp:" +
                         str(amps[i_plot]) +
-                        " file:" + filenames[i_plot])
+                        " file:" + filename_fin)
 
                     axs_c[i_plot].plot(
                         ts[i_plot],
@@ -412,7 +420,7 @@ class Extractor(object):
                     axs_c[i_plot].set_title(
                         cellname + " " + expname + " amp:" +
                         str(amps[i_plot]) +
-                        " file:" + filenames[i_plot])
+                        " file:" + filename_fin)
 
                 # plt.show()
 
