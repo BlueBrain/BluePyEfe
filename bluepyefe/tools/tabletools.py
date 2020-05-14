@@ -12,8 +12,8 @@ class printFeatures:
 	fel_vals=[], multvalnum=5, metadata={}, amp=0, stim_start=0, \
         stim_end=0):
         counter = 0;
-        param_file = os.path.join(os.path.dirname(__file__), cls.TT_CONFIG_PATH, \
-                cls.TT_CONFIG_FILE)
+        param_file = os.path.join(os.path.dirname(__file__), \
+                cls.TT_CONFIG_PATH, cls.TT_CONFIG_FILE)
         with open(param_file, 'r') as f:
             params = json.load(f)
         f.close()
@@ -63,7 +63,8 @@ class printFeatures:
             crr_feature = fel_vals[0][ii]
             if ii not in MULTVALFEAT:
                 if crr_feature is not None \
-                        and not (numpy.array_equal(crr_feature, numpy.array([]))):
+                        and not (numpy.array_equal(crr_feature, \
+                        numpy.array([]))):
                     crr_sweep_str.append(str(crr_feature[0]))
                 else:
                     crr_sweep_str.append(str(numpy.nan))
