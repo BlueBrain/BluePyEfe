@@ -40,54 +40,54 @@ class manageMetadata:
             with open(filename_meta) as f:
                 data = json.load(f)
 
-                if "animal_species" not in data or "animal_species" is None:
+                if "animal_species" not in data or "animal_species" == None:
                     c_species = "unknown_species"
                 else:
                     c_species = data["animal_species"]
                     c_species = cls.pattern.sub("-", c_species)
                     # c_species = c_species.replace(" ", "-")
 
-                if "brain_structure" not in data or "brain_structure" is None:
+                if "brain_structure" not in data or "brain_structure" == None:
                     c_area = "unknown_area"
                 else:
                     c_area = data["brain_structure"]
                     c_area = cls.pattern.sub("-", c_area)
 
                 if "cell_soma_location" not in data or \
-                        "cell_soma_location" is None:
+                        "cell_soma_location" == None:
                     c_region = "unknown_region"
                 else:
                     c_region = data["cell_soma_location"]
                     c_region = cls.pattern.sub("-", c_region)
 
-                if "cell_type" not in data or "cell_type" is None:
+                if "cell_type" not in data or "cell_type" == None:
                     c_type = "unknown_type"
                 else:
                     c_type = data["cell_type"]
                     c_type = cls.pattern.sub("-", c_type)
 
-                if "etype" not in data or "etype" is None:
+                if "etype" not in data or "etype" == None:
                     c_etype = "unknown_etype"
                 else:
                     c_etype = data["etype"]
                     c_etype = cls.pattern.sub("-", c_etype)
 
                 if "contributors_affiliations" not in data or \
-                    "contributors_affiliations" is None:
+                    "contributors_affiliations" == None:
                     c_contrib = "unknown_contrib"
                 else:
                     c_contrib = data["contributors_affiliations"]
                     c_contrib = cls.pattern.sub("-", c_contrib)
 
 
-                if "cell_id" not in data or "cell_id" is None:
+                if "cell_id" not in data or "cell_id" == None:
                     head, c_name = \
                         os.path.split(os.path.split(filename_meta)[0])
                 else:
                     c_name = data["cell_id"]
                     c_name = cls.pattern.sub("-", c_name)
 
-                if "filename" not in data or "filename" is None:
+                if "filename" not in data or "filename" == None:
                     base = os.path.basename(os.path.normpath(filename_meta))
                     c_sample = os.path.splitext(base)[0]
 
