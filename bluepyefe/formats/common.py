@@ -40,54 +40,64 @@ class manageMetadata:
             with open(filename_meta) as f:
                 data = json.load(f)
 
-                if "animal_species" not in data or "animal_species" == None:
+                if "animal_species" not in data or \
+                        data["animal_species"] == None or \
+                        data["animal_species"].lower() == "unknown":
                     c_species = "unknown_species"
                 else:
                     c_species = data["animal_species"]
                     c_species = cls.pattern.sub("-", c_species)
                     # c_species = c_species.replace(" ", "-")
 
-                if "brain_structure" not in data or "brain_structure" == None:
+                if "brain_structure" not in data or \
+                        data["brain_structure"] == None or \
+                        data["brain_structure"].lower() == "unknown":
                     c_area = "unknown_area"
                 else:
                     c_area = data["brain_structure"]
                     c_area = cls.pattern.sub("-", c_area)
 
                 if "cell_soma_location" not in data or \
-                        "cell_soma_location" == None:
+                        data["cell_soma_location"] == None or \
+                        data["cell_soma_location"].lower() == "unknown":
                     c_region = "unknown_region"
                 else:
                     c_region = data["cell_soma_location"]
                     c_region = cls.pattern.sub("-", c_region)
 
-                if "cell_type" not in data or "cell_type" == None:
+                if "cell_type" not in data or data["cell_type"] == None or \
+                        data["cell_type"].lower() == "unknown":
                     c_type = "unknown_type"
                 else:
                     c_type = data["cell_type"]
                     c_type = cls.pattern.sub("-", c_type)
 
-                if "etype" not in data or "etype" == None:
+                if "etype" not in data or data["etype"] == None or \
+                        data["etype"] == "unknown":
                     c_etype = "unknown_etype"
                 else:
                     c_etype = data["etype"]
                     c_etype = cls.pattern.sub("-", c_etype)
 
                 if "contributors_affiliations" not in data or \
-                    "contributors_affiliations" == None:
+                    data["contributors_affiliations"] == None or \
+                    data["contributors_affiliations"].lower() == "unknown":
                     c_contrib = "unknown_contrib"
                 else:
                     c_contrib = data["contributors_affiliations"]
                     c_contrib = cls.pattern.sub("-", c_contrib)
 
 
-                if "cell_id" not in data or "cell_id" == None:
+                if "cell_id" not in data or data["cell_id"] == None or \
+                        data["cell_id"] == "unknown":
                     head, c_name = \
                         os.path.split(os.path.split(filename_meta)[0])
                 else:
                     c_name = data["cell_id"]
                     c_name = cls.pattern.sub("-", c_name)
 
-                if "filename" not in data or "filename" == None:
+                if "filename" not in data or data["filename"] == None or \
+                        data["filename"] == "unknown":
                     base = os.path.basename(os.path.normpath(filename_meta))
                     c_sample = os.path.splitext(base)[0]
 
