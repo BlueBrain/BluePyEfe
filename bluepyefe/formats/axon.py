@@ -67,15 +67,15 @@ def process(config=None,
     # Below line doesn't work anymore due to api change
     # Now using rawio
     # header = r.read_header()
-    
+
     header = neo.rawio.axonrawio.parse_axon_soup(f)
 
     # get number of episodes from header
     nbepisod = get_nbepisod(header)
 
     # read sampling rate
-    #sampling_rate = 1.e6 / header['protocol']['fADCSequenceInterval']
-    #dt = 1. / int(sampling_rate) * 1e3
+    # sampling_rate = 1.e6 / header['protocol']['fADCSequenceInterval']
+    # dt = 1. / int(sampling_rate) * 1e3
     # version = header['fFileVersionNumber']
 
     # read data block
@@ -90,13 +90,14 @@ def process(config=None,
 
     if 'stim_info' in cells[cellname]['experiments'][expname] and \
             'stim_feats' in cells[cellname]['experiments'][expname]:
-        raise Exception("Both 'stim_info' and 'stim_feats' are given in" +\
-                " the configuration parameters. Only one or none is allowed.")
+        raise Exception(
+            "Both 'stim_info' and 'stim_feats' are given in" +
+            " the configuration parameters. Only one or none is allowed.")
 
     # read stimulus info from the option stim_feats if any
     if 'stim_feats' in cells[cellname]['experiments'][expname]:
         stim_feats_crr = cells[cellname]['experiments'][expname]['stim_feats']
-    
+
         # extract stimulus info from the config file
         if isinstance(stim_feats_crr, dict) is True:
             stim_feats = stim_feats_crr
@@ -105,18 +106,20 @@ def process(config=None,
                 stim_feats = stim_feats_crr[0]
             elif len(stim_feats_crr) == len(cells[cellname][
                     'experiments'][expname]['files']):
-                stim_feats = stim_feats_crr[idx_file] 
+                stim_feats = stim_feats_crr[idx_file]
             else:
-                raise ValueError("The 'stim_feats' list must have length " + \
-                        "equals to 1 or to the length of the 'files' list." + \
-                        "Please, check your configuration")
+                raise ValueError(
+                    "The 'stim_feats' list must have length " +
+                    "equals to 1 or to the length of the 'files' list." +
+                    "Please, check your configuration")
         else:
-            raise ValueError("'stim_feats' must be a list or \
-                a dictionary. Please, check your configuration")
+            raise ValueError(
+                "'stim_feats' must be a list or a dictionary. Please," +
+                " check your configuration")
 
         stim_feats['filename'] = filename
-        res = common.manageMetadata.stim_feats_from_meta(stim_feats, \
-            nbepisod)
+        res = common.manageMetadata.stim_feats_from_meta(
+            stim_feats, nbepisod)
 
         logger.info("File: %s. Found info in config file", filename)
 
@@ -128,8 +131,9 @@ def process(config=None,
         try:
             sampling_rate = 1.e6 / header['protocol']['fADCSequenceInterval']
         except Exception as e:
-            logger.info("Unable to find recording frequency in file: %s." + \
-                    "The ABF file version is probably older than v2", filename)
+            logger.info(
+                "Unable to find recording frequency in file: %s." +
+                "The ABF file version is probably older than v2", filename)
 
     else:
         # read metadata file if present
@@ -143,8 +147,8 @@ def process(config=None,
 
         # if metadata with stimulus info could be extracted
         if stim_feats:
-            res = common.manageMetadata.stim_feats_from_meta(meta_dict, \
-                nbepisod)
+            res = common.manageMetadata.stim_feats_from_meta(
+                meta_dict, nbepisod)
             logger.info("File: %s. Found info in metadata file", filename)
 
     # if stimulus has been extracted from stim_feats or metadata file
@@ -154,12 +158,13 @@ def process(config=None,
         all_stims = res[1]
     elif not stim_info_flag:
         # extract stim from header if any
-        logger.info(" File: %s. No stimulus info found in config or " + \
-                "metadata file. Extracting info from the file header.", 
-                filename)
+        logger.info(
+            "File: %s. No stimulus info found in config or " +
+            "metadata file. Extracting info from the file header.",
+            filename)
         res = stim_feats_from_header(header)
         all_stims = res[1]
-            
+
         # extract sampling rate from header
         sampling_rate = sampling_rate_from_header(header)[1]["r"]
 
@@ -188,7 +193,8 @@ def process(config=None,
             ioff = int(toff / dt)
 
             if 'tamp' in stim_info:
-                tamp = [int(stim_info['tamp'][0] / dt),
+                tamp = [
+                    int(stim_info['tamp'][0] / dt),
                     int(stim_info['tamp'][1] / dt)]
             else:
                 tamp = [ion, ioff]
@@ -208,9 +214,9 @@ def process(config=None,
             amp = numpy.nanmean(current[tamp[0]:tamp[1]])
             hypamp = numpy.nanmean(current[0:ion])
 
-        else: 
-            # the following loop is needed because the voltage is not always in the
-            # first array of the segment
+        else:
+            # the following loop is needed because the voltage is not always
+            # in the first array of the segment
             voltage = []
             for i_asig, asig in enumerate(seg.analogsignals):
                 crr_unit = str(seg.analogsignals[i_asig].units.dimensionality)
@@ -240,18 +246,18 @@ def process(config=None,
             current[ion:ioff] = amp
 
             # estimate hyperpolarization current
-            hypamp = numpy.mean( current[0:ion] )
+            hypamp = numpy.mean(current[0:ion])
 
             # 10% distance to measure step current
-            iborder = int((ioff-ion)*0.1)
+            iborder = int((ioff - ion) * 0.1)
 
             # clean voltage from transients
-            voltage[ion:ion+int(numpy.ceil(0.4/dt))] = \
-                voltage[ion+int(numpy.ceil(0.4/dt))]
-            voltage[ioff:ioff+int(numpy.ceil(0.4/dt))] = \
-                voltage[ioff+int(numpy.ceil(0.4/dt))]
+            voltage[ion:ion + int(numpy.ceil(0.4 / dt))] = \
+                voltage[ion + int(numpy.ceil(0.4 / dt))]
+            voltage[ioff:ioff + int(numpy.ceil(0.4 / dt))] = \
+                voltage[ioff + int(numpy.ceil(0.4 / dt))]
 
-        # normalize membrane potential to known value 
+        # normalize membrane potential to known value
         # (given in UCL excel sheet)
         if isinstance(v_corr, list):
             if len(v_corr) == 1 and v_corr[0] != 0.0:
@@ -269,17 +275,17 @@ def process(config=None,
 
         # extract stim traces to be excluded
         [crr_exc, crr_exc_u] = common.manageConfig.get_exclude_values(
-                cells[cellname],idx_file)
+            cells[cellname], idx_file)
 
         if not len(crr_exc) == 0 and any(abs(crr_exc - amp) < 1e-4):
-            continue # llb
+            continue  # llb
         else:
-            common.manageDicts.fill_dict_single_trace( \
-                    data=data, voltage=voltage, current=current, dt=dt, t=t, \
-                    ton=ton, toff=toff, amp=amp, hypamp=hypamp, \
-                    filename=filename)
+            common.manageDicts.fill_dict_single_trace(
+                data=data, voltage=voltage, current=current, dt=dt, t=t,
+                ton=ton, toff=toff, amp=amp, hypamp=hypamp,
+                filename=filename)
     resp_check = check_validity(data)
-    
+
     return data
 
 
@@ -318,10 +324,10 @@ def stim_feats_from_header(header):
                 # TODO IS THIS CORRECT ?
                 # being here, len(valid_epoch_dicts) == 1, so all the stimulus
                 # epochs should be contained in its first and only element
-                # (normally zero) 
+                # (normally zero)
 
                 k = valid_epoch_dicts[0]
-                
+
                 stim_epochs = dictEpochInfoPerDAC[valid_epoch_dicts[0]]
 
                 # read enabled waveforms
@@ -335,13 +341,16 @@ def stim_feats_from_header(header):
                         stim_epochs[2]['fEpochInitLevel'] or
                         stim_epochs[0]['fEpochLevelInc'] !=
                         stim_epochs[2]['fEpochLevelInc'] or
-                        float(format(stim_epochs[0]['fEpochLevelInc'], '.3f'))\
-                                != 0 or 
-                        (len(stim_ch_info) != 1 or 
-                        stim_ch_info[0][2] != k)):
+                        float(
+                            format(
+                                stim_epochs[0][
+                                    'fEpochLevelInc'], '.3f')) != 0 or
+                        (len(stim_ch_info) != 1 or
+                            stim_ch_info[0][2] != k)):
                     # return 0 with message
-                    return (0, "A stimulus different from the steps \
-                                has been detected")
+                    return (
+                        0, "A stimulus different from the steps has been \
+                        detected")
                 else:
                     ty = "step"
                     u = stim_ch_info[0][1]
@@ -361,13 +370,13 @@ def stim_feats_from_header(header):
                     # index of stimulus beginning
                     i_last = int(nSam * 15625 / 10**6)
                     # create array for all stimulus info
-                    all_stim_feats = { 
-                            "ty": [],
-                            "st": [],
-                            "en": [],
-                            "crr_val": [],
-                            "u": [] 
-                    } 
+                    all_stim_feats = {
+                        "ty": [],
+                        "st": [],
+                        "en": [],
+                        "crr_val": [],
+                        "u": []
+                    }
 
                     # step increment
                     e_one_inc = float(format(e_one['fEpochLevelInc'],
@@ -406,14 +415,13 @@ def stim_feats_from_header(header):
         return (0, {})
 
 
-
 def sampling_rate_from_header(header):
     """
     Extract sampling rate from the header of the abf.file
     """
 
     # read version
-    version = header['fFileVersionNumber'] # read file version
+    version = header['fFileVersionNumber']  # read file version
 
     if version < 2.:
         # read sampling rate
@@ -424,12 +432,12 @@ def sampling_rate_from_header(header):
         # read sampling rate
         sampling_rate = 1.e6 / header['protocol']['fADCSequenceInterval']
 
-    return(1, {"r" : sampling_rate, "ru" : "Hz"})
+    return(1, {"r": sampling_rate, "ru": "Hz"})
 
 
 def get_nbepisod(header):
     # read version
-    version = header['fFileVersionNumber'] # read file version
+    version = header['fFileVersionNumber']  # read file version
 
     if version < 2.:
         # read sampling rate
@@ -447,9 +455,9 @@ def check_validity(data):
     # extract number of traces
     nb_traces = len(data["voltage"])
 
-    #extract number of stimuli
-    nb_stims = len(data['current'])  
-    
+    # extract number of stimuli
+    nb_stims = len(data['current'])
+
     if nb_traces != nb_stims:
         raise Exception("Number of traces and number of given \
                 stimuli are different for file: " + filename)

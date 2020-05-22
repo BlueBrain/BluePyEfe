@@ -35,6 +35,7 @@ setuptools.setup(
     "format that can then be used by BluePyOpt for electrical model building "
     "purposes.",
     packages=setuptools.find_packages(),
+    include_package_data=True,
     author="BlueBrain Project, EPFL",
     license="LGPLv3",
     keywords=(
@@ -59,12 +60,4 @@ setuptools.setup(
         'sh',
         'pandas',
         'scipy'],
-    data_files=[
-        ('bluepyefe/formats/configs', \
-                    ['bluepyefe/formats/configs/metadata_template.json']),
-        ('bluepyefe/formats/configs', \
-                ['bluepyefe/formats/configs/features_default.json']),
-        ('bluepyefe/tools/configs', \
-                ['bluepyefe/tools/configs/tabletools_config.json'])
-    ],
 )

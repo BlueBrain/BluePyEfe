@@ -1,2 +1,4 @@
 include versioneer.py
 include bluepyefe/_version.py
+include bluepyefe/tools/configs/*.json
+include bluepyefe/formats/configs/*.json

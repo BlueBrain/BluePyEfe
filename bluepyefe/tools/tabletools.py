@@ -2,25 +2,27 @@ import os
 import numpy
 import json
 
-class printFeatures:
-    TT_CONFIG_PATH = 'configs' 
-    TT_CONFIG_FILE = 'tabletools_config.json' 
 
-    @classmethod 
-    def dump_features(cls, all_feat_filename="all_features.txt", \
-    	cellname="CELLNAME", trace_filename="", features_name=[], \
-	fel_vals=[], multvalnum=5, metadata={}, amp=0, stim_start=0, \
-        stim_end=0):
-        counter = 0;
-        param_file = os.path.join(os.path.dirname(__file__), \
-                cls.TT_CONFIG_PATH, cls.TT_CONFIG_FILE)
+class printFeatures:
+    TT_CONFIG_PATH = 'configs'
+    TT_CONFIG_FILE = 'tabletools_config.json'
+
+    @classmethod
+    def dump_features(
+            cls, all_feat_filename="all_features.txt", cellname="CELLNAME",
+            trace_filename="", features_name=[], fel_vals=[], multvalnum=5,
+            metadata={}, amp=0, stim_start=0, stim_end=0):
+        counter = 0
+        param_file = os.path.join(
+            os.path.dirname(__file__), cls.TT_CONFIG_PATH,
+            cls.TT_CONFIG_FILE)
         with open(param_file, 'r') as f:
             params = json.load(f)
         f.close()
 
         CELLINFO = params["CELLINFO"]
         MULTVALFEAT = params["MULTVALFEAT"]
-        
+
         # create file with headers if needed
         if not os.path.exists(all_feat_filename):
             headers = []
@@ -62,9 +64,11 @@ class printFeatures:
         for ii in features_name:
             crr_feature = fel_vals[0][ii]
             if ii not in MULTVALFEAT:
-                if crr_feature is not None \
-                        and not (numpy.array_equal(crr_feature, \
-                        numpy.array([]))):
+                if crr_feature is not None and not \
+                        (
+                        numpy.array_equal(
+                            crr_feature,
+                            numpy.array([]))):
                     crr_sweep_str.append(str(crr_feature[0]))
                 else:
                     crr_sweep_str.append(str(numpy.nan))
