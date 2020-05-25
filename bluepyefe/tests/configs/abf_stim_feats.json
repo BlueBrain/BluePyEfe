@@ -72,7 +72,7 @@
         },
         "zero_to_nan":{
             "flag": true,
-            "value": "stim_end",
+            "value": "nan",
             "mean_features_no_zeros":[
                 "inv_first_ISI", "inv_second_ISI", 
                 "inv_third_ISI", "inv_fourth_ISI", "inv_fifth_ISI", 
