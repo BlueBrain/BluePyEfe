@@ -1347,6 +1347,8 @@ class Extractor(object):
                         feature][
                         str(target)]
 
+                    # removing nan values before plotting
+                    feat = feat[numpy.logical_not(numpy.isnan(feat))]
                     if (all(numpy.isnan(feat)) is False):
 
                         ax.hist(feat, max(1, int(len(feat) / 2)),
