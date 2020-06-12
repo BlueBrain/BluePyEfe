@@ -1,3 +1,7 @@
+<img src="docs/source/logo/BluePyEfeBanner.jpg"/>
+
+-----------------
+
 # BluePyEfe: Blue Brain Python E-feature extraction
 
 <table>
