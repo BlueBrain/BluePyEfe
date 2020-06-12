@@ -1,4 +1,4 @@
-<img src="docs/source/logo/BluePyOptBanner.png"/>
+<img src="docs/source/logo/BluePyEfeBanner.png"/>
 
 -----------------
 
