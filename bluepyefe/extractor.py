@@ -1669,7 +1669,10 @@ class Extractor(object):
 
                                     if 'stimuli' not in stim[stimname]:
 
-                                        totduration = round(tend)
+                                        try:
+                                            totduration = round(tend)
+                                        except ValueError:
+                                            totduration = numpy.NaN
                                         delay = round(
                                             self.options["delay"] + ton)
                                         duration = round(toff - ton)
