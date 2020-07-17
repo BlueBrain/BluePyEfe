@@ -20,7 +20,7 @@ Copyright (c) 2020, EPFL/Blue Brain Project
 """
 
 import matplotlib
-matplotlib.use('Agg', warn=True)  # noqa
+matplotlib.use('Agg')  # noqa
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
