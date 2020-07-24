@@ -1,3 +1,7 @@
+<img src="docs/source/logo/BluePyEfeBanner.jpg"/>
+
+-----------------
+
 # BluePyEfe: Blue Brain Python E-feature extraction
 
 <table>
@@ -97,4 +101,4 @@ For a quick start, have a look at the notebook [examples/example.ipynb](examples
 
 Funding
 =======
-This work has been partially funded by the European Union Seventh Framework Program (FP7/2007­2013) under grant agreement no. 604102 (HBP), the European Union’s Horizon 2020 Framework Programme for Research and Innovation under the Specific Grant Agreement No. 720270, 785907 (Human Brain Project SGA1/SGA2).
+This work has been partially funded by the European Union Seventh Framework Program (FP7/2007­2013) under grant agreement no. 604102 (HBP), and by the European Union’s Horizon 2020 Framework Programme for Research and Innovation under the Specific Grant Agreements No. 720270 (Human Brain Project SGA1) and No. 785907 (Human Brain Project SGA2).

@@ -20,7 +20,7 @@ Copyright (c) 2020, EPFL/Blue Brain Project
 """
 
 import matplotlib
-matplotlib.use('Agg', warn=True)  # noqa
+matplotlib.use('Agg')  # noqa
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
@@ -98,9 +98,11 @@ class Extractor(object):
             if "target_unit" in self.options:
                 target_unit = self.options["target_unit"].lower()
                 conv_fact = common.manageConfig.conversion_factor(
-                        'nA', target_unit)
+                    'nA', target_unit)
                 if conv_fact != 1:
-                    conv_target = [i * conv_fact for i in self.options["target"]]
+                    conv_target = [
+                        i * conv_fact for i in
+                        self.options["target"]]
                     self.options["target"] = conv_target
 
         if "tolerance" not in self.options:
@@ -186,7 +188,6 @@ class Extractor(object):
         self.extra_features = ['spikerate_tau_jj', 'spikerate_drop',
                                'spikerate_tau_log', 'spikerate_tau_fit',
                                'spikerate_tau_slope']
-
 
     def newmeancell(self, a):
         if (self.options["nanmean_cell"] or
@@ -440,22 +441,21 @@ class Extractor(object):
         """Extract features from the traces"""
         logger.info(" Extracting features")
 
-
         efel.setThreshold(threshold)
         logger.info(" Setting spike threshold to %.2f mV", threshold)
-    
+
         # if print_table flag is set, dump all extracted feature to a .csv file
         print_table_flag = False
-        if 'print_table' in self.options and self.options['print_table'][
-                'flag']:
+        if 'print_table' in self.options and self.options[
+                'print_table']['flag']:
             print_table_flag = True
-            all_feat_filename = os.path.join(self.mainname, 
-                    'all_feature_table.txt')
+            all_feat_filename = os.path.join(
+                self.mainname, 'all_feature_table.txt')
             if os.path.exists(all_feat_filename):
                 os.remove(all_feat_filename)
             if not hasattr(self, "metadataset"):
                 self.create_metadataset()
-        
+
         # set flag to convert zero value to nan for features set by the user
         if 'zero_to_nan' in self.options and \
                 'flag' in self.options['zero_to_nan']:
@@ -559,20 +559,21 @@ class Extractor(object):
                         elif fel_vals[0][feature] is not None and \
                                 len(fel_vals[0][feature]) == 1 and \
                                 fel_vals[0][feature][0] == 0 and ZERO_TO_NAN \
-                                and feature in self.options['zero_to_nan'][
-                                        'mean_features_no_zeros']:
-                                    if self.options['zero_to_nan']['value'] \
-                                            == 'stim_end':
-                                        fel_vals[0][feature] = [toffs[i_seg]]
-                                        f = [toffs[i_seg]]
-                                    elif self.options['zero_to_nan']['value'] \
-                                            == 'nan':
-                                        fel_vals[0][feature] = None
-                                        f = None
-                                    else:
-                                        logger.info("Unrecognized value " + \
-                                                "for zero_to_nan option")
-
+                                and feature in self.options[
+                                    'zero_to_nan'][
+                                    'mean_features_no_zeros']:
+                            if self.options[
+                                    'zero_to_nan']['value'] == 'stim_end':
+                                fel_vals[0][feature] = [toffs[i_seg]]
+                                f = [toffs[i_seg]]
+                            elif self.options[
+                                    'zero_to_nan']['value'] == 'nan':
+                                fel_vals[0][feature] = None
+                                f = None
+                            else:
+                                logger.info(
+                                    "Unrecognized value " +
+                                    "for zero_to_nan option")
                         else:
                             f = fel_vals[0][feature]
 
@@ -604,29 +605,28 @@ class Extractor(object):
                     # Print individual features to table if required
                     if print_table_flag:
 
-                        crr_filename = dataset_cell_exp[expname][
-                                'filename'][i_seg]
-                        all_feat_filename = os.path.join(self.mainname, 
-                                'all_feature_table.txt')
+                        crr_filename = dataset_cell_exp[
+                            expname]['filename'][i_seg]
+                        all_feat_filename = os.path.join(
+                            self.mainname, 'all_feature_table.txt')
                         if 'num_events' not in self.options['print_table']:
                             multvalnum = 5
                         else:
                             multvalnum = self.options['print_table'][
-                                    'num_events']
-                        tabletools.printFeatures.dump_features( \
-                                all_feat_filename = all_feat_filename, \
-                                cellname = cellname, \
-                                trace_filename = crr_filename, \
-                                features_name = features_all_,
-                                fel_vals = fel_vals,
-                                multvalnum = multvalnum, \
-                                metadata = \
-                                        self.metadataset[cellname][
-                                            'experiments'][expname][
-                                                crr_filename], \
-                                amp = amp, \
-                                stim_start = trace['stim_start'][0], \
-                                stim_end = trace['stim_end'][0], \
+                                'num_events']
+                        tabletools.printFeatures.dump_features(
+                            all_feat_filename=all_feat_filename,
+                            cellname=cellname,
+                            trace_filename=crr_filename,
+                            features_name=features_all_,
+                            fel_vals=fel_vals,
+                            multvalnum=multvalnum,
+                            metadata=self.metadataset[
+                                cellname]['experiments'][
+                                    expname][crr_filename],
+                            amp=amp,
+                            stim_start=trace['stim_start'][0],
+                            stim_end=trace['stim_end'][0],
                         )
 
     def mean_features(self):
@@ -1240,8 +1240,9 @@ class Extractor(object):
                                         self.options["zero_std"]:
                                     rules = [~numpy.isnan(m)]
                                 else:
-                                    rules = [~numpy.isnan(m), 
-                                            (s > 0.0) or (m == 0.0)]
+                                    rules = [
+                                        ~numpy.isnan(m), (s > 0.0) or
+                                        (m == 0.0)]
                                 if all(rules):
                                     amp_rel_list.append(a)
                                     mean_list.append(m)
@@ -1354,6 +1355,8 @@ class Extractor(object):
                         feature][
                         str(target)]
 
+                    # removing nan values before plotting
+                    feat = feat[numpy.logical_not(numpy.isnan(feat))]
                     if (all(numpy.isnan(feat)) is False):
 
                         ax.hist(feat, max(1, int(len(feat) / 2)),
@@ -1459,8 +1462,9 @@ class Extractor(object):
                                         self.options["zero_std"]:
                                     rules = [~numpy.isnan(m)]
                                 else:
-                                    rules = [~numpy.isnan(m), (s > 0.0) 
-                                            or (m == 0.0)]
+                                    rules = [
+                                        ~numpy.isnan(m), (s > 0.0) or
+                                        (m == 0.0)]
 
                                 if all(rules):
                                     if s == 0.0:  # prevent divison by 0
@@ -1673,7 +1677,10 @@ class Extractor(object):
 
                                     if 'stimuli' not in stim[stimname]:
 
-                                        totduration = round(tend)
+                                        try:
+                                            totduration = round(tend)
+                                        except ValueError:
+                                            totduration = numpy.NaN
                                         delay = round(
                                             self.options["delay"] + ton)
                                         duration = round(toff - ton)
@@ -1757,10 +1764,9 @@ class Extractor(object):
             with gzip.open(directory + "features_sources.json.gz", "wb") as f:
                 f.write(s.encode('utf-8'))
 
-
     def create_metadataset(self):
         """
-        Fill a dictionary with metadata for every file to be processed 
+        Fill a dictionary with metadata for every file to be processed
         If no metadata file is present, default values are inserted
         """
 
@@ -1777,8 +1783,8 @@ class Extractor(object):
             metadataset_cell_exp = OrderedDict()
             self.metadataset[cellname]['experiments'] = metadataset_cell_exp
 
-            for i_exp, expname in enumerate(self.cells[cellname][
-                'experiments']):
+            for i_exp, expname in enumerate(self.cells[
+                    cellname]['experiments']):
 
                 files = self.cells[cellname]['experiments'][expname]['files']
 
@@ -1788,10 +1794,10 @@ class Extractor(object):
                     metadataset_cell_exp[expname] = OrderedDict()
 
                     for idx_file, filename in enumerate(files):
-                        fullpath = os.path.join(self.path, cellname, \
-                                filename + '_' + 'metadata.json')
-
+                        fullpath = os.path.join(
+                            self.path, cellname, filename + '_' +
+                            'metadata.json')
                         metadataset_cell_exp[expname][filename] = \
-                                common.manageMetadata.get_metadata( \
-                                fullpath)
+                            common.manageMetadata.get_metadata(
+                            fullpath)
         return True
