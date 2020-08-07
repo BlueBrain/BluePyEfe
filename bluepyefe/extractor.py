@@ -1079,18 +1079,17 @@ class Extractor(object):
                     self.dataset_mean[expname]['n'][feature][str(target)] = n
 
                     if n == 1:  # only result from one cell in population
-                        # pick values from this one
-                        # cell instead if more than one sweep
-                        if len(cell_n) > 1:
-                            self.dataset_mean[expname]['mean_features'][
-                                feature][
-                                str(target)] = feat[0]
-                            self.dataset_mean[expname]['std_features'][
-                                feature][str(target)] = cell_std_feat[0]
-                            [bcmean, bcstd, bcld, bcshift] = \
-                                self.dataset_mean[expname][
-                                'cell_bc_features'][feature][str(
-                                    target)][0]
+                        # pick values from this cell
+                        val_idx = numpy.where(~numpy.isnan(
+                            numpy.atleast_1d(feat)))[0][0]
+                        self.dataset_mean[expname]['mean_features'][
+                            feature][str(target)] = feat[val_idx]
+                        self.dataset_mean[expname]['std_features'][
+                            feature][str(target)] = cell_std_feat[val_idx]
+                        [bcmean, bcstd, bcld, bcshift] = \
+                            self.dataset_mean[expname][
+                            'cell_bc_features'][feature][str(
+                                target)][val_idx]
                     else:
                         self.dataset_mean[expname][
                             'mean_features'][feature][str(
