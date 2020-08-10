@@ -395,6 +395,14 @@ class Extractor(object):
                         right=0.97, hspace=0.75, wspace=0.2)
 
                 for i_plot in range(n_plot):
+                    # reduce figure title length if too long
+                    filename_string = filenames[i_plot]
+                    if len(filename_string) > 50:
+                        filename_fin = filename_string[:18] + ' ... ' + \
+                            filename_string[-18:]
+                    else:
+                        filename_fin = filename_string
+
                     axs[i_plot].plot(
                         ts[i_plot],
                         voltages[i_plot],
@@ -403,7 +411,7 @@ class Extractor(object):
                     axs[i_plot].set_title(
                         cellname + " " + expname + " amp:" +
                         str(amps[i_plot]) +
-                        " file:" + filenames[i_plot])
+                        " file:" + filename_fin)
 
                     axs_c[i_plot].plot(
                         ts[i_plot],
@@ -413,7 +421,7 @@ class Extractor(object):
                     axs_c[i_plot].set_title(
                         cellname + " " + expname + " amp:" +
                         str(amps[i_plot]) +
-                        " file:" + filenames[i_plot])
+                        " file:" + filename_fin)
 
                 # plt.show()
 
@@ -1071,18 +1079,17 @@ class Extractor(object):
                     self.dataset_mean[expname]['n'][feature][str(target)] = n
 
                     if n == 1:  # only result from one cell in population
-                        # pick values from this one
-                        # cell instead if more than one sweep
-                        if len(cell_n) > 1:
-                            self.dataset_mean[expname]['mean_features'][
-                                feature][
-                                str(target)] = feat[0]
-                            self.dataset_mean[expname]['std_features'][
-                                feature][str(target)] = cell_std_feat[0]
-                            [bcmean, bcstd, bcld, bcshift] = \
-                                self.dataset_mean[expname][
-                                'cell_bc_features'][feature][str(
-                                    target)][0]
+                        # pick values from this cell
+                        val_idx = numpy.where(~numpy.isnan(
+                            numpy.atleast_1d(feat)))[0][0]
+                        self.dataset_mean[expname]['mean_features'][
+                            feature][str(target)] = feat[val_idx]
+                        self.dataset_mean[expname]['std_features'][
+                            feature][str(target)] = cell_std_feat[val_idx]
+                        [bcmean, bcstd, bcld, bcshift] = \
+                            self.dataset_mean[expname][
+                            'cell_bc_features'][feature][str(
+                                target)][val_idx]
                     else:
                         self.dataset_mean[expname][
                             'mean_features'][feature][str(
