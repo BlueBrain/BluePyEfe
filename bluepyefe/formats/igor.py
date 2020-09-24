@@ -143,7 +143,7 @@ def process(config=None,
         elif i_unit.lower() == "pa":
             amp = filename["pulseAmp"] * 1e-3
         else:
-            amp = filename["pulseAmp"] * 1e-3
+            amp = filename["pulseAmp"]
     else:
         amp = numpy.mean(i[ion + iborder:ioff - iborder]) - hypamp
 
