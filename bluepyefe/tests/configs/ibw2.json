@@ -1,0 +1,207 @@
+{
+    "cells": {
+        "001_150218_A1_CA1py_MPG": {
+            "ljp": 0,
+            "v_corr": 0,
+            "experiments": {
+                "FirePattern": {
+                    "location": "soma",
+                    "files": [
+                        {
+                            "dt": 0.0001,
+                            "i_file": "./data_ibw2/001_150218_A1_CA1py_MPG Folder/c1_FirePattern_ch3_1060.ibw",
+                            "i_unit": "A",
+                            "v_file": "./data_ibw2/001_150218_A1_CA1py_MPG Folder/c1_FirePattern_ch2_1060.ibw",
+                            "v_unit": "V",
+                            "t_unit": "s",
+                            "pulseAmp": 2.4e-10,
+                            "holdingcurrent": -1.053653830851431e-10,
+                            "ordinal": "1060"
+                        },
+                        {
+                            "dt": 0.0001,
+                            "i_file": "./data_ibw2/001_150218_A1_CA1py_MPG Folder/c1_FirePattern_ch3_1061.ibw",
+                            "i_unit": "A",
+                            "v_file": "./data_ibw2/001_150218_A1_CA1py_MPG Folder/c1_FirePattern_ch2_1061.ibw",
+                            "v_unit": "V",
+                            "t_unit": "s",
+                            "pulseAmp": 4e-10,
+                            "holdingcurrent": -1.0532776040239611e-10,
+                            "ordinal": "1061"
+                        }
+                    ]
+                }
+            }
+        },
+        "001_150224_B2_CA1py_MPG": {
+            "ljp": 0,
+            "v_corr": 0,
+            "experiments": {
+                "FirePattern": {
+                    "location": "soma",
+                    "files": [
+                        {
+                            "dt": 0.0001,
+                            "i_file": "./data_ibw2/001_150224_B2_CA1py_MPG Folder/c1_FirePattern_ch3_1058.ibw",
+                            "i_unit": "A",
+                            "v_file": "./data_ibw2/001_150224_B2_CA1py_MPG Folder/c1_FirePattern_ch2_1058.ibw",
+                            "v_unit": "V",
+                            "t_unit": "s",
+                            "pulseAmp": 1.5e-10,
+                            "holdingcurrent": -6.765404902964178e-11,
+                            "ordinal": "1058"
+                        },
+                        {
+                            "dt": 0.0001,
+                            "i_file": "./data_ibw2/001_150224_B2_CA1py_MPG Folder/c1_FirePattern_ch3_1059.ibw",
+                            "i_unit": "A",
+                            "v_file": "./data_ibw2/001_150224_B2_CA1py_MPG Folder/c1_FirePattern_ch2_1059.ibw",
+                            "v_unit": "V",
+                            "t_unit": "s",
+                            "pulseAmp": 2.5e-10,
+                            "holdingcurrent": -6.774596855718684e-11,
+                            "ordinal": "1059"
+                        }
+                    ]
+                }
+            }
+        },
+        "001_150303_A2_CA1py_MPG": {
+            "ljp": 0,
+            "v_corr": 0,
+            "experiments": {
+                "FirePattern": {
+                    "location": "soma",
+                    "files": [
+                        {
+                            "dt": 0.0001,
+                            "i_file": "./data_ibw2/001_150303_A2_CA1py_MPG Folder/c1_FirePattern_ch3_1054.ibw",
+                            "i_unit": "A",
+                            "v_file": "./data_ibw2/001_150303_A2_CA1py_MPG Folder/c1_FirePattern_ch2_1054.ibw",
+                            "v_unit": "V",
+                            "t_unit": "s",
+                            "pulseAmp": 1.2e-10,
+                            "holdingcurrent": -5.370535613447025e-11,
+                            "ordinal": "1054"
+                        },
+                        {
+                            "dt": 0.0001,
+                            "i_file": "./data_ibw2/001_150303_A2_CA1py_MPG Folder/c1_FirePattern_ch3_1055.ibw",
+                            "i_unit": "A",
+                            "v_file": "./data_ibw2/001_150303_A2_CA1py_MPG Folder/c1_FirePattern_ch2_1055.ibw",
+                            "v_unit": "V",
+                            "t_unit": "s",
+                            "pulseAmp": 2e-10,
+                            "holdingcurrent": -5.375987502387325e-11,
+                            "ordinal": "1055"
+                        }
+                    ]
+                }
+            }
+        },
+        "001_150216_A1_CA1py_MPG": {
+            "ljp": 0,
+            "v_corr": 0,
+            "experiments": {
+                "FirePattern": {
+                    "location": "soma",
+                    "files": [
+                        {
+                            "dt": 0.0001,
+                            "i_file": "./data_ibw2/001_150216_A1_CA1py_MPG Folder/c1_FirePattern_ch3_1054.ibw",
+                            "i_unit": "A",
+                            "v_file": "./data_ibw2/001_150216_A1_CA1py_MPG Folder/c1_FirePattern_ch2_1054.ibw",
+                            "v_unit": "V",
+                            "t_unit": "s",
+                            "pulseAmp": 1.2e-10,
+                            "holdingcurrent": -3.473126647390856e-11,
+                            "ordinal": "1054"
+                        },
+                        {
+                            "dt": 0.0001,
+                            "i_file": "./data_ibw2/001_150216_A1_CA1py_MPG Folder/c1_FirePattern_ch3_1055.ibw",
+                            "i_unit": "A",
+                            "v_file": "./data_ibw2/001_150216_A1_CA1py_MPG Folder/c1_FirePattern_ch2_1055.ibw",
+                            "v_unit": "V",
+                            "t_unit": "s",
+                            "pulseAmp": 2e-10,
+                            "holdingcurrent": -3.482042779112682e-11,
+                            "ordinal": "1055"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "path": "",
+    "features": {
+        "FirePattern": [
+            "Spikecount",
+            "mean_frequency",
+            "inv_first_ISI",
+            "inv_second_ISI",
+            "inv_third_ISI",
+            "inv_fourth_ISI",
+            "inv_fifth_ISI",
+            "inv_last_ISI",
+            "time_to_first_spike",
+            "time_to_last_spike"
+        ]
+    },
+    "format": "igor",
+    "options": {
+        "amp_min": 0,
+        "boxcox": false,
+        "delay": 0,
+        "logging": true,
+        "nangrace": 0,
+        "nanmean": true,
+        "nanmean_cell": true,
+        "peak_min": 0.001,
+        "posttime": 200,
+        "relative": false,
+        "spike_threshold": 1,
+        "strict_stiminterval": {
+            "base": true
+        },
+        "zero_std": true,
+        "trace_check": false,
+        "zero_to_nan": {
+            "flag": true,
+            "value": "nan",
+            "mean_features_no_zeros": [
+                "inv_first_ISI",
+                "inv_second_ISI",
+                "inv_third_ISI",
+                "inv_fourth_ISI",
+                "inv_fifth_ISI",
+                "inv_last_ISI",
+                "time_to_first_spike",
+                "time_to_last_spike"
+            ]
+        },
+        "onoff": {
+            "FirePattern": [
+                250.0,
+                3250.0
+            ]
+        },
+        "target_unit": "A",
+        "target": [
+ 	    2.4e-10,
+	    4e-10,
+	    1.5e-10,
+	    2.5e-10,
+	    1.2e-10,
+	    2e-10   
+	],
+        "tolerance": [
+            0,
+            0,
+            0,
+	        0,
+	        0,
+            0
+        ]
+    }
+}
