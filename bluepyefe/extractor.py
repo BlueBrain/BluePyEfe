@@ -108,18 +108,20 @@ class Extractor(object):
 
         if "tolerance" not in self.options:
             self.options["tolerance"] = 10
-        else:
-            if conv_fact != 1:
-                tolerance = self.options["tolerance"]
-                self.options["tolerance"] = conv_fact * tolerance
 
         if "strict_stiminterval" not in self.options:
             self.options["strict_stiminterval"] = {'base': False}
 
         if isinstance(self.options["tolerance"], list) is False:
+            if conv_fact != 1:
+                tolerance = self.options["tolerance"]
+                self.options["tolerance"] = conv_fact * tolerance
             self.options["tolerance"] =\
                 numpy.ones(len(self.options["target"]))\
                 * self.options["tolerance"]
+        elif conv_fact != 1:
+            self.options["tolerance"] = [x * conv_fact for x in 
+                    self.options["tolerance"]]
 
         if "nanmean" not in self.options:
             self.options["nanmean"] = False
