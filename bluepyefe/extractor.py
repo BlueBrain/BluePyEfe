@@ -1286,7 +1286,15 @@ class Extractor(object):
                             s = self.dataset_mean[expname]['std_features'][
                                 feature][
                                 str(target)]
-                            if ~numpy.isnan(m) and ((s > 0.0) or (m == 0.0)):
+
+                            if "zero_std" in self.options and \
+                                    self.options["zero_std"]:
+                                rules = [~numpy.isnan(m)]
+                            else:
+                                rules = [
+                                    ~numpy.isnan(m), (s > 0.0) or
+                                    (m == 0.0)]
+                            if all(rules):
                                 amp_rel_list.append(a)
                                 mean_list.append(m)
                                 std_list.append(s)
