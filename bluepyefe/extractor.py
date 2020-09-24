@@ -1813,8 +1813,7 @@ class Extractor(object):
                             cellname = dict_igor["ordinal"]
                             foldpath = os.path.dirname(dict_igor["v_file"])
                             fullpath = os.path.join(
-                                    foldpath, cellname + '_' +
-                                    'metadata.json')
+                                foldpath, cellname + '_' + 'metadata.json')
                             print(fullpath)
                             metadataset_cell_exp[expname][cellname] = \
                                 common.manageMetadata.get_metadata(
