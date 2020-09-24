@@ -120,8 +120,8 @@ class Extractor(object):
                 numpy.ones(len(self.options["target"]))\
                 * self.options["tolerance"]
         elif conv_fact != 1:
-            self.options["tolerance"] = [x * conv_fact for x in 
-                    self.options["tolerance"]]
+            self.options["tolerance"] = \
+                [x * conv_fact for x in self.options["tolerance"]]
 
         if "nanmean" not in self.options:
             self.options["nanmean"] = False
