@@ -31,6 +31,7 @@ import os
 import logging
 import gzip
 import json
+import pprint
 
 from itertools import cycle
 from collections import OrderedDict
@@ -107,18 +108,20 @@ class Extractor(object):
 
         if "tolerance" not in self.options:
             self.options["tolerance"] = 10
-        else:
-            if conv_fact != 1:
-                tolerance = self.options["tolerance"]
-                self.options["tolerance"] = conv_fact * tolerance
 
         if "strict_stiminterval" not in self.options:
             self.options["strict_stiminterval"] = {'base': False}
 
         if isinstance(self.options["tolerance"], list) is False:
+            if conv_fact != 1:
+                tolerance = self.options["tolerance"]
+                self.options["tolerance"] = conv_fact * tolerance
             self.options["tolerance"] =\
                 numpy.ones(len(self.options["target"]))\
                 * self.options["tolerance"]
+        elif conv_fact != 1:
+            self.options["tolerance"] = \
+                [x * conv_fact for x in self.options["tolerance"]]
 
         if "nanmean" not in self.options:
             self.options["nanmean"] = False
@@ -1285,7 +1288,15 @@ class Extractor(object):
                             s = self.dataset_mean[expname]['std_features'][
                                 feature][
                                 str(target)]
-                            if ~numpy.isnan(m) and ((s > 0.0) or (m == 0.0)):
+
+                            if "zero_std" in self.options and \
+                                    self.options["zero_std"]:
+                                rules = [~numpy.isnan(m)]
+                            else:
+                                rules = [
+                                    ~numpy.isnan(m), (s > 0.0) or
+                                    (m == 0.0)]
+                            if all(rules):
                                 amp_rel_list.append(a)
                                 mean_list.append(m)
                                 std_list.append(s)
@@ -1791,12 +1802,22 @@ class Extractor(object):
                     logger.debug(" Adding experiment %s to metadata", expname)
 
                     metadataset_cell_exp[expname] = OrderedDict()
-
-                    for idx_file, filename in enumerate(files):
-                        fullpath = os.path.join(
-                            self.path, cellname, filename + '_' +
-                            'metadata.json')
-                        metadataset_cell_exp[expname][filename] = \
-                            common.manageMetadata.get_metadata(
-                            fullpath)
+                    if self.format == "axon":
+                        for idx_file, filename in enumerate(files):
+                            fullpath = os.path.join(
+                                self.path, cellname, filename + '_' +
+                                'metadata.json')
+                            metadataset_cell_exp[expname][filename] = \
+                                common.manageMetadata.get_metadata(
+                                fullpath)
+                    elif self.format == "igor":
+                        for dict_igor in files:
+                            cellname = dict_igor["ordinal"]
+                            foldpath = os.path.dirname(dict_igor["v_file"])
+                            fullpath = os.path.join(
+                                foldpath, cellname + '_' + 'metadata.json')
+                            print(fullpath)
+                            metadataset_cell_exp[expname][cellname] = \
+                                common.manageMetadata.get_metadata(
+                                fullpath)
         return True

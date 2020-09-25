@@ -137,6 +137,13 @@ def process(config=None,
         # amp = ampoff
     elif expname in ['H40S8']:
         amp = numpy.mean(i[i > 0.1])
+    elif "pulseAmp" in filename:
+        if i_unit.lower() == "a":
+            amp = filename["pulseAmp"] * 1e9
+        elif i_unit.lower() == "pa":
+            amp = filename["pulseAmp"] * 1e-3
+        else:
+            amp = filename["pulseAmp"]
     else:
         amp = numpy.mean(i[ion + iborder:ioff - iborder]) - hypamp
 
