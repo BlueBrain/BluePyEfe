@@ -1583,11 +1583,9 @@ class Extractor(object):
                                     str(target)]
 
                                 if boxcox:
-                                    do_add = ~numpy.isnan(bcm) and (
-                                        (bcs > 0.0) or (bcm == 0.0))
+                                    do_add = ~numpy.isnan(bcm)
                                 else:
-                                    do_add = ~numpy.isnan(m) and (
-                                        (s > 0.0) or (m == 0.0))
+                                    do_add = ~numpy.isnan(m)
 
                                 if do_add:
 
