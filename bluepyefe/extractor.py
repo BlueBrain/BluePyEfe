@@ -1800,15 +1800,7 @@ class Extractor(object):
                     logger.debug(" Adding experiment %s to metadata", expname)
 
                     metadataset_cell_exp[expname] = OrderedDict()
-                    if self.format == "axon":
-                        for idx_file, filename in enumerate(files):
-                            fullpath = os.path.join(
-                                self.path, cellname, filename + '_' +
-                                'metadata.json')
-                            metadataset_cell_exp[expname][filename] = \
-                                common.manageMetadata.get_metadata(
-                                fullpath)
-                    elif self.format == "igor":
+                    if self.format == "igor":
                         for dict_igor in files:
                             cellname = dict_igor["ordinal"]
                             foldpath = os.path.dirname(dict_igor["v_file"])
@@ -1816,6 +1808,14 @@ class Extractor(object):
                                 foldpath, cellname + '_' + 'metadata.json')
                             print(fullpath)
                             metadataset_cell_exp[expname][cellname] = \
+                                common.manageMetadata.get_metadata(
+                                fullpath)
+                    else:
+                        for idx_file, filename in enumerate(files):
+                            fullpath = os.path.join(
+                                self.path, cellname, filename + '_' +
+                                'metadata.json')
+                            metadataset_cell_exp[expname][filename] = \
                                 common.manageMetadata.get_metadata(
                                 fullpath)
         return True
