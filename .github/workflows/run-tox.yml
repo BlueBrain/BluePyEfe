@@ -20,4 +20,4 @@ jobs:
         python -m pip install --upgrade pip setuptools
         pip install tox tox-gh-actions
     - name: Run tox
-      run: tox 'py{27,36,37,38,39}-{unit,functional,style, syntax}'
+      run: tox
