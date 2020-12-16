@@ -32,8 +32,8 @@
 <tr>
   <td>Build Status</td>
   <td>
-    <a href="https://travis-ci.com/BlueBrain/BluePyEfe">
-    <img src="https://travis-ci.com/BlueBrain/BluePyEfe.svg?branch=master" alt="travis build status" />
+   <a href="https://github.com/BlueBrain/BluePyEfe/actions">
+    <img src="https://github.com/BlueBrain/BluePyEfe/workflows/Build/badge.svg?branch=master" alt="Actions build status" />
     </a>
   </td>
 </tr>
