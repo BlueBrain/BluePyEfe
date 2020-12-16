@@ -16,10 +16,3 @@ cache:
   pip: true
   directories:
   - "$TRAVIS_BUILD_DIR/.tox"
-deploy:
-  provider: pypi
-  user: __token__
-  on:
-    condition: "$TRAVIS_EVENT_TYPE != cron && $TRAVIS_PYTHON_VERSION == 3.6"
-  password:
-    secure: CUZKn66LJWJuEP7jQTOGZTFr2OiHCToqfRinO5cFkP1DgWMETqOCEchHOzpmcmNVBcWbODswaZeEhULKNNykrXou3LTtVZgw3kEl90Qx+jZhdD3OWBK6SyOLsPViymO7zswuRg4L+UC+wN+NinCqqQnUR+TRsAtjZRCTy0CnM2odODKPg0GuukXPNJigPTPiRyeQkb75oreizhq7Z3D1sCMZQo8PbG/26s1Uo/bRoc2BdZOirTqhCEwXp1OFvzrn1pBGKaq52bGFEpFNCahfjcSVDYnuCezabtlG5YKjL/uUkdzQSQ/P4gVX5jGooNlFkfJlIE54N1OsB9BF9A2fTMpk+/O698uGz0Jgfx0qJSI6tvsQsFKz1bfazRIgFPT02S3jN3ULaxWVIiqrMLkpnYZqFgGHoaHiD+0bGyHcBYXzTRpJqC29VCGoOyiAsugNEz/nquhcXbFJmr7pskvzDVurODTzeH+8CGK8L2DMpndSjgvXWa+3JIR87d+i1P+KRp8Qd0Fh9mSoVDffBI678BDXTNfiBAiZkY9tNr9G2Cz80lrxFh8bWGJ9zDOecXmpBG/OEwERH5tQ1Ofuqho/7K6MW5+e1BNczDvR+jl/bhcVA1Rd6zNOsGRkvmzr1U3KVekUKzEhhY1l2HJHLK6+8o6QLSPr1SQ1zZYTKSuWWuc=
