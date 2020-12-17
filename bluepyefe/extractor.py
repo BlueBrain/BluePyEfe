@@ -327,6 +327,9 @@ class Extractor(object):
         elif self.format == 'csv_lccr':
             from .formats import csv_lccr
             return csv_lccr.process(**kwargs)
+        elif self.format == 'spike2':
+            from .formats import spike2
+            return spike2.process(**kwargs)
         elif self.format == 'ibf_json':
             from .formats import ibf_json
             return ibf_json.process(**kwargs)
