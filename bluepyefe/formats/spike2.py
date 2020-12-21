@@ -1,3 +1,24 @@
+"""Axon reader"""
+
+"""
+Copyright (c) 2020, EPFL/Blue Brain Project
+
+ This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
+
+ This library is free software; you can redistribute it and/or modify it under
+ the terms of the GNU Lesser General Public License version 3.0 as published
+ by the Free Software Foundation.
+
+ This library is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ details.
+
+ You should have received a copy of the GNU Lesser General Public License
+ along with this library; if not, write to the Free Software Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+"""
+
 from neo import io
 from collections import OrderedDict
 import logging
@@ -5,19 +26,13 @@ logger = logging.getLogger(__name__)
 import numpy as np
 import os
 import json
-import pprint
 import sys
 import quantities
-from quantities import ms
-from quantities import s
+from quantities import ms, s, mV, nA
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from neo import AnalogSignal
 from neo.io import Spike2IO
-
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from . import common
 
 def process(config=None,
@@ -30,9 +45,6 @@ def process(config=None,
 
     path = config['path']
     cells = config['cells']
-
-    #features = config['features']
-    #options = config['options']
 
     # initialize data dictionary
     data = common.manageDicts.initialize_data_dict()
@@ -70,38 +82,58 @@ def process(config=None,
 
     # extract parameters from metadata
     gain, voltage_unit, vm_channel, stimulus_start, stimulus_end, \
-        stimulus_time_unit, stim_channel, holding_voltage, stim_unit = \
-            extract_metadata(meta_dict)
+        stimulus_time_unit, stim_channel, holding_voltage, stimulus_unit, \
+        stimulus_threshold = extract_metadata(meta_dict)
 
     # check parameters
-    if None in (gain, vm_channel, stimulus_start, stimulus_end, stimulus_time_unit):
+    if None in (gain, voltage_unit, vm_channel, stimulus_start, stimulus_end, 
+            stimulus_time_unit, stim_channel, stimulus_unit, 
+            stimulus_threshold):
         print("Parameters are not valid or not present. Skipping file: " + \
                 fullfilename)
         return data
 
-    # add dimension to signal
-    signals[vm_channel] = set_voltage_units(signals[vm_channel], gain, \
-            voltage_unit)
-    
-    # find edges of the entire signal where different stimulus steps are located
-    step_edges = find_stimulus_steps(signals[stim_channel].time_slice(stimulus_start, stimulus_end))
+    # read vm signal
+    vm = signals[vm_channel[0]]
+    conv_factor = common.manageConfig.conversion_factor("mV", voltage_unit)
+    vm = set_units(vm, gain * conv_factor, mV)  # add dimension to signal
+    vm = vm.flatten()[::vm_channel[1]+1]
 
+    # read stim signal
+    stim = signals[stim_channel[0]]
+    conv_factor = common.manageConfig.conversion_factor("nA", stimulus_unit)
+    stim = set_units(stim, conv_factor, "nA")  # add dimension to signal
+    stim = stim.flatten()[::stim_channel[1]+1]
+    stimulus_threshold = stimulus_threshold * conv_factor
 
-    # fill gaps in step_edges looking for 0 amplitude stimulus
-    step_edges = fill_zero_stim_edges(step_edges)
+    # find edges of the signal where different stimulus steps are located
+    step_edges = []
+    for idx_sts in range(len(stimulus_start)):
+        sts = stimulus_start[idx_sts]
+        ste = stimulus_end[idx_sts]
+        se = find_stimulus_steps(stim.time_slice(sts, ste),
+                    stimulus_threshold)
+        if idx_sts == 0:
+            step_edges = se
+        else:
+            se_mag = se.magnitude
+            se_unit = se.units
+            step_edges_mag = step_edges.magnitude
+            mag = np.append(step_edges_mag, se_mag)
+            step_edges = mag * se_unit
 
     if "remove_transient_size" in cells[cellname] and \
             cells[cellname]['remove_transient_size']:
         # remove transient
-        signals[vm_channel] = remove_transients(signals[vm_channel], \
-                step_edges, transient_length=cells[cellname]['remove_transient_size'][0][0] * ms)
+        vm = remove_transients(vm, step_edges, transient_length = \
+                cells[cellname]['remove_transient_size'][0][0] * ms)
 
     # extract onsets and offsets from edges
     step_onsets = step_edges[::2]
     step_offsets = step_edges[1::2]
 
-    all_vm = signals[vm_channel]
-    all_stim = signals[stim_channel]
+    all_vm = vm.flatten()
+    all_stim = stim
 
     # adding margins to recording chunks
     margins = 50 * ms
@@ -111,12 +143,14 @@ def process(config=None,
 
         # slicing current sweep voltage signal
         voltage = all_vm.time_slice(onset - margins, offset + margins) 
+        voltage = voltage.flatten()
 
         # slicing current sweep stimulus signal
-        stim = signals[stim_channel].time_slice(onset - margins, offset + margins)
+        stimulus = all_stim.time_slice(onset - margins, 
+                offset + margins)
 
         # extracting stimulus chunks
-        stim_no_borders = signals[stim_channel].time_slice(onset + 0.0 * ms, \
+        stim_no_borders = all_stim.time_slice(onset + 0.0 * ms, \
                 offset - 0.0 * ms)
 
         # extracting time step
@@ -126,23 +160,21 @@ def process(config=None,
         t = (voltage.times-voltage.t_start).rescale("ms")
 
         # extracting onset and offset index from arrays
-        ion = time_index(stim, onset)
-        ioff = time_index(stim, offset)
+        ion = time_index(stimulus, onset)
+        ioff = time_index(stimulus, offset)
         
         # convert indices to timestamps
         ton = ion * dt
         toff = ioff * dt
 
-        cut = 5 # duration in ms of signal slice from which to extract the stimulus amplitude 
+        # duration in ms of signal slice from which to extract the 
+        # stimulus amplitude 
+        cut = 5 
         amp = extract_amp_from_sig(stim_no_borders, onset, offset, cut)
         amp = np.float64(amp)
 
-        # convert stimulus to nA
-        conv_fact = common.manageConfig.conversion_factor('nA', stim_unit)
-        amp = amp * conv_fact 
+        # convert stimulus to string
         amp = np.float64(str("{0:.2f}".format(amp)))
-        if conv_fact != 1:
-            stim_u = "nA"
 
         # creating current signal
         current = []
@@ -150,30 +182,30 @@ def process(config=None,
         current[ion:ioff] = amp
 
         # estimate hyperpolarization current
-        hypamp = np.mean( current[0:ion] )
+        hypamp = np.mean(current[0:ion])
 
         # convert voltage from AnalogSignal to list
         voltage = np.array(voltage.tolist()).astype(np.float64)
 
-        # clean voltage from transients
-
-        # normalize membrane potential to known value (given in UCL excel sheet)
-        if v_corr:
+        # normalize membrane potential to known value
+        # (given in UCL excel sheet)
+        if isinstance(v_corr, list):
             if len(v_corr) == 1 and v_corr[0] != 0.0:
-                voltage = voltage - np.mean(voltage[0:ion]) + v_corr[0]
-            elif len(v_corr) - 1 >= idx_file and v_corr[idx_file] != 0.0:
-                voltage = voltage - np.mean(voltage[0:ion]) \
-                        + v_corr[idx_file]
+                voltage = voltage - numpy.mean(voltage[0:ion]) + v_corr[0]
+            elif len(v_corr) - 1 >= idx_file and v_corr[0] != 0.0:
+                voltage = voltage - numpy.mean(voltage[0:ion]) \
+                    + v_corr[idx_file]
+        elif v_corr != 0.0:
+            voltage = voltage - numpy.mean(voltage[0:ion]) + v_corr
 
         voltage = voltage - ljp
-
-        # clip spikes after stimulus so they are not analysed
-        voltage[ioff:] = np.clip(voltage[ioff:], -300, -40)
 
         # extract stim traces to be excluded
         [crr_exc, crr_exc_u] = common.manageConfig.get_exclude_values( \
                 cells[cellname],idx_file)
-        
+
+        t = t.magnitude.flatten()
+
         if not len(crr_exc) == 0 and any(abs(crr_exc - amp) < 1e-4):
             continue # llb
         else:
@@ -181,9 +213,7 @@ def process(config=None,
                     data=data, voltage=voltage, current=current, dt=dt, t=t, \
                     ton=ton, toff=toff, amp=amp, hypamp=hypamp, \
                     filename=filename)
-
     return data
-
 
 
 def extract_metadata(metadata):
@@ -195,114 +225,154 @@ def extract_metadata(metadata):
         gain = float(metadata["gain"])
     except:
         print("Error reading 'gain' in metadata or key not present. " + \
-                "Storing value: 'None'")
+                "Storing value: None")
         gain = None
     
     try:
+        stimulus_threshold = float(metadata["stimulus_threshold"])
+    except:
+        print("Error reading 'stimulus_threshold' in metadata or key not present. " + \
+                "Storing value: None")
+        stimulus_threshold = None
+
+    try:
         holding_voltage = float(metadata["holding_voltage"][0])
     except:
-        print("Error reading 'holding_voltage' in metadata or key not present. " + \
-                "Storing value: '0.0'")
+        print("Error reading 'holding_voltage' in metadata or " + \
+                "key not present. Storing value: '0.0'")
         holding_voltage = 0.0
 
     try:
-        voltage_unit = metadata["holding_voltage_unit"]
+        voltage_unit = metadata["voltage_unit"]
     except:
-        print("Error reading 'voltage_unit' in metadata or key not present. " + \
-                "Storing value: 'mV'")
+        print("Error reading 'voltage_unit' in metadata or " + \
+                "key not present. Storing value: 'mV'")
         voltage_unit = "mV"
 
     try:
-        stimulus_time_unit = getattr(quantities, metadata["stimulus_time_unit"])
+        stimulus_time_unit = getattr(quantities, 
+                metadata["stimulus_time_unit"])
     except:
-        print("Error reading 'stimulus_time_unit' in metadata or key not present. " + \
-                "Storing value: 'None'")
+        print("Error reading 'stimulus_time_unit' in metadata or " + \
+                "key not present. Storing value: 'None'")
         stimulus_time_unit = None
 
     try:
-        vm_channel = metadata.get("vm_channel", None)   # this entry added manually to metadata files
+        vm_channel = metadata.get("vm_channel", None)   
     except:
         print("Error reading 'vm_channel' in metadata or key not present. " + \
                 "Storing value: 'None'")
         vm_channel = None
 
     try:
-        stimulus_start = metadata["stimulus_start"][0] * stimulus_time_unit   # these entries modified manually
+        if not "stimulus_start" in metadata.keys():
+            raise Exception
+        else:
+            stim_start = metadata["stimulus_start"]
+            if type(stim_start) in (float, int):
+                stimulus_start = float(stim_start)
+            elif type(stim_start) == list and len(stim_start) >= 1:
+                stimulus_start = []
+                for i in stim_start:
+                    stimulus_start.append(i * stimulus_time_unit)
+            else:
+                raise Exception
     except:
-        print("Error reading 'stimulus_start' in metadata or key not present. " + \
-                "Storing value: 'None'")
+        print("Error reading 'stimulus_start' in metadata, " + \
+                "key not present or wrong. Storing value: 'None'")
         stimulus_start = None
 
     try:
-        stimulus_end = metadata["stimulus_end"][0] * stimulus_time_unit       # in metadata files
+        if not "stimulus_end" in metadata.keys():
+            raise Exception
+        else:
+            stim_end = metadata["stimulus_end"]
+            if type(stim_end) in (float, int):
+                stimulus_end = float(stim_end)
+            elif type(stim_end) == list and len(stim_end) >= 1:
+                stimulus_end = []
+                for i in stim_end:
+                    stimulus_end.append(i * stimulus_time_unit)
+            else:
+                raise Exception
     except:
-        print("Error reading 'stimulus_end' in metadata or key not present. " + \
-                "Storing value: 'None'")
+        print("Error reading 'stimulus_end' in metadata, " + \
+                "key not present or wrong. Storing value: 'None'")
         stimulus_end = None
 
     try:
-        stim_channel = metadata["stim_channel"]   # this entry added manually to metadata files
+        stim_channel = metadata["stim_channel"]   
     except:
-        print("Error reading 'stim_channel' in metadata or key not present. " + \
-                "Storing value: 3")
-        stim_channel = 3
+        print("Error reading 'stim_channel' in metadata or key not present. " \
+                + "Storing value: None")
+        stim_channel = None
 
     try:
-        stim_unit = metadata["stimulus_unit"]   # this entry added manually to metadata files
+        stimulus_unit = metadata["stimulus_unit"]   
     except:
-        print("Error reading 'stimulus_unit' in metadata or key not present. " + \
-                "Storing value: 'nA'")
-        stim_unit = 'nA'
-
+        print("Error reading 'stimulus_unit' in metadata or key not present. "\
+                + "Storing value: 'nA'")
+        stimulus_unit = None
 
     return gain, voltage_unit, vm_channel, stimulus_start, stimulus_end, \
-            stimulus_time_unit, stim_channel, holding_voltage, stim_unit
+            stimulus_time_unit, stim_channel, holding_voltage, stimulus_unit, \
+            stimulus_threshold
 
 
-def set_voltage_units(signal, gain, voltage_unit):
+def set_units(signal, gain, unit):
     """
     Author: Andrew Davison
     """
-    # cannot change the units of a signal once created, so we create a new signal
-    # from the original data (original signal is dimensionless)
+    # cannot change the units of a signal once created, so we create a new 
+    # signal from the original data (original signal is dimensionless)
     orig = signal
-    vm = AnalogSignal(orig.magnitude * gain,
-                      units=voltage_unit,
+    sig = AnalogSignal(orig.magnitude * gain,
+                      units=unit,
                       sampling_rate=orig.sampling_rate)
-    vm._copy_data_complement(orig)
+    sig._copy_data_complement(orig)
 
-    return vm
+    return sig
 
 
-def find_stimulus_steps(stimulus):
+def find_stimulus_steps(stimulus, stimulus_threshold):
     """
-    Author: Andrew Davison
+    Authors: Andrew Davison, Luca L. Bologna
     """
-    # cut signals into segments so as to overlay responses to different stimulus steps
-    x = np.abs(stimulus.magnitude.flatten()) > 0.05  # arbitrary threshold based on visual inspection
+    # cut signals into segments so as to overlay responses to different 
+    # stimulus steps;  
+    x = np.abs(stimulus.magnitude.flatten()) > stimulus_threshold 
     step_edge_indices = np.nonzero(x[1:] ^ x[:-1])[0]
-    step_edges = stimulus.times[step_edge_indices]  # does not include step of amplitude zero.
+
+    # does not include step of amplitude zero.
+    step_edges = stimulus.times[step_edge_indices]  
     
     return step_edges
 
 
-def remove_transients(vm_trace, stimulus_step_edges, transient_length=1.0 * ms, window=5.0 * ms):
-    """
-    Replace the voltage transients at stimulus onset and offset by the mean of the previous few milliseconds.
+def remove_transients(vm_trace, stimulus_step_edges, 
+        transient_length=1.0 * ms, window=5.0 * ms):
 
-    This is a rather crude method, and is problematic for offsets if there is an action potential just before offset.
-    A better approach might be to fit an exponential to the transient.
-    Author: Andrew Davison
     """
+    Replace the voltage transients at stimulus onset and offset by the mean of 
+    the previous few milliseconds.
+
+    This is a rather crude method, and is problematic for offsets if there is 
+    an action potential just before offset.
+    A better approach might be to fit an exponential to the transient.
+    Author: Andrew Davison, Luca L. Bologna
+    """
+    vm = AnalogSignal(vm_trace.magnitude,
+                        sampling_rate=vm_trace.sampling_rate,
+                        units=vm_trace.units)
     for t_step in stimulus_step_edges:
-        length = int(transient_length / vm_trace.sampling_period.rescale('ms'))
-        level = vm_trace.time_slice(t_step - window, t_step).mean()
+        length = int(transient_length / vm.sampling_period.rescale('ms'))
+        level = vm.time_slice(t_step - window, t_step).mean()
         splice = AnalogSignal(level * np.ones((length,)),
-                              sampling_rate=vm_trace.sampling_rate,
-                              units=vm_trace.units,
+                              sampling_rate=vm.sampling_rate,
+                              units=vm.units,
                               t_start=t_step)
-        vm_trace.splice(splice)
-    return vm_trace
+        vm.splice(splice)
+    return vm
 
 
 def read_data(filename):
@@ -316,17 +386,17 @@ def read_data(filename):
 
 
 def extract_amp_from_sig(signal, onset, offset, cut):
+
     """
     Extract amplitude value from signal
     """
 
     signal_cut = signal.time_slice(onset, onset + cut * ms)
-    amp = float(max(signal_cut.tolist(), key=signal_cut.tolist().count)[0])
+    signal_cut = signal_cut.flatten().magnitude.tolist()
+    amp = float(max(signal_cut, key=signal_cut.count))
     
     return amp
     
-
-
 # The following function has been taken from the neo-python package
 # Copyright (c) 2010-2018, Neo authors and contributors
 # All rights reserved.
@@ -337,59 +407,3 @@ def time_index(signal, t):
     i = int(np.rint(i.magnitude))
 
     return i
-
-
-
-def fill_zero_stim_edges(step_edges):
-    """
-    Check time differences between consecutive stimuli onset. 
-    If only one stimulus onset is twice delayed with respect to all the remaining
-    fill the stimulus onsets/offsets list with the appropriate values, assuming
-    a zero stimuli was applied in that period
-    """
-
-    x = step_edges
-    xdiff = [float(x[n])-float(x[n-2]) for n in range(2,len(x))[::2]]
-
-    # extract the most common value in the array
-    stim_time_diff = float(max(xdiff, key=xdiff.count))
-
-    # create dictionary with all time differences
-    diff_dict = dict((x,xdiff.count(x)) for x in set(xdiff))
-    
-    # if more than two values are found skip this step
-    if len(diff_dict) > 2:
-        print("Stimulus intervals are not regular. Skipping eventual zero amplitude stimulus reconstruction")
-        return step_edges
-    else:
-        if not diff_dict or len(diff_dict) == 1:
-            print("No jump in stimulus onset values. Skipping eventual zero amplitude stimulus reconstruction")
-            return step_edges
-        for k in diff_dict:
-            if k is not stim_time_diff:
-                if diff_dict[k] != 1:
-                    print("More than one big 'hole' in stimulus amplitudes. Skipping eventual zero amplitude stimulus reconstruction")
-                    return step_edges
-                else:
-                    if abs(k - 2 * stim_time_diff) < stim_time_diff/10.0:
-                        time_jump = k
-                        break
-                    else:
-                        print("Irregular jump into stimulus timing. Skipping eventual zero amplitude stimulus reconstruction")
-                        return step_edges
-
-    idx_array = range(len(step_edges))[2::2]
-    for idx in idx_array:
-        edge = step_edges[idx]
-        if edge - step_edges[idx-2] == time_jump * edge.units:
-            first_chunk = np.array(step_edges[:idx])
-            zero_edge_start = np.float64(step_edges[idx-2] + stim_time_diff * step_edges.units)
-            zero_edge_end = zero_edge_start + np.float64(step_edges[idx-1] - step_edges[idx-2])
-            zero_chunk = [zero_edge_start, zero_edge_end]
-            last_chunk = np.array(step_edges[idx:])
-
-            step_edges = np.append(first_chunk, np.append(zero_chunk, last_chunk))
-            step_edges = step_edges * edge.units
-            break
-
-    return step_edges

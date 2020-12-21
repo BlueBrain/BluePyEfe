@@ -523,7 +523,7 @@ class manageConfig():
                 crr_exc_u = 'nA'
             elif len(cells_cellname["exclude"]) == \
                     len(cells_cellname["exclude_unit"]):
-                crr_exc_u = exclude_units[idx]
+                crr_exc_u = cells_cellname["exclude_unit"][idx]
             else:
                 raise ValueError(
                     "'exclude' and 'exclude_unit' lists must " +
