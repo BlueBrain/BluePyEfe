@@ -318,10 +318,11 @@ class manageMetadata:
                 st = st * 1e3
                 en = en * 1e3
         except Exception as e:
-            print(
+            logger.degub(
                 'Error in reading keys for stimulus extraction in file: ' +
-                crr_dict['filename'])
-            print('ERROR ' + str(e))
+                crr_dict['filename']
+            )
+            logger.debug('ERROR ' + str(e))
 
         all_stim_feats = {
             "ty": [],

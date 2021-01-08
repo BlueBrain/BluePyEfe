@@ -61,10 +61,8 @@ def process(config=None,
             meta_dict = json.load(json_metadata)
         json_metadata.close()
     else:
-        logger.debug("No metadata file found for file %s. \
-                Skipping file", filename)
-        print("No metadata found. Skipping file " + filename)
-        print("Returning for error")
+        logger.debug(
+            "No metadata file found for file %s. Skipping file", filename)
         return data
 
     # read stimulus features if present
@@ -74,7 +72,7 @@ def process(config=None,
 
     fullfilename = filename + '.smr'
 
-    print("Reading file :" + fullfilename)
+    logger.debug("Reading file :" + fullfilename)
 
     f = os.path.join(path, cellname, fullfilename)
 
@@ -90,7 +88,7 @@ def process(config=None,
     if None in (gain, voltage_unit, vm_channel, stimulus_start, stimulus_end,
                 stimulus_time_unit, stim_channel, stimulus_unit,
                 stimulus_threshold):
-        print(
+        logger.debug(
             "Parameters are not valid or not present. Skipping file: " +
             fullfilename
         )
@@ -240,52 +238,62 @@ def extract_metadata(metadata):
     try:
         gain = float(metadata["gain"])
     except Exception as ex:
-        print(
+        logger.debug(
             "Error reading 'gain' in metadata or key not present. " +
             "Storing value: None"
         )
-        print(ex)
+        logger.debug(ex)
         gain = None
 
     try:
         stimulus_threshold = float(metadata["stimulus_threshold"][0])
     except Exception as ex:
-        print("Error reading 'stimulus_threshold' in metadata or key not " +
-              "present. Storing value: None")
-        print(ex)
+        logger.debug(
+            "Error reading 'stimulus_threshold' in metadata or key not " +
+            "present. Storing value: None"
+        )
+        logger.debug(ex)
         stimulus_threshold = None
 
     try:
         holding_voltage = float(metadata["holding_voltage"][0])
     except Exception as ex:
-        print("Error reading 'holding_voltage' in metadata or key not " +
-              "present. Storing value: '0.0'")
-        print(ex)
+        logger.debug(
+            "Error reading 'holding_voltage' in metadata or key not " +
+            "present. Storing value: '0.0'"
+        )
+        logger.debug(ex)
         holding_voltage = 0.0
 
     try:
         voltage_unit = metadata["voltage_unit"]
     except Exception as ex:
-        print("Error reading 'voltage_unit' in metadata or key not present. " +
-              "Storing value: 'mV'")
-        print(ex)
+        logger.debug(
+            "Error reading 'voltage_unit' in metadata or key not present. " +
+            "Storing value: 'mV'"
+        )
+        logger.debug(ex)
         voltage_unit = "mV"
 
     try:
         stimulus_time_unit = getattr(
             quantities, metadata["stimulus_time_unit"])
     except Exception as ex:
-        print("Error reading 'stimulus_time_unit' in metadata or key not " +
-              "present. Storing value: 'None'")
-        print(ex)
+        logger.debug(
+            "Error reading 'stimulus_time_unit' in metadata or key not " +
+            "present. Storing value: 'None'"
+        )
+        logger.debug(ex)
         stimulus_time_unit = None
 
     try:
         vm_channel = metadata.get("vm_channel", None)
     except Exception as ex:
-        print("Error reading 'vm_channel' in metadata or key not present. " +
-              "Storing value: 'None'")
-        print(ex)
+        logger.debug(
+            "Error reading 'vm_channel' in metadata or key not present. " +
+            "Storing value: 'None'"
+        )
+        logger.debug(ex)
         vm_channel = None
 
     try:
@@ -302,9 +310,11 @@ def extract_metadata(metadata):
             else:
                 raise Exception
     except Exception as ex:
-        print("Error reading 'stimulus_start' in metadata, key not present " +
-              "or wrong. Storing value: 'None'")
-        print(ex)
+        logger.debug(
+            "Error reading 'stimulus_start' in metadata, key not present " +
+            "or wrong. Storing value: 'None'"
+        )
+        logger.debug(ex)
         stimulus_start = None
 
     try:
@@ -321,25 +331,31 @@ def extract_metadata(metadata):
             else:
                 raise Exception
     except Exception as ex:
-        print("Error reading 'stimulus_end' in metadata, key not present or " +
-              "wrong. Storing value: 'None'")
-        print(ex)
+        logger.debug(
+            "Error reading 'stimulus_end' in metadata, key not present or " +
+            "wrong. Storing value: 'None'"
+        )
+        logger.debug(ex)
         stimulus_end = None
 
     try:
         stim_channel = metadata["stim_channel"]
     except Exception as ex:
-        print("Error reading 'stim_channel' in metadata or key not present. " +
-              "Storing value: None")
-        print(ex)
+        logger.debug(
+            "Error reading 'stim_channel' in metadata or key not present. " +
+            "Storing value: None"
+        )
+        logger.debug(ex)
         stim_channel = None
 
     try:
         stimulus_unit = metadata["stimulus_unit"]
     except Exception as ex:
-        print("Error reading 'stimulus_unit' in metadata or key not present." +
-              " Storing value: 'nA'")
-        print(ex)
+        logger.debug(
+            "Error reading 'stimulus_unit' in metadata or key not present." +
+            " Storing value: 'nA'"
+        )
+        logger.debug(ex)
         stimulus_unit = None
 
     return \
