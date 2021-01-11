@@ -7,6 +7,7 @@ import calendar
 import re
 import six
 import logging
+import quantities as pq
 
 
 class manageFiles:
@@ -317,10 +318,11 @@ class manageMetadata:
                 st = st * 1e3
                 en = en * 1e3
         except Exception as e:
-            print(
+            logger.error(
                 'Error in reading keys for stimulus extraction in file: ' +
-                crr_dict['filename'])
-            print('ERROR ' + str(e))
+                crr_dict['filename']
+            )
+            logger.error('ERROR ' + str(e))
 
         all_stim_feats = {
             "ty": [],
@@ -413,31 +415,23 @@ class manageMetadata:
         """
         Fill holdcurr (i.e. holding current) field
         """
-        hca = "holding_current_amp"
-        hcs = "holding_current_start"
-        hce = "holding_current_end"
+        hca = "holding_current"
         hcu = "holding_current_unit"
-        hctu = "holding_current_time_unit"
 
         holding_current = {}
 
-        if hca and hcs and hce and hcu and hctu in crr_dict:
+        if hca and hcu in crr_dict:
 
             chca = crr_dict[hca]
-            chcs = crr_dict[hcs]
-            chce = crr_dict[hce]
             chcu = crr_dict[hcu]
-            chctu = crr_dict[hctu]
 
-            if chca and chcs and chce and chcu and chctu:
-                chca = chca[0] * conversion_factor(amp_unit, chcu)
+            if chca and chcu:
+                chca = chca[0] * manageConfig.conversion_factor(amp_unit, chcu)
                 holding_current = {
                     "holdcurr": {
-                        "value": [chca], "holdcurrstart": chcs,
-                        "holdcurrend": chce, "holdcurru": chcu,
-                        "holdcurrtu": chctu,
+                        "value": [chca], "holdcurru": amp_unit,
                         "message": "Applied holding current: " + str(chca) +
-                        " " + chcu
+                        " " + amp_unit
                     }
                 }
         return holding_current
@@ -523,7 +517,7 @@ class manageConfig():
                 crr_exc_u = 'nA'
             elif len(cells_cellname["exclude"]) == \
                     len(cells_cellname["exclude_unit"]):
-                crr_exc_u = exclude_units[idx]
+                crr_exc_u = cells_cellname["exclude_unit"][idx]
             else:
                 raise ValueError(
                     "'exclude' and 'exclude_unit' lists must " +
