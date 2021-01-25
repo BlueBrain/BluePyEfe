@@ -1,0 +1,77 @@
+{
+    "cells": {
+        "cell01": {
+            "etype": "etype",
+            "exclude": [
+                [
+                    -2.0
+                ],
+                [
+                    -2.0
+                ]
+            ],
+            "experiments": {
+                "step": {
+                    "files": [
+                        "97509008",
+                        "96711009"
+                    ],
+                    "location": "soma"
+                }
+            },
+            "ljp": 0,
+            "v_corr": 0
+        },
+        "cell02": {
+            "etype": "etype",
+            "exclude": [
+                [],
+                []
+            ],
+            "experiments": {
+                "step": {
+                    "files": [
+                        "98205017",
+                        "98205018"
+                    ],
+                    "location": "soma"
+                }
+            },
+            "ljp": 0,
+            "v_corr": 0
+        }
+    },
+    "comment": [],
+    "features": {
+        "step": [
+            "time_to_last_spike",
+            "time_to_second_spike",
+            "voltage",
+            "voltage_base"
+        ]
+    },
+    "format": "axon",
+    "options": {
+        "delay": 500,
+        "logging": false,
+        "nanmean": true,
+        "relative": false,
+        "target": [
+            -2.0,
+            0.0,
+            1.0
+        ],
+        "zero_std": true,
+        "zero_to_nan":{
+            "flag": true,
+            "value": "stim_end",
+            "mean_features_no_zeros":[
+                "inv_first_ISI", "inv_second_ISI",
+                "inv_third_ISI", "inv_fourth_ISI", "inv_fifth_ISI",
+                "inv_last_ISI", "time_to_first_spike", "time_to_last_spike"
+            ]
+        },
+        "tolerance": 0.02
+    },
+    "path": "./data_abf/"
+}

@@ -61,18 +61,18 @@ def process(config=None,
             meta_dict = json.load(json_metadata)
         json_metadata.close()
     else:
-        logger.debug(
+        logger.info(
             "No metadata file found for file %s. Skipping file", filename)
         return data
 
     # read stimulus features if present
     stim_feats = []
 
-    logger.debug(" Adding spike2 file %s", filename)
+    logger.info(" Adding spike2 file %s", filename)
 
     fullfilename = filename + '.smr'
 
-    logger.debug("Reading file :" + fullfilename)
+    logger.info("Reading file :" + fullfilename)
 
     f = os.path.join(path, cellname, fullfilename)
 
@@ -88,7 +88,7 @@ def process(config=None,
     if None in (gain, voltage_unit, vm_channel, stimulus_start, stimulus_end,
                 stimulus_time_unit, stim_channel, stimulus_unit,
                 stimulus_threshold):
-        logger.debug(
+        logger.info(
             "Parameters are not valid or not present. Skipping file: " +
             fullfilename
         )
