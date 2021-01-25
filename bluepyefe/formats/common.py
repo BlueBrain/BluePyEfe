@@ -7,6 +7,7 @@ import calendar
 import re
 import six
 import logging
+logger = logging.getLogger(__name__)
 import quantities as pq
 
 
@@ -130,7 +131,7 @@ class manageMetadata:
         """
         Read metadata file into a json dictionary
         """
-        logging.info("Reading metadata " + os.path.basename(metadata_file))
+        logger.info("Reading metadata " + os.path.basename(metadata_file))
 
         crr_file_dir = os.path.dirname(__file__)
         default_metadata_file = os.path.join(
@@ -229,7 +230,7 @@ class manageMetadata:
                         for file:" + crr_dict['filename'])
             else:
                 ty = str(crr_dict['stimulus_type'])
-                logging.info("extracted stimulus type")
+                logger.info("extracted stimulus type")
 
             if 'stimulus_time_unit' not in crr_dict or not \
                     crr_dict['stimulus_time_unit'] or \
@@ -238,7 +239,7 @@ class manageMetadata:
                     for file:" + crr_dict['filename'])
             else:
                 tu = crr_dict['stimulus_time_unit']
-                logging.info("extracted stimulus unit")
+                logger.info("extracted stimulus unit")
 
             if 'stimulus_start' in crr_dict \
                     and crr_dict['stimulus_start'] and \
@@ -248,16 +249,16 @@ class manageMetadata:
                     crr_dict['stimulus_end'] != 'uknown':
                 st = crr_dict['stimulus_start'][0]
                 en = crr_dict['stimulus_end'][0]
-                logging.info("extracted stimulus start and stimulus \
+                logger.info("extracted stimulus start and stimulus \
                         end")
             elif 'tamp' in crr_dict and crr_dict['tamp']:
                 st = crr_dict['tamp'][0]
                 en = crr_dict['tamp'][1]
-                logging.info("extracted stimulus start")
+                logger.info("extracted stimulus start")
             elif 'ton' in crr_dict and 'toff' in crr_dict:
                 st = crr_dict['ton']
                 en = crr_dict['toff']
-                logging.info("extracted stimulus start")
+                logger.info("extracted stimulus start")
             else:
                 raise Exception("'stimulus_start' and/or 'stimulus_end' key \
                         absent in metadata, for file:" + crr_dict['filename'])
@@ -265,11 +266,11 @@ class manageMetadata:
             if 'stimulus_unit' in crr_dict and crr_dict['stimulus_unit'] and \
                     crr_dict["stimulus_unit"] != "unknown":
                 u = str(crr_dict['stimulus_unit'])
-                logging.info("extracted stimulus unit")
+                logger.info("extracted stimulus unit")
             elif 'i_unit' in crr_dict and crr_dict['i_unit'] and \
                     crr_dict['i_unit'] != 'unknown':
                 u = str(crr_dict['i_unit'])
-                logging.info("extracted stimulus unit")
+                logger.info("extracted stimulus unit")
             else:
                 raise Exception("'stimulus_unit' key absent in metadata, \
                         for file:" + crr_dict['filename'])
@@ -284,7 +285,7 @@ class manageMetadata:
                     format(
                         crr_dict['stimulus_first_amplitude'][0],
                         '.3f'))
-                logging.info("extracted stimulus first amplitude")
+                logger.info("extracted stimulus first amplitude")
 
             if 'stimulus_increment' not in crr_dict \
                     or crr_dict["stimulus_increment"] == "unknown":
@@ -294,16 +295,16 @@ class manageMetadata:
                 inc = float(format(0, '.3f'))
             else:
                 inc = float(format(crr_dict['stimulus_increment'][0], '.3f'))
-            logging.info("extracted stimulus increment")
+            logger.info("extracted stimulus increment")
 
             if 'sampling_rate_unit' not in crr_dict or not \
                     crr_dict['sampling_rate_unit'] \
                     or crr_dict["sampling_rate_unit"] == "unknown":
                 ru = 'Hz'
-                logging.info("extracted sampling rate unit")
+                logger.info("extracted sampling rate unit")
             else:
                 ru = crr_dict['sampling_rate_unit'][0]
-                logging.info("extracted sampling rate unit")
+                logger.info("extracted sampling rate unit")
 
             if 'sampling_rate' not in crr_dict or not \
                     crr_dict['sampling_rate'] or \
@@ -312,17 +313,17 @@ class manageMetadata:
                         file:" + crr_dict['filename'])
             else:
                 r = crr_dict['sampling_rate'][0]
-                logging.info("extracted sampling rate")
+                logger.info("extracted sampling rate")
 
             if tu == 's':
                 st = st * 1e3
                 en = en * 1e3
         except Exception as e:
-            logging.error(
+            logger.error(
                 'Error in reading keys for stimulus extraction in file: ' +
                 crr_dict['filename']
             )
-            logging.error('ERROR ' + str(e))
+            logger.error('ERROR ' + str(e))
 
         all_stim_feats = {
             "ty": [],
