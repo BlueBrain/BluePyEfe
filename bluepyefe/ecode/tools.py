@@ -1,7 +1,9 @@
-"""
-Copyright (c) 2016, EPFL/Blue Brain Project
+"""Tools"""
 
- This file is part of BluePyOpt <https://github.com/BlueBrain/BluePyOpt>
+"""
+Copyright (c) 2020, EPFL/Blue Brain Project
+
+ This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
 
  This library is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License version 3.0 as published
@@ -16,3 +18,21 @@ Copyright (c) 2016, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
+
+
+import numpy
+from scipy.signal import medfilt2d
+
+
+def scipy_signal2d(data, width):
+    return medfilt2d(data.reshape(1, -1), (1, width))[0].tolist()
+
+
+def base_current(current, idx_ton=300):
+    """Compute the base current from the first few points of the current
+    array"""
+
+    # Get the base current hypamp
+    upper_lim = min(idx_ton, len(current))
+    smooth_current = scipy_signal2d(current[:upper_lim], 85)
+    return numpy.median(smooth_current)

@@ -1,12 +1,13 @@
 *.pyc
 *.swp
-x86_64
 /bluepyefe.egg-info/
 load_module
 .DS_Store
-.tox
+.tox/
 .coverage
 .python-version
 dist
 BluePyEfe.egg-info
 /testrun
+.idea/
+MouseCells/

@@ -1,0 +1,142 @@
+"""Recording class"""
+
+"""
+Copyright (c) 2020, EPFL/Blue Brain Project
+
+ This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
+
+ This library is free software; you can redistribute it and/or modify it under
+ the terms of the GNU Lesser General Public License version 3.0 as published
+ by the Free Software Foundation.
+
+ This library is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ details.
+
+ You should have received a copy of the GNU Lesser General Public License
+ along with this library; if not, write to the Free Software Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+"""
+
+
+import logging
+
+import numpy
+
+from .tools import to_ms
+from .tools import to_mV
+from .tools import to_nA
+
+logger = logging.getLogger(__name__)
+
+
+class Recording(object):
+    def __init__(self, config_data, reader_data, protocol_name):
+
+        self.config_data = config_data
+        self.reader_data = reader_data
+
+        self.files = None
+        self.location = None
+        self.efeatures = {}
+        self.spikecount = None
+        self.protocol_name = protocol_name
+
+        self.t = None
+        self.current = None
+        self.voltage = None
+
+        if len(reader_data):
+            self.t, self.current, self.voltage = self.standardize_trace(
+                config_data, reader_data
+            )
+
+    def get_params(self):
+        """Returns the eCode parameters"""
+        params = {}
+        return params
+
+    def interpret(self):
+        """Analyse a current array and extract from it the parameters needed to
+        reconstruct the array"""
+        pass
+
+    def generate(self):
+        """Generate the current array from the parameters of the ecode"""
+        pass
+
+    def compute_relative_amp(self, amp_threshold):
+        """Divide all the amplitude in the stimuli by the spiking amplitude"""
+        pass
+
+    def in_target(self, target, tolerance):
+        """Returns a boolean. True if the amplitude of the eCode is close to
+        target and False otherwise."""
+        pass
+
+    def standardize_trace(self, config_data, reader_data):
+        """Standardize the units of the current and voltage times series. If
+        some metadata are present both in the file itself and the file_metadata
+         dictionary, the latter is used."""
+
+        if "filepath" in config_data:
+            self.files = [config_data["filepath"]]
+        elif "i_file" in config_data:
+            self.files = [config_data["i_file"], config_data["v_file"]]
+
+        # Create the time series
+        t = numpy.arange(len(reader_data["voltage"]))
+
+        # Give it the correct sampling rate
+        if "dt" in config_data and config_data["dt"] is not None:
+            t = t * config_data["dt"]
+        elif "dt" in reader_data and reader_data["dt"] is not None:
+            t = t * reader_data["dt"]
+        else:
+            raise Exception(
+                "Sampling rate not configured for "
+                "file {}".format(self.files)
+            )
+
+        # Convert it to ms
+        if "t_unit" in config_data and config_data["t_unit"] is not None:
+            t = to_ms(t, config_data["t_unit"])
+        elif "t_unit" in reader_data and reader_data["t_unit"] is not None:
+            t = to_ms(t, reader_data["t_unit"])
+        else:
+            raise Exception(
+                "Time unit not configured for " "file {}".format(self.files)
+            )
+
+        # Convert current to nA
+        if "i_unit" in config_data and config_data["i_unit"] is not None:
+            current = to_nA(reader_data["current"], config_data["i_unit"])
+        elif "i_unit" in reader_data and reader_data["i_unit"] is not None:
+            current = to_nA(reader_data["current"], reader_data["i_unit"])
+        else:
+            raise Exception(
+                "Current unit not configured for " "file {}".format(self.files)
+            )
+
+        # Convert voltage to mV
+        if "v_unit" in config_data and config_data["v_unit"] is not None:
+            voltage = to_mV(reader_data["voltage"], config_data["v_unit"])
+        elif "v_unit" in reader_data and reader_data["v_unit"] is not None:
+            voltage = to_mV(reader_data["voltage"], reader_data["v_unit"])
+        else:
+            raise Exception(
+                "Voltage unit not configured for " "file {}".format(self.files)
+            )
+
+        # Offset membrane potential to known value
+        if "v_corr" in config_data and config_data["v_corr"] is not None:
+            voltage = (
+                voltage - numpy.median(voltage[:100]) + config_data["v_corr"]
+            )
+
+        # Correct for the liquid junction potential
+        if "ljp" in config_data and config_data["ljp"] is not None:
+            voltage = voltage - config_data["ljp"]
+
+        return t, current, voltage

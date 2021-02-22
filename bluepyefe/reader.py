@@ -1,0 +1,260 @@
+"""Trace reader functions"""
+
+"""
+Copyright (c) 2020, EPFL/Blue Brain Project
+
+ This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
+
+ This library is free software; you can redistribute it and/or modify it under
+ the terms of the GNU Lesser General Public License version 3.0 as published
+ by the Free Software Foundation.
+
+ This library is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ details.
+
+ You should have received a copy of the GNU Lesser General Public License
+ along with this library; if not, write to the Free Software Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+"""
+
+
+import logging
+
+import h5py
+import numpy
+import scipy.io
+from neo import io
+
+from . import igorpy
+
+logger = logging.getLogger(__name__)
+
+
+def _check_metadata(metadata, reader_name, required_entries=[]):
+
+    for entry in required_entries:
+
+        if entry not in metadata:
+
+            raise KeyError(
+                "The trace reader {} expects the metadata {}. The "
+                "entry {} was not provided.".format(
+                    reader_name, ", ".join(e for e in required_entries), entry
+                )
+            )
+
+
+def axon_reader(in_data):
+    """Reader to read .abf
+
+    Args:
+        in_data (dict): of the format
+        {
+            "filepath': "./XXX.ibw",
+            "i_unit": "pA",
+            "t_unit": "s",
+            "v_unit": "mV",
+        }
+    """
+
+    _check_metadata(
+        in_data,
+        axon_reader.__name__,
+        ["filepath", "i_unit", "v_unit", "t_unit"],
+    )
+
+    filepath = in_data["filepath"]
+
+    # Read file
+    r = io.AxonIO(filename=filepath)
+    bl = r.read_block(lazy=False)
+
+    # Extract data
+    data = []
+    for trace in bl.segments:
+        trace_data = {}
+        trace_data["voltage"] = numpy.array(trace.analogsignals[0]).flatten()
+        trace_data["current"] = numpy.array(trace.analogsignals[1]).flatten()
+        trace_data["dt"] = 1.0 / int(trace.analogsignals[0].sampling_rate)
+        data.append(trace_data)
+
+    return data
+
+
+def igor_reader(in_data):
+    """Reader to read old .ibw
+
+    Args:
+        in_data (dict): of the format
+        {
+            'i_file': './XXX.ibw',
+            'v_file': './XXX.ibw',
+            'v_unit': 'V',
+            't_unit': 's',
+            'i_unit': 'A'
+        }
+    """
+
+    _check_metadata(
+        in_data, igor_reader.__name__, ["v_file", "i_file", "t_unit"]
+    )
+
+    # Read file
+    notes_v, voltage = igorpy.read(in_data["v_file"])
+    notes_i, current = igorpy.read(in_data["i_file"])
+
+    # Extract data
+    trace_data = {}
+    trace_data["voltage"] = numpy.asarray(voltage)
+    trace_data["v_unit"] = notes_v.dUnits
+    trace_data["dt"] = notes_v.dx
+    trace_data["current"] = numpy.asarray(current)
+    trace_data["i_unit"] = notes_i.dUnits
+
+    return [trace_data]
+
+
+def nwb_reader(in_data):
+    """Reader to read old .nwb from LNMC
+
+    Args:
+        in_data (dict): of the format
+        {
+            'filepath': './XXX.nwb',
+            'v_unit': 'V',
+            't_unit': 's',
+            'i_unit': 'A'
+        }
+    """
+
+    _check_metadata(
+        in_data,
+        nwb_reader.__name__,
+        ["filepath", "i_unit", "v_unit", "t_unit"],
+    )
+
+    filepath = in_data["filepath"]
+    r = h5py.File(filepath, "r")
+
+    data = []
+    for sweep in list(r["acquisition"]["timeseries"].keys()):
+
+        key_current = "Experiment_{}".format(sweep.replace("Sweep_", ""))
+        protocol_name = str(
+            r["acquisition"]["timeseries"][sweep]["aibs_stimulus_name"][()]
+        )
+
+        if protocol_name == in_data["protocol_name"]:
+
+            trace_data = {
+                "voltage": numpy.array(
+                    r["acquisition"]["timeseries"][sweep]["data"][()],
+                    dtype="float32",
+                ),
+                "current": numpy.array(
+                    r["epochs"][key_current]["stimulus"]["timeseries"]["data"],
+                    dtype="float32",
+                ),
+                "dt": 1.0
+                / float(
+                    r["acquisition"]["timeseries"][sweep][
+                        "starting_time"
+                    ].attrs["rate"]
+                ),
+            }
+
+            data.append(trace_data)
+
+    return data
+
+
+def nwb_reader_BBP(in_data):
+    """Reader to read .nwb from LNMC
+
+    Args:
+        in_data (dict): of the format
+        {
+            'filepath': './XXX.nwb',
+            'v_unit': 'V',
+            't_unit': 's',
+            'i_unit': 'A'
+        }
+    """
+
+    _check_metadata(
+        in_data,
+        nwb_reader_BBP.__name__,
+        ["filepath", "i_unit", "v_unit", "t_unit"],
+    )
+
+    filepath = in_data["filepath"]
+    r = h5py.File(filepath, "r")
+
+    data = []
+    for sweep in list(r["acquisition"].keys()):
+
+        key_current = sweep.replace("css", "csss")
+        protocol_name = str(
+            r["acquisition"][sweep].attrs["stimulus_description"]
+        )
+
+        if protocol_name == in_data["protocol_name"]:
+
+            trace_data = {
+                "voltage": numpy.array(
+                    r["acquisition"][sweep]["data"][()], dtype="float32"
+                ),
+                "current": numpy.array(
+                    r["stimulus"]["presentation"][key_current]["data"][()],
+                    dtype="float32",
+                ),
+                "dt": 1.0
+                / float(
+                    r["acquisition"][sweep]["starting_time"].attrs["rate"]
+                ),
+            }
+
+            data.append(trace_data)
+
+    return data
+
+
+def read_matlab(in_data):
+    """To read .mat from http://gigadb.org/dataset/100535
+
+    Args:
+        in_data (dict): of the format
+        {
+            'filepath': './161214_AL_113_CC.mat',
+            'ton': 2000,
+            'toff': 2500,
+            'v_unit': 'V',
+            't_unit': 's',
+            'i_unit': 'A'
+        }
+    """
+
+    _check_metadata(
+        in_data,
+        read_matlab.__name__,
+        ["filepath", "i_unit", "v_unit", "t_unit"],
+    )
+
+    r = scipy.io.loadmat(in_data["filepath"])
+
+    data = []
+    for k, v in r.items():
+
+        if "Trace" in k and k[-1] == "1":
+
+            trace_data = {
+                "current": v[:, 1],
+                "voltage": r[k[:-1] + "2"][:, 1],
+                "dt": v[1, 0],
+            }
+
+            data.append(trace_data)
+
+    return data
