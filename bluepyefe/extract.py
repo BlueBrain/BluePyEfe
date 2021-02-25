@@ -23,7 +23,7 @@ Copyright (c) 2020, EPFL/Blue Brain Project
 import functools
 import logging
 import pathlib
-import time
+import gc
 
 import numpy
 
@@ -415,6 +415,53 @@ def create_feature_protocol_files(
     return feat, stim, currents
 
 
+def _read_extract(
+        files_metadata, recording_reader, map_function, targets, ap_threshold
+):
+    cells = read_recordings(
+        files_metadata,
+        recording_reader=recording_reader,
+        map_function=map_function,
+    )
+
+    extract_efeatures_at_targets(
+        cells, targets, threshold=ap_threshold, map_function=map_function
+    )
+
+    return cells
+
+
+def _read_extract_low_memory(
+        files_metadata, recording_reader, targets, ap_threshold
+):
+
+    cells = []
+    for cell_name in files_metadata:
+
+        cell = read_recordings(
+            {cell_name: files_metadata[cell_name]},
+            recording_reader=recording_reader,
+        )[0]
+
+        cell.recordings = [rec for rec in cell.recordings if rec.amp > 0.]
+
+        extract_efeatures_at_targets(
+            [cell], targets, threshold=ap_threshold
+        )
+
+        # clean traces voltage and time
+        for i in range(len(cell.recordings)):
+            cell.recordings[i].t = None
+            cell.recordings[i].voltage = None
+            cell.recordings[i].current = None
+            cell.recordings[i].reader_data = None
+
+        cells.append(cell)
+        gc.collect()
+
+    return cells
+
+
 def extract_efeatures(
     output_directory,
     files_metadata,
@@ -426,6 +473,7 @@ def extract_efeatures(
     map_function=map,
     write_files=False,
     plot=False,
+    low_memory_mode=False,
 ):
     """
     Extract efeatures.
@@ -476,17 +524,28 @@ def extract_efeatures(
             will be saved in .json files in addition of being returned.
         plot (bool): if True, the recordings and efeatures plots will be
             created.
+        low_memory_mode (bool): if True, minimizes the amount of memory used
+            during the data reading and feature extraction steps by performing
+            additional clean up. Not compatible with map_function.
     """
 
-    cells = read_recordings(
-        files_metadata,
-        recording_reader=recording_reader,
-        map_function=map_function,
-    )
+    if low_memory_mode and map_function != map:
+        logger.warning(
+            "low_memory_mode is not compatible with the use of map_function"
+        )
 
-    extract_efeatures_at_targets(
-        cells, targets, threshold=ap_threshold, map_function=map_function
-    )
+    if low_memory_mode and plot:
+        raise Exception('plot cannot be used in low_memory_mode mode.')
+
+    if low_memory_mode:
+        cells = _read_extract(
+            files_metadata, recording_reader, map_function, targets,
+            ap_threshold
+        )
+    else:
+        cells = _read_extract_low_memory(
+            files_metadata, recording_reader, targets, ap_threshold
+        )
 
     if protocols_rheobase:
         compute_rheobase(cells, protocols_rheobase=protocols_rheobase)
@@ -505,7 +564,7 @@ def extract_efeatures(
         plot_all_recordings_efeatures(
             cells, protocols, output_dir=output_directory
         )
-
+    
     return efeatures, protocol_definitions, current
 
 

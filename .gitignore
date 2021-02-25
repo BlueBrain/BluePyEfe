@@ -11,3 +11,4 @@ BluePyEfe.egg-info
 /testrun
 .idea/
 MouseCells/
+.ipynb_checkpoints/
