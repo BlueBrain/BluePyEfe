@@ -125,14 +125,15 @@ def nwb_reader(in_data):
             'filepath': './XXX.nwb',
             'v_unit': 'V',
             't_unit': 's',
-            'i_unit': 'A'
+            'i_unit': 'A',
+            "protocol_name": "Name_of_the_protocol"
         }
     """
 
     _check_metadata(
         in_data,
         nwb_reader.__name__,
-        ["filepath", "i_unit", "v_unit", "t_unit"],
+        ["filepath", "i_unit", "v_unit", "t_unit", "protocol_name"],
     )
 
     filepath = in_data["filepath"]
