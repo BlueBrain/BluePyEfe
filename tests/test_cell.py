@@ -1,8 +1,9 @@
 """bluepyefe.cell tests"""
 
+import unittest
+
 import bluepyefe.cell
 import bluepyefe.recording
-import unittest
 
 
 class CellTest(unittest.TestCase):

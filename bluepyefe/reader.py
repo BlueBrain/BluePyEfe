@@ -52,7 +52,7 @@ def axon_reader(in_data):
     Args:
         in_data (dict): of the format
         {
-            "filepath': "./XXX.ibw",
+            "filepath": "./XXX.ibw",
             "i_unit": "pA",
             "t_unit": "s",
             "v_unit": "mV",
@@ -172,7 +172,7 @@ def nwb_reader(in_data):
 
 
 def nwb_reader_BBP(in_data):
-    """Reader to read .nwb from LNMC
+    """ Reader to read .nwb from LNMC
 
     Args:
         in_data (dict): of the format
@@ -180,28 +180,36 @@ def nwb_reader_BBP(in_data):
             'filepath': './XXX.nwb',
             'v_unit': 'V',
             't_unit': 's',
-            'i_unit': 'A'
+            'i_unit': 'A',
+            "protocol_name": "IV"
         }
     """
 
     _check_metadata(
         in_data,
         nwb_reader_BBP.__name__,
-        ["filepath", "i_unit", "v_unit", "t_unit"],
+        ["filepath", "i_unit", "v_unit", "t_unit", "protocol_name"],
     )
 
     filepath = in_data["filepath"]
     r = h5py.File(filepath, "r")
 
     data = []
+
     for sweep in list(r["acquisition"].keys()):
 
-        key_current = sweep.replace("css", "csss")
+        if "css" in sweep:
+            key_current = sweep.replace("css", "csss")
+        elif "ccs" in sweep:
+            key_current = sweep.replace("ccs", "ccss")
+        else:
+            raise Exception("Unexpected sweep name in NWB file.")
+
         protocol_name = str(
             r["acquisition"][sweep].attrs["stimulus_description"]
         )
 
-        if protocol_name == in_data["protocol_name"]:
+        if protocol_name.lower() == in_data["protocol_name"].lower():
 
             trace_data = {
                 "voltage": numpy.array(

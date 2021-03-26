@@ -487,11 +487,12 @@ def extract_efeatures(
                     protocol_name: [{file_metadata1}, {file_metadata1}]
                 }
             }
-            A same file path might be present in the file metadata for
-            different protocols.
             The entries required in the file_metadata are specific to each
             recording_reader (see bluepyemodel/reader.py to know which one are
             needed for your recording_reader).
+            As the file_metadata contain file paths, a same file path might
+            need to be present in the file metadata of different protocols if
+            the path contains data coming from different stimuli (eg: for NWB).
         targets (dict): define the efeatures to extract for each protocols
             and the amplitude around which these features should be
             averaged. Of the form:
@@ -564,7 +565,7 @@ def extract_efeatures(
         plot_all_recordings_efeatures(
             cells, protocols, output_dir=output_directory
         )
-    
+
     return efeatures, protocol_definitions, current
 
 
