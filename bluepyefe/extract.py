@@ -241,6 +241,14 @@ def mean_efeatures(cells, targets, use_global_rheobase=True):
     protocols = []
     for protocol_name, target in targets.items():
         for i, amplitude in enumerate(target["amplitudes"]):
+
+            if not type(amplitude) == int and not type(amplitude) == float:
+                raise Exception(
+                    "Target amplitudes have to be numbers, not {}".format(
+                        type(amplitude)
+                    )
+                )
+
             protocol = Protocol(
                 name=protocol_name,
                 amplitude=amplitude,
@@ -262,6 +270,7 @@ def mean_efeatures(cells, targets, use_global_rheobase=True):
             for recording in cell.get_recordings_by_protocol_name(
                 protocol.name
             ):
+
                 if recording.in_target(
                         protocol.amplitude,
                         protocol.tolerance

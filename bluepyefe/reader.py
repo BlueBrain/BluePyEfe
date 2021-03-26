@@ -202,6 +202,8 @@ def nwb_reader_BBP(in_data):
             key_current = sweep.replace("css", "csss")
         elif "ccs" in sweep:
             key_current = sweep.replace("ccs", "ccss")
+        elif "vcs" in sweep:
+            key_current = sweep.replace("vcs", "vcss")
         else:
             raise Exception("Unexpected sweep name in NWB file.")
 
