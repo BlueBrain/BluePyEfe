@@ -159,6 +159,21 @@ class Step(Recording):
 
         self.tend = len(t) * self.dt
 
+        # Check for some common step detection failures when the current
+        # is constant.
+        if self.ton > self.toff or self.ton > self.tend or \
+                self.toff > self.tend:
+
+            self.ton = 0.
+            self.toff = self.tend
+
+            logger.warning(
+                "The automatic step detection failed for the recording "
+                f"{self.protocol_name} in files {self.files}. You should "
+                "specify ton and toff by hand in your files_metadata "
+                "for this file."
+            )
+
     def generate(self):
         """Generate the step current array from the parameters of the ecode"""
         ton_idx = int(self.ton / self.dt)
