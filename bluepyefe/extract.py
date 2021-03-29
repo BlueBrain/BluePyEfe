@@ -547,7 +547,7 @@ def extract_efeatures(
     if low_memory_mode and plot:
         raise Exception('plot cannot be used in low_memory_mode mode.')
 
-    if low_memory_mode:
+    if not(low_memory_mode):
         cells = _read_extract(
             files_metadata, recording_reader, map_function, targets,
             ap_threshold

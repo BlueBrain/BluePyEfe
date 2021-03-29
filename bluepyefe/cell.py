@@ -198,9 +198,11 @@ class Cell(object):
 
                     if rec.amp < 0.01:
                         logger.warning(
-                            "A recording of cell {} protocol {} shows spikes"
-                            " at a suspiciously low current. Check ton and"
-                            " toff.".format(self.name, rec.protocol_name)
+                            f"A recording of cell {self.name} protocol "
+                            f"{rec.protocol_name} shows spikes at a "
+                            "suspiciously low current in a trace from file"
+                            f" {rec.files}. Check that the ton and toff are"
+                            "correct or for the presence of unwanted spikes."
                         )
 
                     amps.append(rec.amp)
