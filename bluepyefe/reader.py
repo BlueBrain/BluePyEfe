@@ -164,6 +164,7 @@ def nwb_reader(in_data):
                         "starting_time"
                     ].attrs["rate"]
                 ),
+                "id": str(key_current)
             }
 
             data.append(trace_data)
@@ -225,6 +226,7 @@ def nwb_reader_BBP(in_data):
                 / float(
                     r["acquisition"][sweep]["starting_time"].attrs["rate"]
                 ),
+                "id": str(key_current)
             }
 
             data.append(trace_data)

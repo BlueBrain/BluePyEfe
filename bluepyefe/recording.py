@@ -33,16 +33,22 @@ logger = logging.getLogger(__name__)
 
 class Recording(object):
     def __init__(self, config_data, reader_data, protocol_name):
-
+ 
         self.config_data = config_data
         self.reader_data = reader_data
+        self.protocol_name = protocol_name
 
-        self.files = None
+        if "filepath" in config_data:
+            self.files = [config_data["filepath"]]
+        elif "i_file" in config_data:
+            self.files = [config_data["i_file"], config_data["v_file"]]
+
+        self.id = reader_data.get("id", None)
+
         self.location = None
         self.efeatures = {}
         self.spikecount = None
-        self.protocol_name = protocol_name
-
+ 
         self.t = None
         self.current = None
         self.voltage = None
@@ -79,11 +85,6 @@ class Recording(object):
         """Standardize the units of the current and voltage times series. If
         some metadata are present both in the file itself and the file_metadata
          dictionary, the latter is used."""
-
-        if "filepath" in config_data:
-            self.files = [config_data["filepath"]]
-        elif "i_file" in config_data:
-            self.files = [config_data["i_file"], config_data["v_file"]]
 
         # Create the time series
         t = numpy.arange(len(reader_data["voltage"]))

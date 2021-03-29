@@ -169,16 +169,16 @@ class PosCheops(Recording):
 
     def generate(self):
         """Generate the current array from the parameters of the ecode"""
+
         ton = int(self.ton / self.dt)
         t1 = int(self.t1 / self.dt)
         t2 = int(self.t2 / self.dt)
         t3 = int(self.t3 / self.dt)
         t4 = int(self.t4 / self.dt)
         toff = int(self.toff / self.dt)
-        tend = int(self.tend / self.dt)
 
         time = numpy.arange(0.0, self.tend, self.dt)
-        current = numpy.full(tend, self.hypamp)
+        current = numpy.full(time.shape, self.hypamp)
 
         # First peak
         mid = int(0.5 * (ton + t1))

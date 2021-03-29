@@ -110,16 +110,16 @@ def plot_cell_recordings(cell, protocol_name, output_dir):
 
         xpos = 2 * int(i / nbr_x)
         ypos = i % int(nbr_x)
+ 
+        title = "Amp = {:.03f}".format(rec.amp)
 
         if rec.amp_rel is not None:
-            axs[xpos][ypos].set_title(
-                "Amp = {:.04f} ({:.01f}%)".format(rec.amp, rec.amp_rel),
-                size="small",
-            )
-        else:
-            axs[xpos][ypos].set_title(
-                "Amp = {:.04f}".format(rec.amp), size="small"
-            )
+            title += " ({:.01f}%)".format(rec.amp_rel)
+
+        if rec.id is not None:
+            title += "\nid: {}".format(rec.id)
+
+        axs[xpos][ypos].set_title(title, size="small")
 
         axs[xpos][ypos].plot(rec.t, rec.current, c="C0")
 

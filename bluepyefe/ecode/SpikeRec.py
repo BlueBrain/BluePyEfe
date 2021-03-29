@@ -166,10 +166,9 @@ class SpikeRec(Recording):
 
     def generate(self):
         """Generate the step current array from the parameters of the ecode"""
-        tend_idx = int(self.tend / self.dt)
 
         t = numpy.arange(0.0, self.tend, self.dt)
-        current = numpy.full(tend_idx, self.hypamp)
+        current = numpy.full(t.shape, self.hypamp)
 
         spike_start = int(self.tspike[0] / self.dt)
         spike_end = int((self.tspike[0] + self.spike_duration) / self.dt)

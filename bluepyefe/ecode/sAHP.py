@@ -174,14 +174,14 @@ class SAHP(Recording):
 
     def generate(self):
         """Generate the current array from the parameters of the ecode"""
+
         ton = int(self.ton / self.dt)
         tmid = int(self.tmid / self.dt)
         tmid2 = int(self.tmid2 / self.dt)
         toff = int(self.toff / self.dt)
-        tend = int(self.tend / self.dt)
 
         time = numpy.arange(0.0, self.tend, self.dt)
-        current = numpy.full(tend, self.hypamp)
+        current = numpy.full(time.shape, self.hypamp)
         current[ton:tmid] += self.amp
         current[tmid2:toff] += self.amp
         current[tmid:tmid2] += self.amp2

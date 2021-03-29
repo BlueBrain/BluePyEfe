@@ -178,10 +178,9 @@ class Step(Recording):
         """Generate the step current array from the parameters of the ecode"""
         ton_idx = int(self.ton / self.dt)
         toff_idx = int(self.toff / self.dt)
-        tend_idx = int(self.tend / self.dt)
 
         t = numpy.arange(0.0, self.tend, self.dt)
-        current = numpy.full(tend_idx, self.hypamp)
+        current = numpy.full(t.shape, self.hypamp)
         current[ton_idx:toff_idx] += self.amp
 
         return t, current
