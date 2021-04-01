@@ -260,8 +260,9 @@ def plot_efeatures(
             )
 
     # Remove surplus of subplots
-    for ax_idx in range(xpos + 1, PLOT_PER_COLUMN):
-        fig.delaxes(axs[ax_idx, -1])
+    if xpos:
+        for ax_idx in range(xpos + 1, PLOT_PER_COLUMN):
+            fig.delaxes(axs[ax_idx, -1])
 
     if key_amp == "amp_rel":
         fig.text(

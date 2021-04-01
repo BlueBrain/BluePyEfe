@@ -63,7 +63,7 @@ def _extract_efeatures_cell(cell, targets, threshold):
     """
     Compute the efeatures on all the recordings of a Cell.
 
-    The present function exist to be use by the map_function.
+    The present function exists to be use by the map_function.
     """
 
     for prot_name, target in targets.items():

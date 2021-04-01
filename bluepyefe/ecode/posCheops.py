@@ -181,17 +181,17 @@ class PosCheops(Recording):
         current = numpy.full(time.shape, self.hypamp)
 
         # First peak
-        mid = int(0.5 * (ton + t1))
+        mid = int(0.5 * (self.ton + self.t1) / self.dt)
         current[ton:mid] += numpy.linspace(0.0, self.amp, mid - ton)
         current[mid:t1] += numpy.linspace(self.amp, 0.0, t1 - mid)
 
         # Second peak
-        mid = int(0.5 * (t2 + t3))
+        mid = int(0.5 * (self.t2 + self.t3) / self.dt)
         current[t2:mid] += numpy.linspace(0.0, self.amp, mid - t2)
         current[mid:t3] += numpy.linspace(self.amp, 0.0, t3 - mid)
 
         # Third peak
-        mid = int(0.5 * (t4 + toff))
+        mid = int(0.5 * (self.t4 + self.toff) / self.dt)
         current[t4:mid] += numpy.linspace(0.0, self.amp, mid - t4)
         current[mid:toff] += numpy.linspace(self.amp, 0.0, toff - mid)
 
