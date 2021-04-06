@@ -182,7 +182,8 @@ def nwb_reader_BBP(in_data):
             'v_unit': 'V',
             't_unit': 's',
             'i_unit': 'A',
-            "protocol_name": "IV"
+            "protocol_name": "IV",
+            "repetition": 1
         }
     """
 
@@ -197,39 +198,56 @@ def nwb_reader_BBP(in_data):
 
     data = []
 
-    for sweep in list(r["acquisition"].keys()):
+    ecode = in_data['protocol_name']
 
-        if "css" in sweep:
-            key_current = sweep.replace("css", "csss")
-        elif "ccs" in sweep:
-            key_current = sweep.replace("ccs", "ccss")
-        elif "vcs" in sweep:
-            key_current = sweep.replace("vcs", "vcss")
+    for cell_id in r["data_organization"].keys():
+
+        if ecode not in r["data_organization"][cell_id]:
+            raise Exception(
+                f"No eCode {ecode} in nwb  {in_data['filepath']}."
+            )
+
+        if "repetition" in in_data:
+            rep_iter = [f"repetition {in_data['repetition']}"]
         else:
-            raise Exception("Unexpected sweep name in NWB file.")
+            rep_iter = r["data_organization"][cell_id][ecode].keys()
 
-        protocol_name = str(
-            r["acquisition"][sweep].attrs["stimulus_description"]
-        )
+        for rep in rep_iter:
 
-        if protocol_name.lower() == in_data["protocol_name"].lower():
+            for sweep in r["data_organization"][cell_id][ecode][rep].keys():
 
-            trace_data = {
-                "voltage": numpy.array(
-                    r["acquisition"][sweep]["data"][()], dtype="float32"
-                ),
-                "current": numpy.array(
-                    r["stimulus"]["presentation"][key_current]["data"][()],
-                    dtype="float32",
-                ),
-                "dt": 1.0
-                / float(
-                    r["acquisition"][sweep]["starting_time"].attrs["rate"]
-                ),
-                "id": str(key_current)
-            }
+                sweeps = r["data_organization"][cell_id][ecode][rep][sweep]
 
-            data.append(trace_data)
+                for trace in list(sweeps.keys()):
+
+                    if "ccss_" in trace:
+                        key_voltage = trace.replace("ccss_", "ccs_")
+                    elif "csss_" in trace:
+                        key_voltage = trace.replace("csss_", "css_")
+                    elif "vcss" in trace:
+                        key_voltage = trace.replace("vcss_", "vcs_")
+                    else:
+                        continue
+
+                    trace_data = {
+                        "voltage": numpy.array(
+                            r["acquisition"][key_voltage]["data"][()],
+                            dtype="float32"
+                        ),
+                        "current": numpy.array(
+                            r["stimulus"]["presentation"][trace]["data"][()],
+                            dtype="float32",
+                        ),
+                        "dt": 1.0
+                        / float(
+                            r["acquisition"][key_voltage][
+                                "starting_time"
+                            ].attrs["rate"]
+                        ),
+                        "id": str(trace)
+                    }
+
+                    data.append(trace_data)
 
     return data
 

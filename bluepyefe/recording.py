@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 class Recording(object):
     def __init__(self, config_data, reader_data, protocol_name):
- 
+
         self.config_data = config_data
         self.reader_data = reader_data
         self.protocol_name = protocol_name
@@ -48,7 +48,7 @@ class Recording(object):
         self.location = None
         self.efeatures = {}
         self.spikecount = None
- 
+
         self.t = None
         self.current = None
         self.voltage = None
