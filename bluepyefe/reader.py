@@ -183,7 +183,7 @@ def nwb_reader_BBP(in_data):
             't_unit': 's',
             'i_unit': 'A',
             "protocol_name": "IV",
-            "repetition": 1
+            "repetition": 1 (or [1, 3, ...])
         }
     """
 
@@ -207,8 +207,11 @@ def nwb_reader_BBP(in_data):
                 f"No eCode {ecode} in nwb  {in_data['filepath']}."
             )
 
-        if "repetition" in in_data:
-            rep_iter = [f"repetition {in_data['repetition']}"]
+        if "repetition" in in_data and in_data["repetition"]:
+            if isinstance(in_data["repetition"], list):
+                rep_iter = [f"repetition {i}" for i in in_data['repetition']]
+            else:
+                rep_iter = [f"repetition {in_data['repetition']}"]
         else:
             rep_iter = r["data_organization"][cell_id][ecode].keys()
 
