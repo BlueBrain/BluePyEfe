@@ -19,7 +19,6 @@ Copyright (c) 2020, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 
-
 import math
 import pathlib
 from itertools import cycle
@@ -56,6 +55,11 @@ def _get_colors_markers_wheels(cells):
 
 def _plot_legend(colors, markers, output_dir):
     """Draw a separate legend figure"""
+
+    if not len(colors):
+        raise Exception("Plot legend needs an non-empty colors dictionary.")
+    if not len(markers):
+        raise Exception("Plot legend needs an non-empty markers dictionary.")
 
     ncols = math.ceil(numpy.sqrt(len(colors)))
 
@@ -178,6 +182,10 @@ def plot_efeatures(
     or relative current amplitude.
     """
 
+    if not cells:
+        logger.warning("In plot_efeatures, no cells object to plot.")
+        return None, None
+
     if not colors or not markers:
         colors, markers = _get_colors_markers_wheels(cells)
 
@@ -296,6 +304,7 @@ def plot_efeatures(
 def plot_individual_efeatures(
     cells, protocols, output_dir, colors=None, markers=None, key_amp="amp"
 ):
+
     if not colors or not markers:
         colors, markers = _get_colors_markers_wheels(cells)
 
@@ -324,6 +333,11 @@ def plot_individual_efeatures(
 def plot_grouped_efeatures(
     cells, protocols, output_dir, colors=None, markers=None, key_amp="amp"
 ):
+
+    if not cells:
+        logger.warning("In plot_grouped_efeatures, no cells object to plot.")
+        return
+
     if not colors or not markers:
         colors, markers = _get_colors_markers_wheels(cells)
 
