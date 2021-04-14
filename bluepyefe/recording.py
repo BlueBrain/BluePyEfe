@@ -53,6 +53,8 @@ class Recording(object):
         self.current = None
         self.voltage = None
 
+        self.repetition = None
+
         if len(reader_data):
             self.t, self.current, self.voltage = self.standardize_trace(
                 config_data, reader_data
@@ -139,5 +141,10 @@ class Recording(object):
         # Correct for the liquid junction potential
         if "ljp" in config_data and config_data["ljp"] is not None:
             voltage = voltage - config_data["ljp"]
+
+        if "repetition" in config_data:
+            self.repetition = config_data["repetition"]
+        elif "repetition" in reader_data:
+            self.repetition = reader_data["repetition"]
 
         return t, current, voltage

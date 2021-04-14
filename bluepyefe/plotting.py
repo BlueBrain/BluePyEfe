@@ -123,6 +123,9 @@ def plot_cell_recordings(cell, protocol_name, output_dir):
         if rec.id is not None:
             title += "\nid: {}".format(rec.id)
 
+        if rec.repetition is not None:
+            title += ", repetition: {}".format(rec.repetition)
+
         axs[xpos][ypos].set_title(title, size="small")
 
         axs[xpos][ypos].plot(rec.t, rec.current, c="C0")
