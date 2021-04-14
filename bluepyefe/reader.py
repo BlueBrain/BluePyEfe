@@ -247,7 +247,8 @@ def nwb_reader_BBP(in_data):
                                 "starting_time"
                             ].attrs["rate"]
                         ),
-                        "id": str(trace)
+                        "id": str(trace),
+                        "repetition": int(rep.replace("repetition ", ""))
                     }
 
                     data.append(trace_data)

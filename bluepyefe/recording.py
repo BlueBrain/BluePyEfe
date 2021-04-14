@@ -142,9 +142,7 @@ class Recording(object):
         if "ljp" in config_data and config_data["ljp"] is not None:
             voltage = voltage - config_data["ljp"]
 
-        if "repetition" in config_data:
-            self.repetition = config_data["repetition"]
-        elif "repetition" in reader_data:
+        if "repetition" in reader_data:
             self.repetition = reader_data["repetition"]
 
         return t, current, voltage
