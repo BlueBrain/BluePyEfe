@@ -197,9 +197,13 @@ def plot_efeatures(
         2.0 * PLOT_PER_COLUMN,
     ]
 
+    NCOL = math.ceil(len(efeatures) / PLOT_PER_COLUMN)
+    if NCOL = 0:
+        NCOL += 1
+
     fig, axs = plt.subplots(
         PLOT_PER_COLUMN,
-        math.ceil(len(efeatures) / PLOT_PER_COLUMN),
+        NCOL,
         figsize=figsize,
         squeeze=False,
     )
