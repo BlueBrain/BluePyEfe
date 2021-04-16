@@ -198,7 +198,7 @@ def plot_efeatures(
     ]
 
     NCOL = math.ceil(len(efeatures) / PLOT_PER_COLUMN)
-    if NCOL = 0:
+    if NCOL == 0:
         NCOL += 1
 
     fig, axs = plt.subplots(
