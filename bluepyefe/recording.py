@@ -21,14 +21,46 @@ Copyright (c) 2020, EPFL/Blue Brain Project
 
 
 import logging
-
 import numpy
+import efel
 
 from .tools import to_ms
 from .tools import to_mV
 from .tools import to_nA
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_EFEL_SETTINGS = {
+    'strict_stiminterval': True,
+    'Threshold': -20.,
+    'interp_step': 0.025
+}
+
+
+def _set_efel_settings(efeature_settings):
+    """ Reset the eFEl settings and set them as requested by the user (uses
+        default value otherwise).
+    """
+
+    efel.reset()
+
+    settings = dict(
+        list(DEFAULT_EFEL_SETTINGS.items()) + list(efeature_settings.items())
+    )
+
+    for setting, value in settings.items():
+
+        if setting == 'Threshold':
+            efel.setThreshold(value)
+
+        elif isinstance(value, bool) or isinstance(value, int):
+            efel.setIntSetting(setting, int(value))
+
+        elif isinstance(value, float):
+            efel.setDoubleSetting(setting, value)
+
+        elif isinstance(value, str):
+            efel.setStrSetting(setting, value)
 
 
 class Recording(object):
@@ -146,3 +178,41 @@ class Recording(object):
             self.repetition = reader_data["repetition"]
 
         return t, current, voltage
+
+    def compute_efeatures(self, efeatures):
+        """ Calls efel to computed the wanted efeatures. """
+
+        efel.setDoubleSetting("stimulus_current", self.amp)
+
+        efel_trace = {"T": self.t, "V": self.voltage}
+
+        temp_features = dict(
+            list(efeatures.items()) + list({"peak_time": {}}.items())
+        )
+
+        for feature in temp_features:
+
+            _set_efel_settings(temp_features[feature])
+
+            efel_trace["stim_start"] = [
+                temp_features[feature].get('stim_start', self.ton)
+            ]
+            efel_trace["stim_end"] = [
+                temp_features[feature].get('stim_end', self.toff)
+            ]
+
+            efel_vals = efel.getFeatureValues(
+                [efel_trace], [feature], raise_warnings=False
+            )
+
+            value = efel_vals[0][feature]
+
+            if feature == "peak_time":
+                self.spikecount = len(value)
+
+            else:
+
+                if value is None:
+                    value = numpy.nan
+
+                self.efeatures[feature] = numpy.nanmean(value)

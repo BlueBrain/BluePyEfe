@@ -59,7 +59,7 @@ def _create_cell(cell_definition, recording_reader):
     return out_cell
 
 
-def _extract_efeatures_cell(cell, targets, threshold):
+def _extract_efeatures_cell(cell, targets):
     """
     Compute the efeatures on all the recordings of a Cell.
 
@@ -67,7 +67,7 @@ def _extract_efeatures_cell(cell, targets, threshold):
     """
 
     for prot_name, target in targets.items():
-        cell.extract_efeatures(prot_name, target["efeatures"], threshold)
+        cell.extract_efeatures(prot_name, target["efeatures"])
 
     return cell
 
@@ -136,9 +136,7 @@ def read_recordings(files_metadata, recording_reader=None, map_function=map):
     return list(cells)
 
 
-def extract_efeatures_at_targets(
-    cells, targets, threshold=-20.0, map_function=map
-):
+def extract_efeatures_at_targets(cells, targets, map_function=map):
     """
     Extract efeatures from recordings following the protocols, amplitudes and
     efeature names specified in the targets.
@@ -157,15 +155,13 @@ def extract_efeatures_at_targets(
                     "location": "soma"
                 }
             }
-            If efeatures must be computed only for a given time interval,
-            the beginning and end of this interval can be specified as
-            follows (in ms):
+            If specific settings should be used by eFEL for an efeature, they
+            can be specified by using a dict instead of a list for the
+            efeatures, as in the following example:
             "efeatures": {
-                "Spikecount": [500, 1100],
-                "AP_amplitude": [100, 600],
+                "Spikecount": {'stim_start': 200., 'stim_end': 500.},
+                "AP_amplitude": {'Threshold': -40.},
             }
-        threshold (float): voltage threshold (in mV) used for spike
-        detection.
         map_function (function): Function used to map (parallelize) the
             feature extraction operations. Note: the parallelization is
             done across cells an not across efeatures.
@@ -174,22 +170,19 @@ def extract_efeatures_at_targets(
     for prot_name, target in targets.items():
 
         if len(target["tolerances"]) == 1:
-
             targets[prot_name]["tolerances"] = target["tolerances"] * len(
                 target["amplitudes"]
             )
 
+        # If no efel settings were specified, initialize them with an
+        # empty dictionary
         if isinstance(target["efeatures"], list):
             targets[prot_name]["efeatures"] = {
-                k: None for k in target["efeatures"]
+                k: {} for k in target["efeatures"]
             }
 
     cells = map_function(
-        functools.partial(
-            _extract_efeatures_cell,
-            targets=targets,
-            threshold=threshold,
-        ),
+        functools.partial(_extract_efeatures_cell, targets=targets),
         cells,
     )
 
@@ -222,7 +215,24 @@ def mean_efeatures(cells, targets, use_global_rheobase=True):
     Args:
         cells (list): list of Cells containing for which the rheobase will be
             computed
-        targets (dict): see docstring of extract_efeatures.
+        targets (dict): define the efeatures to extract for each protocols
+            and the amplitude around which these features should be
+            averaged. Of the form:
+            {
+                protocol_name: {
+                    "amplitudes": [50, 100],
+                    "tolerances": [10, 10],
+                    "efeatures": ["Spikecount", "AP_amplitude"],
+                    "location": "soma"
+                }
+            }
+            If specific settings should be used by eFEL for an efeature, they
+            can be specified by using a dict instead of a list for the
+            efeatures, as in the following example:
+            "efeatures": {
+                "Spikecount": {'stim_start': 200., 'stim_end': 500.},
+                "AP_amplitude": {'Threshold': -10.},
+            }
         use_global_rheobase (bool): As the final amplitude of a target is the
             mean of the amplitude of the cells, a global rheobase can be used
             to avoid issues when a cell matches a target but not another one.
@@ -425,7 +435,7 @@ def create_feature_protocol_files(
 
 
 def _read_extract(
-        files_metadata, recording_reader, map_function, targets, ap_threshold
+        files_metadata, recording_reader, map_function, targets
 ):
     cells = read_recordings(
         files_metadata,
@@ -433,16 +443,12 @@ def _read_extract(
         map_function=map_function,
     )
 
-    extract_efeatures_at_targets(
-        cells, targets, threshold=ap_threshold, map_function=map_function
-    )
+    extract_efeatures_at_targets(cells, targets, map_function=map_function)
 
     return cells
 
 
-def _read_extract_low_memory(
-        files_metadata, recording_reader, targets, ap_threshold
-):
+def _read_extract_low_memory(files_metadata, recording_reader, targets):
 
     cells = []
     for cell_name in files_metadata:
@@ -454,9 +460,7 @@ def _read_extract_low_memory(
 
         cell.recordings = [rec for rec in cell.recordings if rec.amp > 0.]
 
-        extract_efeatures_at_targets(
-            [cell], targets, threshold=ap_threshold
-        )
+        extract_efeatures_at_targets([cell], targets)
 
         # clean traces voltage and time
         for i in range(len(cell.recordings)):
@@ -476,8 +480,7 @@ def extract_efeatures(
     files_metadata,
     targets,
     threshold_nvalue_save,
-    protocols_rheobase=[],
-    ap_threshold=-20.0,
+    protocols_rheobase=None,
     recording_reader=None,
     map_function=map,
     write_files=False,
@@ -513,19 +516,17 @@ def extract_efeatures(
                     "location": "soma"
                 }
             }
-            If efeatures must be computed only for a given time interval,
-            the beginning and end of this interval can be specified as
-            follows (in ms):
+            If specific settings should be used by eFEL for an efeature, they
+            can be specified by using a dict instead of a list for the
+            efeatures, as in the following example:
             "efeatures": {
-                "Spikecount": [500, 1100],
-                "AP_amplitude": [100, 600],
+                "Spikecount": {'stim_start': 200., 'stim_end': 500.},
+                "AP_amplitude": {'Threshold': -10.},
             }
         threshold_nvalue_save (int): minimum number of values needed for
             an efeatures to be averaged and returned in the output.
         protocols_rheobase (list): names of the protocols that will be
             used to compute the rheobase of the cells. E.g: ['IDthresh'].
-        ap_threshold (float): voltage threshold (in mV) used for spike
-            detection.
         recording_reader (function): custom recording reader function. It's
             inner working has to match the metadata entered in files_metadata.
         map_function (function): Function used to map (parallelize) the
@@ -539,6 +540,9 @@ def extract_efeatures(
             additional clean up. Not compatible with map_function.
     """
 
+    if protocols_rheobase is None:
+        protocols_rheobase = []
+
     if low_memory_mode and map_function != map:
         logger.warning(
             "low_memory_mode is not compatible with the use of map_function"
@@ -547,14 +551,13 @@ def extract_efeatures(
     if low_memory_mode and plot:
         raise Exception('plot cannot be used in low_memory_mode mode.')
 
-    if not(low_memory_mode):
+    if not low_memory_mode:
         cells = _read_extract(
             files_metadata, recording_reader, map_function, targets,
-            ap_threshold
         )
     else:
         cells = _read_extract_low_memory(
-            files_metadata, recording_reader, targets, ap_threshold
+            files_metadata, recording_reader, targets
         )
 
     if protocols_rheobase:

@@ -18,10 +18,6 @@ Copyright (c) 2020, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
-
-
-import efel
-
 from bluepyefe.ecode import eCodes
 from bluepyefe.reader import *
 
@@ -33,7 +29,7 @@ class Cell(object):
     """Contains the metadata related to the cell as well as the recordings data
     once these are read"""
 
-    def __init__(self, name, recording_reader=None):
+    def __init__(self, name):
         """
         Constructor
 
@@ -110,79 +106,14 @@ class Cell(object):
                         "names".format(protocol_name.lower())
                     )
 
-    def efeatures_from_recording(self, recording, efeatures):
-        """
-        Calls efel to computed the wanted efeatures.In a first time,
-        computes features that have are to be computed between ton
-        and toff, then compute the features that use custom stim_start
-        and stim_end.
-        """
-
-        efel.setDoubleSetting("stimulus_current", recording.amp)
-
-        efel_trace = [
-            {
-                "T": recording.t,
-                "V": recording.voltage,
-                "stim_start": [recording.ton],
-                "stim_end": [recording.toff],
-            }
-        ]
-
-        efel_efeatures = [
-            f
-            for f in efeatures
-            if efeatures[f] is None or not (len(efeatures[f]))
-        ] + ["peak_time"]
-
-        fel_vals = efel.getFeatureValues(
-            efel_trace, efel_efeatures, raise_warnings=False
-        )
-
-        recording.spikecount = len(fel_vals[0]["peak_time"])
-        efel_efeatures.remove("peak_time")
-
-        for efeature in efel_efeatures:
-
-            f = fel_vals[0][efeature]
-
-            if f is None:
-                f = numpy.nan
-
-            recording.efeatures[efeature] = numpy.nanmean(f)
-
-        for f in efeatures:
-
-            if efeatures[f] is not None and len(efeatures[f]):
-
-                efel_trace[-1]["stim_start"] = [efeatures[f][0]]
-                efel_trace[-1]["stim_end"] = [efeatures[f][1]]
-
-                fel_vals = efel.getFeatureValues(
-                    efel_trace, [f], raise_warnings=False
-                )
-
-                if fel_vals[0][f] is not None:
-                    recording.efeatures[f] = numpy.nanmean(fel_vals[0][f])
-                else:
-                    recording.efeatures[f] = numpy.nan
-
-        return recording
-
-    def extract_efeatures(
-        self, protocol_name, efeatures, ap_threshold=-20.0, strict_stim=True
-    ):
+    def extract_efeatures(self, protocol_name, efeatures):
         """
         Extract the efeatures for the recordings matching the protocol name.
         """
 
-        efel.setThreshold(ap_threshold)
-        efel.setIntSetting("strict_stiminterval", strict_stim)
-
         for i in self.get_recordings_id_by_protocol_name(protocol_name):
-            self.recordings[i] = self.efeatures_from_recording(
-                self.recordings[i], efeatures=efeatures
-            )
+
+            self.recordings[i].compute_efeatures(efeatures=efeatures)
 
     def compute_rheobase(self, protocols_rheobase):
         """

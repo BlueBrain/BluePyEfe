@@ -11,11 +11,11 @@ import bluepyefe.tools
 def get_config():
 
     interesting_efeatures = {
-        "Spikecount": None,
-        "mean_frequency": None,
-        "ISI_CV": None,
-        "AP1_amp": None,
-        "AP_width": None,
+        "Spikecount": {},
+        "mean_frequency": {},
+        "ISI_CV": {},
+        "AP1_amp": {},
+        "AP_width": {},
     }
 
     files_metadata1 = []
@@ -97,8 +97,11 @@ class ExtractorTest(unittest.TestCase):
                 self.assertEqual(s, 4.0)
                 break
 
-        features = json.load(open("MouseCells/features.json"))
-        protocols = json.load(open("MouseCells/protocols.json"))
+        with open("MouseCells/features.json") as fp:
+            features = json.load(fp)
+        with open("MouseCells/protocols.json") as fp:
+            protocols = json.load(fp)
+
         self.assertEqual(len(features), len(protocols))
 
 

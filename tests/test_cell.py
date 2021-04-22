@@ -23,7 +23,7 @@ class CellTest(unittest.TestCase):
 
         self.cell.read_recordings(protocol_data=[file_metadata], protocol_name="IDRest")
 
-        self.efeatures = {"Spikecount": None, "AP1_amp": None}
+        self.efeatures = {"Spikecount": {}, "AP1_amp": {}}
         self.cell.extract_efeatures(protocol_name="IDRest", efeatures=self.efeatures)
 
     def test_step_ecode(self):
