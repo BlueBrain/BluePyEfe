@@ -223,27 +223,25 @@ def nwb_reader_BBP(in_data):
 
                 for trace in list(sweeps.keys()):
 
-                    if "ccss_" in trace:
-                        key_voltage = trace.replace("ccss_", "ccs_")
-                    elif "csss_" in trace:
-                        key_voltage = trace.replace("csss_", "css_")
-                    elif "vcss" in trace:
-                        key_voltage = trace.replace("vcss_", "vcs_")
+                    if "ccs_" in trace:
+                        key_current = trace.replace("ccs_", "ccss_")
                     else:
                         continue
 
                     trace_data = {
                         "voltage": numpy.array(
-                            r["acquisition"][key_voltage]["data"][()],
+                            r["acquisition"][trace]["data"][()] * \
+                            r["acquisition"][trace]["data"].attrs['conversion'],
                             dtype="float32"
                         ),
                         "current": numpy.array(
-                            r["stimulus"]["presentation"][trace]["data"][()],
+                            r["stimulus"]["presentation"][key_current]["data"][()] * \
+                            r["stimulus"]["presentation"][key_current]["data"].attrs['conversion'],
                             dtype="float32",
                         ),
                         "dt": 1.0
                         / float(
-                            r["acquisition"][key_voltage][
+                            r["acquisition"][trace][
                                 "starting_time"
                             ].attrs["rate"]
                         ),
