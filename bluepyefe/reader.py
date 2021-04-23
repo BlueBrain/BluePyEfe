@@ -228,23 +228,19 @@ def nwb_reader_BBP(in_data):
                     else:
                         continue
 
+                    v = r["acquisition"][trace]
+                    i = r["stimulus"]["presentation"][key_current]
+
                     trace_data = {
                         "voltage": numpy.array(
-                            r["acquisition"][trace]["data"][()] * \
-                            r["acquisition"][trace]["data"].attrs['conversion'],
+                            v["data"][()] * v["data"].attrs["conversion"],
                             dtype="float32"
                         ),
                         "current": numpy.array(
-                            r["stimulus"]["presentation"][key_current]["data"][()] * \
-                            r["stimulus"]["presentation"][key_current]["data"].attrs['conversion'],
+                            i["data"][()] * i["data"].attrs["conversion"],
                             dtype="float32",
                         ),
-                        "dt": 1.0
-                        / float(
-                            r["acquisition"][trace][
-                                "starting_time"
-                            ].attrs["rate"]
-                        ),
+                        "dt": 1.0 / float(v["starting_time"].attrs["rate"]),
                         "id": str(trace),
                         "repetition": int(rep.replace("repetition ", ""))
                     }
