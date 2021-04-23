@@ -443,7 +443,7 @@ def _read_extract(
         map_function=map_function,
     )
 
-    extract_efeatures_at_targets(cells, targets, map_function=map_function)
+    cells = extract_efeatures_at_targets(cells, targets, map_function=map_function)
 
     return cells
 
