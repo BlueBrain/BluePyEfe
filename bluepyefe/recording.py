@@ -182,8 +182,6 @@ class Recording(object):
     def compute_efeatures(self, efeatures):
         """ Calls efel to computed the wanted efeatures. """
 
-        efel.setDoubleSetting("stimulus_current", self.amp)
-
         efel_trace = {"T": self.t, "V": self.voltage}
 
         temp_features = dict(
@@ -192,7 +190,9 @@ class Recording(object):
 
         for feature in temp_features:
 
-            _set_efel_settings(temp_features[feature])
+            _set_efel_settings(
+                {**temp_features[feature], **{"stimulus_current": self.amp}}
+            )
 
             efel_trace["stim_start"] = [
                 temp_features[feature].get('stim_start', self.ton)
