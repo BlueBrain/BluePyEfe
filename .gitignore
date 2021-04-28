@@ -10,3 +10,6 @@ load_module
 dist
 BluePyEfe.egg-info
 /testrun
+/examples/output
+*.ipynb_checkpoints
+/test_run
