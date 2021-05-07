@@ -189,7 +189,7 @@ def extract_efeatures_at_targets(cells, targets, map_function=map):
     return list(cells)
 
 
-def compute_rheobase(cells, protocols_rheobase):
+def compute_rheobase(cells, protocols_rheobase, spike_threshold=1):
     """
     For each cell, finds the smallest current inducing a spike (rheobase).
     This currents are then use it to compute the relative amplitude of
@@ -200,10 +200,12 @@ def compute_rheobase(cells, protocols_rheobase):
             computed
         protocols_rheobase (list): names of the protocols that will be
             used to compute the rheobase of the cells. E.g: ['IDthresh'].
+        spike_threshold (int): number of spikes above which a recording
+            is considered to compute the rheobase.
     """
 
     for cell in cells:
-        cell.compute_rheobase(protocols_rheobase)
+        cell.compute_rheobase(protocols_rheobase, spike_threshold)
         cell.compute_relative_amp()
 
 
@@ -488,6 +490,7 @@ def extract_efeatures(
     write_files=False,
     plot=False,
     low_memory_mode=False,
+    spike_threshold_rheobase=1
 ):
     """
     Extract efeatures.
@@ -540,6 +543,8 @@ def extract_efeatures(
         low_memory_mode (bool): if True, minimizes the amount of memory used
             during the data reading and feature extraction steps by performing
             additional clean up. Not compatible with map_function.
+        spike_threshold_rheobase (int): number of spikes above which a
+            recording is considered to compute the rheobase.
     """
 
     if protocols_rheobase is None:
@@ -563,7 +568,11 @@ def extract_efeatures(
         )
 
     if protocols_rheobase:
-        compute_rheobase(cells, protocols_rheobase=protocols_rheobase)
+        compute_rheobase(
+            cells,
+            protocols_rheobase=protocols_rheobase,
+            spike_threshold=spike_threshold_rheobase
+        )
 
     protocols = mean_efeatures(cells, targets, use_global_rheobase=True)
 

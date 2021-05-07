@@ -115,17 +115,24 @@ class Cell(object):
 
             self.recordings[i].compute_efeatures(efeatures=efeatures)
 
-    def compute_rheobase(self, protocols_rheobase):
+    def compute_rheobase(self, protocols_rheobase, spike_threshold=1):
         """
         Compute the rheobase by finding the smallest current amplitude
         triggering at least one spike.
+
+        Args:
+            protocols_rheobase (list): names of the protocols that will be
+                used to compute the rheobase of the cells. E.g: ['IDthresh'].
+            spike_threshold (int): number of spikes above which a recording
+                is considered to compute the rheobase.
         """
 
         amps = []
 
         for i, rec in enumerate(self.recordings):
             if rec.protocol_name in protocols_rheobase:
-                if rec.spikecount is not None and rec.spikecount > 0:
+                if rec.spikecount is not None and \
+                        rec.spikecount >= spike_threshold:
 
                     if rec.amp < 0.01:
                         logger.warning(
