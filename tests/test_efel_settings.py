@@ -40,7 +40,22 @@ class EfelSettingTest(unittest.TestCase):
         self.cell.extract_efeatures(protocol_name="IDRest", efeatures=efeatures)
 
         recording = self.cell.recordings[0]
-        self.assertEqual(recording.efeatures["Spikecount"], 0.)   
+        self.assertEqual(recording.efeatures["Spikecount"], 0.)
+
+    def test_efel_global_setting(self):
+
+        self.cell.recordings[0].efeatures = {}
+
+        efeatures = {"Spikecount": {}}
+
+        self.cell.extract_efeatures(
+            protocol_name="IDRest",
+            efeatures=efeatures,
+            global_efel_settings={'Threshold': 40.}
+        )
+
+        recording = self.cell.recordings[0]
+        self.assertEqual(recording.efeatures["Spikecount"], 0.)
 
 if __name__ == "__main__":
     unittest.main()

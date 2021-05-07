@@ -59,7 +59,7 @@ def _create_cell(cell_definition, recording_reader):
     return out_cell
 
 
-def _extract_efeatures_cell(cell, targets):
+def _extract_efeatures_cell(cell, targets, efel_settings=None):
     """
     Compute the efeatures on all the recordings of a Cell.
 
@@ -67,7 +67,10 @@ def _extract_efeatures_cell(cell, targets):
     """
 
     for prot_name, target in targets.items():
-        cell.extract_efeatures(prot_name, target["efeatures"])
+
+        cell.extract_efeatures(
+            prot_name, target["efeatures"], efel_settings
+        )
 
     return cell
 
@@ -136,7 +139,12 @@ def read_recordings(files_metadata, recording_reader=None, map_function=map):
     return list(cells)
 
 
-def extract_efeatures_at_targets(cells, targets, map_function=map):
+def extract_efeatures_at_targets(
+        cells,
+        targets,
+        map_function=map,
+        efel_settings=None
+):
     """
     Extract efeatures from recordings following the protocols, amplitudes and
     efeature names specified in the targets.
@@ -165,6 +173,9 @@ def extract_efeatures_at_targets(cells, targets, map_function=map):
         map_function (function): Function used to map (parallelize) the
             feature extraction operations. Note: the parallelization is
             done across cells an not across efeatures.
+        efel_settings (dict): efel settings in the form
+            {setting_name: setting_value}. If settings are also informed
+            in the targets per efeature, the latter will have priority.
     """
 
     for prot_name, target in targets.items():
@@ -185,7 +196,11 @@ def extract_efeatures_at_targets(cells, targets, map_function=map):
             }
 
     cells = map_function(
-        functools.partial(_extract_efeatures_cell, targets=targets),
+        functools.partial(
+            _extract_efeatures_cell,
+            targets=targets,
+            efel_settings=efel_settings
+        ),
         cells,
     )
 
@@ -440,8 +455,13 @@ def create_feature_protocol_files(
 
 
 def _read_extract(
-        files_metadata, recording_reader, map_function, targets
+    files_metadata,
+    recording_reader,
+    map_function,
+    targets,
+    efel_settings=None
 ):
+
     cells = read_recordings(
         files_metadata,
         recording_reader=recording_reader,
@@ -449,13 +469,15 @@ def _read_extract(
     )
 
     cells = extract_efeatures_at_targets(
-        cells, targets, map_function=map_function
+        cells, targets, map_function=map_function, efel_settings=efel_settings
     )
 
     return cells
 
 
-def _read_extract_low_memory(files_metadata, recording_reader, targets):
+def _read_extract_low_memory(
+    files_metadata, recording_reader, targets, efel_settings=None
+):
 
     cells = []
     for cell_name in files_metadata:
@@ -467,7 +489,7 @@ def _read_extract_low_memory(files_metadata, recording_reader, targets):
 
         cell.recordings = [rec for rec in cell.recordings if rec.amp > 0.]
 
-        extract_efeatures_at_targets([cell], targets)
+        extract_efeatures_at_targets([cell], targets, efel_settings)
 
         # clean traces voltage and time
         for i in range(len(cell.recordings)):
@@ -493,7 +515,8 @@ def extract_efeatures(
     write_files=False,
     plot=False,
     low_memory_mode=False,
-    spike_threshold_rheobase=1
+    spike_threshold_rheobase=1,
+    efel_settings=None
 ):
     """
     Extract efeatures.
@@ -548,6 +571,9 @@ def extract_efeatures(
             additional clean up. Not compatible with map_function.
         spike_threshold_rheobase (int): number of spikes above which a
             recording is considered to compute the rheobase.
+        efel_settings (dict): efel settings in the form
+            {setting_name: setting_value}. If settings are also informed
+            in the targets per efeature, the latter will have priority.
     """
 
     if protocols_rheobase is None:
@@ -563,11 +589,15 @@ def extract_efeatures(
 
     if not low_memory_mode:
         cells = _read_extract(
-            files_metadata, recording_reader, map_function, targets,
+            files_metadata,
+            recording_reader,
+            map_function,
+            targets,
+            efel_settings
         )
     else:
         cells = _read_extract_low_memory(
-            files_metadata, recording_reader, targets
+            files_metadata, recording_reader, targets, efel_settings
         )
 
     if protocols_rheobase:

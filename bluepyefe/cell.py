@@ -106,14 +106,21 @@ class Cell(object):
                         "names".format(protocol_name.lower())
                     )
 
-    def extract_efeatures(self, protocol_name, efeatures):
+    def extract_efeatures(
+            self,
+            protocol_name,
+            efeatures,
+            global_efel_settings=None
+    ):
         """
         Extract the efeatures for the recordings matching the protocol name.
         """
 
         for i in self.get_recordings_id_by_protocol_name(protocol_name):
 
-            self.recordings[i].compute_efeatures(efeatures=efeatures)
+            self.recordings[i].compute_efeatures(
+                efeatures, global_efel_settings
+            )
 
     def compute_rheobase(self, protocols_rheobase, spike_threshold=1):
         """

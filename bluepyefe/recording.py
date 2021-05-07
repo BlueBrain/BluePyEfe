@@ -44,9 +44,7 @@ def _set_efel_settings(efeature_settings):
 
     efel.reset()
 
-    settings = dict(
-        list(DEFAULT_EFEL_SETTINGS.items()) + list(efeature_settings.items())
-    )
+    settings = {**DEFAULT_EFEL_SETTINGS, **efeature_settings}
 
     for setting, value in settings.items():
 
@@ -179,8 +177,11 @@ class Recording(object):
 
         return t, current, voltage
 
-    def compute_efeatures(self, efeatures):
+    def compute_efeatures(self, efeatures, global_efel_settings=None):
         """ Calls efel to computed the wanted efeatures. """
+
+        if global_efel_settings is None:
+            global_efel_settings = {}
 
         efel_trace = {"T": self.t, "V": self.voltage}
 
@@ -190,9 +191,13 @@ class Recording(object):
 
         for feature in temp_features:
 
-            _set_efel_settings(
-                {**temp_features[feature], **{"stimulus_current": self.amp}}
-            )
+            efel_settings = {
+                **{"stimulus_current": self.amp},
+                **global_efel_settings,
+                **temp_features[feature]
+            }
+
+            _set_efel_settings(efel_settings)
 
             efel_trace["stim_start"] = [
                 temp_features[feature].get('stim_start', self.ton)
