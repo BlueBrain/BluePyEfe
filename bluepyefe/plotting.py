@@ -19,12 +19,16 @@ Copyright (c) 2020, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 
+import logging
 import math
 import pathlib
 from itertools import cycle
 
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import numpy
+
+logger = logging.getLogger(__name__)
 
 DPI = 100
 PLOT_PER_COLUMN = 5
@@ -240,14 +244,16 @@ def plot_efeatures(
                 if protocol.name == protocol_name:
 
                     if key_amp == "amp_rel":
-                        x = protocol.amplitude
+                        x_key = protocol.amplitude
                     elif key_amp == "amp":
-                        x = numpy.mean([t.amp for t in protocol.recordings])
+                        x_key = numpy.mean(
+                            [t.amp for t in protocol.recordings]
+                        )
 
                     mean, std = protocol.mean_std_efeature(efeature)
 
                     axs[xpos][ypos].errorbar(
-                        x,
+                        x_key,
                         mean,
                         yerr=std,
                         marker="o",

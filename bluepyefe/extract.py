@@ -174,6 +174,9 @@ def extract_efeatures_at_targets(cells, targets, map_function=map):
                 target["amplitudes"]
             )
 
+        if 'location' not in target:
+            targets[prot_name]["location"] = "soma"
+
         # If no efel settings were specified, initialize them with an
         # empty dictionary
         if isinstance(target["efeatures"], list):

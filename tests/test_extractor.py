@@ -97,6 +97,10 @@ class ExtractorTest(unittest.TestCase):
                 self.assertEqual(s, 4.0)
                 break
 
+        bluepyefe.extract.plot_all_recordings_efeatures(
+            cells, protocols, output_dir="MouseCells/"
+        )
+
         with open("MouseCells/features.json") as fp:
             features = json.load(fp)
         with open("MouseCells/protocols.json") as fp:
