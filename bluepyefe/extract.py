@@ -180,6 +180,9 @@ def extract_efeatures_at_targets(
 
     for prot_name, target in targets.items():
 
+        if isinstance(target["tolerances"], (int, float)):
+            target["tolerances"] = [target["tolerances"]]
+
         if len(target["tolerances"]) == 1:
             targets[prot_name]["tolerances"] = target["tolerances"] * len(
                 target["amplitudes"]
