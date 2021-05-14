@@ -183,13 +183,13 @@ class Recording(object):
         if global_efel_settings is None:
             global_efel_settings = {}
 
-        efel_trace = {"T": self.t, "V": self.voltage}
-
         temp_features = dict(
             list(efeatures.items()) + list({"peak_time": {}}.items())
         )
 
         for feature in temp_features:
+
+            efel_trace = {"T": self.t, "V": self.voltage}
 
             efel_settings = {
                 **{"stimulus_current": self.amp},
