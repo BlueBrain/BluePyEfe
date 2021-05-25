@@ -136,10 +136,6 @@ class EFeatureTarget():
             )
             std = 1e-3
 
-        print(self.protocol_name, self.amplitude, self.sample_size)
-        print(self._values)
-        print(self.mean, self.std)
-
         feature_dict = {
             "feature": self.efel_feature_name,
             "val": [self.mean, std],
