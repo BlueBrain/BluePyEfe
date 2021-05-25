@@ -32,12 +32,7 @@ class EfelSettingTest(unittest.TestCase):
 
         self.cell.extract_efeatures(
             protocol_name="IDRest",
-            efeature=["Spikecount"],
-            efel_settings={'Threshold': 40.}
-        )
-        self.cell.extract_efeatures(
-            protocol_name="IDRest",
-            efeature=["AP1_amp"],
+            efeatures=["Spikecount", "AP1_amp"],
             efel_settings={'Threshold': 40.}
         )
 
@@ -51,7 +46,7 @@ class EfelSettingTest(unittest.TestCase):
 
         self.cell.extract_efeatures(
             protocol_name="IDRest",
-            efeature=["Spikecount"],
+            efeatures=["Spikecount"],
             efel_settings={'stim_start': 0, 'stim_end': 500}
         )
 
@@ -64,7 +59,7 @@ class EfelSettingTest(unittest.TestCase):
 
         self.cell.extract_efeatures(
             protocol_name="IDRest",
-            efeature=["Spikecount"],
+            efeatures=["Spikecount"],
             efel_settings={'Threshold': 40.}
         )
 
