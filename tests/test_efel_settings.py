@@ -21,20 +21,23 @@ class EfelSettingTest(unittest.TestCase):
             "ljp": 14.0,
         }
 
-        self.cell.read_recordings(protocol_data=[file_metadata], protocol_name="IDRest")
+        self.cell.read_recordings(
+            protocol_data=[file_metadata],
+            protocol_name="IDRest"
+        )
 
     def test_efel_threshold(self):
         
         self.cell.recordings[0].efeatures = {}
 
-        self.cell.extract_efeature(
+        self.cell.extract_efeatures(
             protocol_name="IDRest",
-            efeature="Spikecount",
+            efeature=["Spikecount"],
             efel_settings={'Threshold': 40.}
         )
-        self.cell.extract_efeature(
+        self.cell.extract_efeatures(
             protocol_name="IDRest",
-            efeature="AP1_amp",
+            efeature=["AP1_amp"],
             efel_settings={'Threshold': 40.}
         )
 
@@ -46,9 +49,9 @@ class EfelSettingTest(unittest.TestCase):
         
         self.cell.recordings[0].efeatures = {}
 
-        self.cell.extract_efeature(
+        self.cell.extract_efeatures(
             protocol_name="IDRest",
-            efeature="Spikecount",
+            efeature=["Spikecount"],
             efel_settings={'stim_start': 0, 'stim_end': 500}
         )
 
@@ -59,9 +62,9 @@ class EfelSettingTest(unittest.TestCase):
 
         self.cell.recordings[0].efeatures = {}
 
-        self.cell.extract_efeature(
+        self.cell.extract_efeatures(
             protocol_name="IDRest",
-            efeature="Spikecount",
+            efeature=["Spikecount"],
             efel_settings={'Threshold': 40.}
         )
 
