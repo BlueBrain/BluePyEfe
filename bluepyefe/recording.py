@@ -72,6 +72,8 @@ class Recording(object):
             self.files = [config_data["filepath"]]
         elif "i_file" in config_data:
             self.files = [config_data["i_file"], config_data["v_file"]]
+        else:
+            self.files = []
 
         self.id = reader_data.get("id", None)
 
@@ -177,47 +179,51 @@ class Recording(object):
 
         return t, current, voltage
 
-    def compute_efeatures(self, efeatures, global_efel_settings=None):
-        """ Calls efel to computed the wanted efeatures. """
+    def compute_spikecount(self):
+        """Compute the number of spikecounts in the trace"""
 
-        if global_efel_settings is None:
-            global_efel_settings = {}
+        efel_trace = {
+            "T": self.t,
+            "V": self.voltage,
+            "stim_start": [self.ton],
+            "stim_end": [self.toff]
+        }
 
-        temp_features = dict(
-            list(efeatures.items()) + list({"peak_time": {}}.items())
+        _set_efel_settings({"stimulus_current": self.amp})
+
+        efel_vals = efel.getFeatureValues(
+            [efel_trace], ['peak_time'], raise_warnings=False
         )
 
-        for feature in temp_features:
+        self.spikecount = len(efel_vals[0]['peak_time'])
 
-            efel_trace = {"T": self.t, "V": self.voltage}
+    def compute_efeatures(self, efeatures, efel_settings=None):
+        """ Calls efel to computed the wanted efeature """
 
-            efel_settings = {
-                **{"stimulus_current": self.amp},
-                **global_efel_settings,
-                **temp_features[feature]
-            }
+        if efel_settings is None:
+            efel_settings = {}
 
-            _set_efel_settings(efel_settings)
+        settings = {"stimulus_current": self.amp}
+        for setting in efel_settings:
+            if setting not in ['stim_start', 'stim_end']:
+                settings[setting] = efel_settings[setting]
+        _set_efel_settings(settings)
 
-            efel_trace["stim_start"] = [
-                temp_features[feature].get('stim_start', self.ton)
-            ]
-            efel_trace["stim_end"] = [
-                temp_features[feature].get('stim_end', self.toff)
-            ]
+        efel_trace = {
+            "T": self.t,
+            "V": self.voltage,
+            'stim_start': [efel_settings.get('stim_start', self.ton)],
+            'stim_end': [efel_settings.get('stim_end', self.toff)]
+        }
 
-            efel_vals = efel.getFeatureValues(
-                [efel_trace], [feature], raise_warnings=False
-            )
+        efel_vals = efel.getFeatureValues(
+            [efel_trace], efeatures, raise_warnings=False
+        )
 
-            value = efel_vals[0][feature]
+        for efeature in efeatures:
 
-            if feature == "peak_time":
-                self.spikecount = len(value)
+            value = efel_vals[0][efeature]
+            if value is None or numpy.isinf(numpy.nanmean(value)):
+                value = numpy.nan
 
-            else:
-
-                if value is None:
-                    value = numpy.nan
-
-                self.efeatures[feature] = numpy.nanmean(value)
+            self.efeatures[efeature] = numpy.nanmean(value)

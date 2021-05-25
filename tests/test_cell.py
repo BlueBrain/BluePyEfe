@@ -23,8 +23,9 @@ class CellTest(unittest.TestCase):
 
         self.cell.read_recordings(protocol_data=[file_metadata], protocol_name="IDRest")
 
-        self.efeatures = {"Spikecount": {}, "AP1_amp": {}}
-        self.cell.extract_efeatures(protocol_name="IDRest", efeatures=self.efeatures)
+        self.cell.extract_efeatures(
+            protocol_name="IDRest", efeatures=["Spikecount", "AP1_amp"]
+        )
 
     def test_step_ecode(self):
         recording = self.cell.recordings[0]
@@ -39,7 +40,7 @@ class CellTest(unittest.TestCase):
 
     def test_efeature_extraction(self):
         recording = self.cell.recordings[0]
-        self.assertEqual(len(self.efeatures), len(recording.efeatures))
+        self.assertEqual(2, len(recording.efeatures))
         self.assertEqual(recording.efeatures["Spikecount"], 9.0)
         self.assertLess(abs(recording.efeatures["AP1_amp"] - 66.4), 2.0)
 

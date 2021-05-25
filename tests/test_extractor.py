@@ -52,7 +52,7 @@ def get_config():
         "MouseNeuron2": {"IDRest": files_metadata2},
     }
 
-    targets = targets = {
+    targets = {
         "IDRest": {
             "amplitudes": [150, 200, 250],
             "tolerances": [20.0],
@@ -61,7 +61,7 @@ def get_config():
         }
     }
 
-    return files_metadata, targets
+    return files_metadata, bluepyefe.extract.convert_legacy_targets(targets)
 
 
 class ExtractorTest(unittest.TestCase):
@@ -77,7 +77,12 @@ class ExtractorTest(unittest.TestCase):
 
         bluepyefe.extract.compute_rheobase(cells, protocols_rheobase=["IDRest"])
 
-        protocols = bluepyefe.extract.mean_efeatures(cells, targets)
+        protocols = bluepyefe.extract.group_efeatures(
+            cells,
+            targets,
+            use_global_rheobase=True,
+            protocol_mode="mean"
+        )
 
         _ = bluepyefe.extract.create_feature_protocol_files(
             cells=cells, protocols=protocols, output_directory="MouseCells"
@@ -91,11 +96,12 @@ class ExtractorTest(unittest.TestCase):
         self.assertLess(abs(cells[1].rheobase - 0.0923), 0.01)
 
         for protocol in protocols:
-            if protocol.identify("IDRest", 300):
-                m, s = protocol.mean_std_efeature("Spikecount")
-                self.assertEqual(m, 85.0)
-                self.assertEqual(s, 4.0)
-                break
+            if protocol.name == "IDRest" and protocol.amplitude == 250.:
+                for target in protocol.feature_targets:
+                    if target.efel_feature_name == "Spikecount":
+                        self.assertEqual(target.mean, 78.5)
+                        self.assertEqual(target.std, 3.5)
+                        break
 
         bluepyefe.extract.plot_all_recordings_efeatures(
             cells, protocols, output_dir="MouseCells/"

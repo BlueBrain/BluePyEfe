@@ -21,13 +21,20 @@ class EfelSettingTest(unittest.TestCase):
             "ljp": 14.0,
         }
 
-        self.cell.read_recordings(protocol_data=[file_metadata], protocol_name="IDRest")
+        self.cell.read_recordings(
+            protocol_data=[file_metadata],
+            protocol_name="IDRest"
+        )
 
     def test_efel_threshold(self):
         
         self.cell.recordings[0].efeatures = {}
-        efeatures = {"Spikecount": {'Threshold': 40.}, "AP1_amp": {'Threshold': 0.}}
-        self.cell.extract_efeatures(protocol_name="IDRest", efeatures=efeatures)
+
+        self.cell.extract_efeatures(
+            protocol_name="IDRest",
+            efeatures=["Spikecount", "AP1_amp"],
+            efel_settings={'Threshold': 40.}
+        )
 
         recording = self.cell.recordings[0]
         self.assertEqual(recording.efeatures["Spikecount"], 0.)
@@ -36,22 +43,24 @@ class EfelSettingTest(unittest.TestCase):
     def test_efel_strictstim(self):
         
         self.cell.recordings[0].efeatures = {}
-        efeatures = {"Spikecount": {'stim_start': 0, 'stim_end': 500}}
-        self.cell.extract_efeatures(protocol_name="IDRest", efeatures=efeatures)
+
+        self.cell.extract_efeatures(
+            protocol_name="IDRest",
+            efeatures=["Spikecount"],
+            efel_settings={'stim_start': 0, 'stim_end': 500}
+        )
 
         recording = self.cell.recordings[0]
         self.assertEqual(recording.efeatures["Spikecount"], 0.)
 
-    def test_efel_global_setting(self):
+    def test_efel_threshold(self):
 
         self.cell.recordings[0].efeatures = {}
 
-        efeatures = {"Spikecount": {}}
-
         self.cell.extract_efeatures(
             protocol_name="IDRest",
-            efeatures=efeatures,
-            global_efel_settings={'Threshold': 40.}
+            efeatures=["Spikecount"],
+            efel_settings={'Threshold': 40.}
         )
 
         recording = self.cell.recordings[0]
