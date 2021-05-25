@@ -1,7 +1,7 @@
 """Protocol class"""
 
 """
-Copyright (c) 2020, EPFL/Blue Brain Project
+Copyright (c) 2021, EPFL/Blue Brain Project
 
  This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
 
@@ -19,34 +19,85 @@ Copyright (c) 2020, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 
-
-import logging
-
 import numpy
+import logging
 
 from bluepyefe.ecode import eCodes
 
 logger = logging.getLogger(__name__)
 
 
-class Protocol(object):
+class Protocol():
 
-    """ Protocol class """
+    """Protocol informs about the current stimulus that was used to obtain
+     efeatures at a given amplitude for a given protocol name. This class
+     is mainly used to produce a description of the experimental protocol
+     that can be used in BluePyOpt"""
 
     def __init__(
-        self, name, amplitude, tolerance=20.0, efeatures=[], location="soma"
+            self,
+            name,
+            amplitude,
+            tolerance,
+            feature_targets=None,
+            global_rheobase=None,
+            mode="mean"
     ):
+        """Constructor
+
+        Args:
+            name (str): name of the protocol (ex: 'APWaveform')
+            amplitude (float): amplitude of the current stimuli for the
+                present protocol (expressed as a percentage of the
+                threshold amplitude (rheobase))
+            tolerance (float): tolerance around the target amplitude in which
+                an experimental recording will be seen as a hit during
+                efeatures extraction (expressed as a percentage of the
+                threshold amplitude (rheobase))
+            feature_targets (list): list of EFeatureTarget associated to the
+                protocol
+            global_rheobase (float): average rheobase across all cells
+            mode (str): if the protocol matches several recordings, the mode
+                set the logic of how the output will be generating. Must be
+                'mean', 'median' or 'lnmc'
+        """
 
         self.name = name
         self.amplitude = amplitude
-        self.efeatures = efeatures
         self.tolerance = tolerance
-        self.location = location
+
+        self.feature_targets = feature_targets
+        if self.feature_targets is None:
+            self.feature_targets = []
+
+        self.global_rheobase = global_rheobase
+        self.mode = mode
 
         self.recordings = []
 
+    @property
+    def stimulus_name(self):
+        """Name of the stimulus associated to the protocol"""
+
+        return f"{self.name}_{self.amplitude}"
+
+    @property
+    def n_match(self):
+        """Number of recordings whose amplitude matched the present protocol"""
+
+        return sum([f.sample_size for f in self.feature_targets])
+
+    @property
+    def ecode(self):
+        """Create a temporary eCode that matches all the recordings for the
+        present protocol. The eCode's parameters are computed differently
+        depending on the mode of the protocol"""
+
+        if not self.recordings:
+            return None
+
         if self.name.lower() in eCodes:
-            self.ecode = eCodes[self.name.lower()]({}, {}, name)
+            ecode = eCodes[self.name.lower()]({}, {}, self.name)
         else:
             raise KeyError(
                 "There is no eCode linked to the stimulus name {}. See "
@@ -54,83 +105,34 @@ class Protocol(object):
                 "".format(self.name.lower())
             )
 
-    def get_efeature(self, efeature):
-        return [t.efeatures[efeature] for t in self.recordings]
-
-    def mean_std_efeature(self, efeature):
-        list_feature = self.get_efeature(efeature)
-        return numpy.nanmean(list_feature), numpy.nanstd(list_feature)
-
-    def mean_ecode_params(self, global_amp_threshold=None):
-
-        if len(self.recordings):
-
-            ecodes_params = [t.get_params() for t in self.recordings]
-
-            if global_amp_threshold is None and "amp" in ecodes_params[0]:
-                logger.warning(
-                    "No global threshold amplitude passed. This can result"
-                    " in inconsistencies in-between protocols if some cells "
-                    "only matched a subset of the targets."
-                )
-
-            for key in ecodes_params[0]:
-
-                if key == "amp" and global_amp_threshold is not None:
-                    amp_rel = numpy.nanmean(
-                        [c["amp_rel"] for c in ecodes_params]
-                    )
-                    param_mean = float(amp_rel) * global_amp_threshold / 100.0
-                    setattr(self.ecode, key, param_mean)
-
-                elif (
-                    isinstance(ecodes_params[0][key], list)
-                    or type(ecodes_params[0][key]) is numpy.ndarray
-                ):
-                    param_mean = numpy.asarray([c[key] for c in ecodes_params])
-                    param_mean = numpy.nanmean(param_mean, axis=0)
-                    setattr(self.ecode, key, param_mean)
-
-                else:
-                    param_mean = numpy.nanmean([c[key] for c in ecodes_params])
-                    setattr(self.ecode, key, param_mean)
-
+        if self.mode == "mean":
+            self.reduce_ecode(ecode, operator=numpy.nanmean)
+        elif self.mode == "median":
+            self.reduce_ecode(ecode, operator=numpy.nanmedian)
         else:
-            logger.warning(
-                "Could not compute average ecode for protocol {} target {} "
-                "because it didn't match any recordings".format(
-                    self.name, self.amplitude
+            raise ValueError("'mode' should be mean or median")
+
+        return ecode
+
+    def append(self, recording):
+        """Append a Recording to the present protocol"""
+
+        for i, target in enumerate(self.feature_targets):
+            if target.efel_feature_name in recording.efeatures:
+                self.feature_targets[i].append(
+                    recording.efeatures[target.efel_feature_name],
+                    recording.files
                 )
-            )
 
-    def get_files_used(self):
+        self.recordings.append(recording)
 
-        files = []
+    def as_dict(self):
+        """Returns an dictionary that defines the present protocol. This
+        definition is computed differently depending on the mode of the
+        protocol
+        """
 
-        for rec in self.recordings:
-            files += rec.files
-
-        return files
-
-    def identify(self, name, target):
-        return name == self.name and target == self.amplitude
-
-    def mean_stimulus(self):
-
-        if len(self.recordings):
-            return self.ecode.generate()
-        else:
-            logger.warning(
-                "Cannot generate time and current series for protocol {} "
-                "because its target didn't match any recordings".format(
-                    self.name
-                )
-            )
-            return ([], [])
-
-    def ecode_params(self):
-
-        out = {
+        return {
             "holding": {
                 "delay": 0.0,
                 "amp": self.ecode.hypamp,
@@ -140,4 +142,50 @@ class Protocol(object):
             "step": self.ecode.get_stimulus_parameters(),
         }
 
-        return out
+    def reduce_ecode(self, ecode, operator):
+        """Creates an eCode defined from the parameters of all the recordings
+        matching the present protocol"""
+
+        if not self.recordings:
+            logger.warning(
+                "Could not compute average ecode for protocol {} target {} "
+                "because it didn't match any recordings".format(
+                    self.name, self.amplitude
+                )
+            )
+            return None
+
+        params = [r.get_params() for r in self.recordings]
+
+        if self.global_rheobase is None and "amp" in params[0]:
+            logger.warning(
+                "No global threshold amplitude passed. This can result"
+                " in inconsistencies in-between protocols if some cells "
+                "only matched a subset of the targets."
+            )
+
+        for key in params[0]:
+
+            if key == "amp" and self.global_rheobase:
+                amp_rel = operator([c["amp_rel"] for c in params])
+                mean_param = float(amp_rel) * self.global_rheobase / 100.
+            else:
+                mean_param = operator([c[key] for c in params])
+
+            setattr(ecode, key, mean_param)
+
+        return ecode
+
+    def __str__(self):
+        """String representation"""
+
+        str_form = "Protocol {} {:.1f}%:\n".format(
+            self.name, self.amplitude
+        )
+
+        str_form += "Number of matching recordings: {}".format(self.n_match)
+
+        if self.n_match:
+            str_form += "\neCode: {}\n".format(self.as_dict)
+
+        return str_form

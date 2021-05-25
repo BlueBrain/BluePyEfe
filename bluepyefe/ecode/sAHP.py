@@ -54,6 +54,9 @@ class SAHP(Recording):
                 self.t, self.current, self.config_data, self.reader_data
             )
 
+        if self.voltage is not None:
+            self.compute_spikecount()
+
     def get_params(self):
         """Returns the eCode parameters"""
         ecode_params = {

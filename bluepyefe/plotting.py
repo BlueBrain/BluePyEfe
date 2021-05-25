@@ -25,7 +25,6 @@ import pathlib
 from itertools import cycle
 
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 import numpy
 
 logger = logging.getLogger(__name__)
@@ -177,7 +176,6 @@ def plot_all_recordings(cells, output_dir):
 def plot_efeatures(
     cells,
     protocol_name,
-    efeatures,
     output_dir,
     protocols=[],
     key_amp="amp",
@@ -195,6 +193,11 @@ def plot_efeatures(
 
     if not colors or not markers:
         colors, markers = _get_colors_markers_wheels(cells)
+
+    efeatures = set()
+    for p in protocols:
+        if p.name == protocol_name:
+            efeatures.update([t.efel_feature_name for t in p.feature_targets])
 
     figsize = [
         3.0 + 1.7 * int(len(efeatures) / PLOT_PER_COLUMN),
@@ -250,12 +253,16 @@ def plot_efeatures(
                             [t.amp for t in protocol.recordings]
                         )
 
-                    mean, std = protocol.mean_std_efeature(efeature)
+                    target = next(
+                        (t for t in protocol.feature_targets if
+                         t.efel_feature_name == efeature),
+                        None
+                    )
 
                     axs[xpos][ypos].errorbar(
                         x_key,
-                        mean,
-                        yerr=std,
+                        target.mean,
+                        yerr=target.std,
                         marker="o",
                         elinewidth=0.7,
                         markersize=3.0,
@@ -325,16 +332,9 @@ def plot_individual_efeatures(
 
         for protocol_name in cell.get_protocol_names():
 
-            efeatures = set()
-            for c in cells:
-                for rec in c.recordings:
-                    if rec.protocol_name == protocol_name:
-                        efeatures.update(list(rec.efeatures.keys()))
-
             _ = plot_efeatures(
                 cells=[cell],
                 protocol_name=protocol_name,
-                efeatures=efeatures,
                 output_dir=output_dir,
                 protocols=protocols,
                 key_amp=key_amp,
@@ -358,15 +358,9 @@ def plot_grouped_efeatures(
 
     for protocol_name in protocol_names:
 
-        efeatures = set()
-        for p in protocols:
-            if p.name == protocol_name:
-                efeatures.update(list(p.efeatures.keys()))
-
         _ = plot_efeatures(
             cells=cells,
             protocol_name=protocol_name,
-            efeatures=efeatures,
             output_dir=output_dir,
             protocols=protocols,
             key_amp=key_amp,

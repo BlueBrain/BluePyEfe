@@ -91,6 +91,9 @@ class SpikeRec(Recording):
                 self.t, self.current, self.config_data, self.reader_data
             )
 
+        if self.voltage is not None:
+            self.compute_spikecount()
+
     @property
     def ton(self):
         return 0.0

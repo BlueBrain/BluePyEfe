@@ -19,7 +19,6 @@ Copyright (c) 2020, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 
-
 import functools
 import logging
 import pathlib
@@ -32,6 +31,7 @@ from bluepyefe.cell import Cell
 from bluepyefe.plotting import plot_all_recordings
 from bluepyefe.plotting import plot_all_recordings_efeatures
 from bluepyefe.protocol import Protocol
+from bluepyefe.target import EFeatureTarget
 
 logger = logging.getLogger(__name__)
 
@@ -66,10 +66,30 @@ def _extract_efeatures_cell(cell, targets, efel_settings=None):
     The present function exists to be use by the map_function.
     """
 
-    for prot_name, target in targets.items():
+    if efel_settings is None:
+        efel_settings = {}
 
+    # Group targets per same protocol and same efel settings for efficiency
+    setting_groups = []
+    for target in targets:
+
+        for i, group in enumerate(setting_groups):
+            if target["efel_settings"] == group['efel_settings'] and \
+                    target["protocol"] == group['protocol']:
+                setting_groups[i]["efeatures"].append(target["efeature"])
+                break
+        else:
+            setting_groups.append({
+                'efel_settings': target["efel_settings"],
+                'protocol': target["protocol"],
+                'efeatures': [target["efeature"]]
+            })
+
+    for group in setting_groups:
         cell.extract_efeatures(
-            prot_name, target["efeatures"], efel_settings
+            group['protocol'],
+            group["efeatures"],
+            efel_settings={**efel_settings, **group["efel_settings"]}
         )
 
     return cell
@@ -152,24 +172,20 @@ def extract_efeatures_at_targets(
     Args:
         cells (list): list of Cells containing the recordings from which the
             efeatures will be extracted.
-        targets (dict): define the efeatures to extract for each protocols
-            and the amplitude around which these features should be
-            averaged. Of the form:
-            {
-                protocol_name: {
-                    "amplitudes": [50, 100],
-                    "tolerances": [10, 10],
-                    "efeatures": ["Spikecount", "AP_amplitude"],
-                    "location": "soma"
+        targets (dict): define the efeatures to extract as well as which
+            protocols and current amplitude they should be extracted for. Of
+            the form:
+            [{
+                "efeature": "AP_amplitude",
+                "protocol": "IDRest",
+                "amplitude": 150.,
+                "tolerance": 10.,
+                "efel_settings": {
+                    'stim_start': 200.,
+                    'stim_end': 500.,
+                    'Threshold': -10.
                 }
-            }
-            If specific settings should be used by eFEL for an efeature, they
-            can be specified by using a dict instead of a list for the
-            efeatures, as in the following example:
-            "efeatures": {
-                "Spikecount": {'stim_start': 200., 'stim_end': 500.},
-                "AP_amplitude": {'Threshold': -40.},
-            }
+            }]
         map_function (function): Function used to map (parallelize) the
             feature extraction operations. Note: the parallelization is
             done across cells an not across efeatures.
@@ -178,25 +194,13 @@ def extract_efeatures_at_targets(
             in the targets per efeature, the latter will have priority.
     """
 
-    for prot_name, target in targets.items():
-
-        if isinstance(target["tolerances"], (int, float)):
-            target["tolerances"] = [target["tolerances"]]
-
-        if len(target["tolerances"]) == 1:
-            targets[prot_name]["tolerances"] = target["tolerances"] * len(
-                target["amplitudes"]
-            )
+    for target in targets:
 
         if 'location' not in target:
-            targets[prot_name]["location"] = "soma"
+            target["location"] = "soma"
 
-        # If no efel settings were specified, initialize them with an
-        # empty dictionary
-        if isinstance(target["efeatures"], list):
-            targets[prot_name]["efeatures"] = {
-                k: {} for k in target["efeatures"]
-            }
+        if 'efel_settings' not in target:
+            target['efel_settings'] = {}
 
     cells = map_function(
         functools.partial(
@@ -230,32 +234,67 @@ def compute_rheobase(cells, protocols_rheobase, spike_threshold=1):
         cell.compute_relative_amp()
 
 
-def mean_efeatures(cells, targets, use_global_rheobase=True):
+def _build_protocols(targets, global_rheobase, protocol_mode):
+    """Build a list of Protocols that matches the expected targets"""
+
+    protocols = []
+
+    for target in targets:
+
+        efeature_target = EFeatureTarget(
+            efel_feature_name=target['efeature'],
+            protocol_name=target['protocol'],
+            amplitude=target['amplitude'],
+            tolerance=target['tolerance']
+        )
+
+        for i, p in enumerate(protocols):
+            if p.name == target['protocol'] and \
+                    p.amplitude == target['amplitude']:
+                protocols[i].feature_targets.append(efeature_target)
+                break
+        else:
+            protocols.append(
+                Protocol(
+                    name=target['protocol'],
+                    amplitude=target['amplitude'],
+                    tolerance=target['tolerance'],
+                    feature_targets=[efeature_target],
+                    global_rheobase=global_rheobase,
+                    mode=protocol_mode
+                )
+            )
+
+    return protocols
+
+
+def group_efeatures(
+        cells,
+        targets,
+        use_global_rheobase=True,
+        protocol_mode='mean'
+):
     """
     Group the recordings and their efeatures and associate them to the
-    Protocol (target) they belong with.
+    EFeature Targets and Protocols they belong to.
 
     Args:
         cells (list): list of Cells containing for which the rheobase will be
             computed
-        targets (dict): define the efeatures to extract for each protocols
-            and the amplitude around which these features should be
-            averaged. Of the form:
-            {
-                protocol_name: {
-                    "amplitudes": [50, 100],
-                    "tolerances": [10, 10],
-                    "efeatures": ["Spikecount", "AP_amplitude"],
-                    "location": "soma"
+        targets (dict): define the efeatures to extract as well as which
+            protocols and current amplitude they should be extracted for. Of
+            the form:
+            [{
+                "efeature": "AP_amplitude",
+                "protocol": "IDRest",
+                "amplitude": 150.,
+                "tolerance": 10.,
+                "efel_settings": {
+                    'stim_start': 200.,
+                    'stim_end': 500.,
+                    'Threshold': -10.
                 }
-            }
-            If specific settings should be used by eFEL for an efeature, they
-            can be specified by using a dict instead of a list for the
-            efeatures, as in the following example:
-            "efeatures": {
-                "Spikecount": {'stim_start': 200., 'stim_end': 500.},
-                "AP_amplitude": {'Threshold': -10.},
-            }
+            }]
         use_global_rheobase (bool): As the final amplitude of a target is the
             mean of the amplitude of the cells, a global rheobase can be used
             to avoid issues when a cell matches a target but not another one.
@@ -263,6 +302,9 @@ def mean_efeatures(cells, targets, use_global_rheobase=True):
             but it's amp in amperes is lower.
             e.g: target1 = 100%, target2 = 150% but target1_amp = 0.2 and
             target2_amp = 0.18
+        protocol_mode (mean): if a protocol matches several recordings, the
+            mode set the logic of how the output will be generating. Must be
+            'mean', 'median' or 'lnmc'
     """
 
     global_rheobase = None
@@ -271,48 +313,27 @@ def mean_efeatures(cells, targets, use_global_rheobase=True):
             [c.rheobase for c in cells if c.rheobase is not None]
         )
 
-    protocols = []
-    for protocol_name, target in targets.items():
-        for i, amplitude in enumerate(target["amplitudes"]):
-
-            if not type(amplitude) == int and not type(amplitude) == float:
-                raise Exception(
-                    "Target amplitudes have to be numbers, not {}".format(
-                        type(amplitude)
-                    )
-                )
-
-            protocol = Protocol(
-                name=protocol_name,
-                amplitude=amplitude,
-                tolerance=target["tolerances"][i],
-                efeatures=target["efeatures"],
-                location=target["location"],
-            )
-
-            protocols.append(protocol)
+    protocols = _build_protocols(
+        targets,
+        global_rheobase=global_rheobase,
+        protocol_mode=protocol_mode
+    )
 
     for protocol in protocols:
         for cell in cells:
 
-            # Ignore the cells for which we couldn't compute
-            # the rheobase
             if cell.rheobase is None:
                 continue
 
             for recording in cell.get_recordings_by_protocol_name(
-                protocol.name
+                    protocol.name
             ):
 
                 if recording.in_target(
                         protocol.amplitude,
                         protocol.tolerance
                 ):
-                    protocol.recordings.append(recording)
-
-        # Update the ecode of protocol with the mean of the ecode of each
-        # recording it contains.
-        protocol.mean_ecode_params(global_rheobase)
+                    protocol.append(recording)
 
     return protocols
 
@@ -352,12 +373,12 @@ def _build_current_dict(cells):
 
 
 def create_feature_protocol_files(
-    cells,
-    protocols,
-    output_directory=None,
-    threshold_nvalue_save=1,
-    write_files=True,
-    save_files_used=False,
+        cells,
+        protocols,
+        output_directory=None,
+        threshold_nvalue_save=1,
+        write_files=True,
+        save_files_used=False,
 ):
     """
     Save the efeatures and protocols for each protocol/target combo
@@ -383,63 +404,36 @@ def create_feature_protocol_files(
 
     """
 
-    feat = {}
-    stim = {}
+    out_features = {}
+    out_stimuli = {}
 
-    for prot in protocols:
+    for protocol in protocols:
 
-        stimname = prot.name + "_" + str(prot.amplitude)
+        stimname = protocol.stimulus_name
 
-        for efeature in prot.efeatures:
+        tmp_feat = []
 
-            n = len(prot.get_efeature(efeature))
-            m, s = prot.mean_std_efeature(efeature)
+        for target in protocol.feature_targets:
 
-            if n < threshold_nvalue_save:
+            if target.sample_size < threshold_nvalue_save:
                 logger.warning(
                     "Number of values < threshold_nvalue_save for efeature"
                     "{} stimulus {}. The efeature will be ignored"
-                    "".format(efeature, stimname)
+                    "".format(target.efel_feature_name, stimname)
                 )
                 continue
 
-            if numpy.isnan(m):
-                logger.warning(
-                    "Efeatures {} for stimulus {} is NaN and will be "
-                    "ignored".format(efeature, stimname)
-                )
-                continue
+            tmp_feat.append(target.as_legacy_dict(save_files_used))
 
-            if s == 0.0:
-                logger.warning(
-                    "Standard deviation for efeatures {} for stimulus {} "
-                    "is 0. and will be set to 1e-3".format(efeature, stimname)
-                )
-                s += 1e-3
+        if not tmp_feat:
+            logger.warning(
+                "No efeatures for stimulus {}. The protocol will not "
+                "be created.".format(stimname)
+            )
+            continue
 
-            feature_definition = {"feature": efeature, "val": [m, s], "n": n}
-
-            if stimname not in feat:
-                feat[stimname] = {}
-                feat[stimname][prot.location] = [feature_definition]
-            else:
-                feat[stimname][prot.location].append(feature_definition)
-
-            if save_files_used:
-                feat[stimname][prot.location][-1][
-                    "files"
-                ] = prot.get_files_used()
-
-        if stimname in feat:
-
-            if len(feat[stimname]):
-                stim[stimname] = prot.ecode_params()
-            else:
-                feat.pop(stimname, None)
-                logger.warning(
-                    "No efeatures for stimulus {}. The protocol will not "
-                    "be returned.".format(stimname)
-                )
+        out_features[stimname] = {'soma': tmp_feat}
+        out_stimuli[stimname] = protocol.as_dict()
 
     # Compute the mean and std of holding and threshold currents
     currents = _build_current_dict(cells)
@@ -452,19 +446,23 @@ def create_feature_protocol_files(
                 f" if write_files is True."
             )
 
-        _saving_data(output_directory, feat, stim, currents)
+        _saving_data(
+            output_directory,
+            out_features,
+            out_stimuli,
+            currents
+        )
 
-    return feat, stim, currents
+    return out_features, out_stimuli, currents
 
 
 def _read_extract(
-    files_metadata,
-    recording_reader,
-    map_function,
-    targets,
-    efel_settings=None
+        files_metadata,
+        recording_reader,
+        map_function,
+        targets,
+        efel_settings=None
 ):
-
     cells = read_recordings(
         files_metadata,
         recording_reader=recording_reader,
@@ -479,9 +477,8 @@ def _read_extract(
 
 
 def _read_extract_low_memory(
-    files_metadata, recording_reader, targets, efel_settings=None
+        files_metadata, recording_reader, targets, efel_settings=None
 ):
-
     cells = []
     for cell_name in files_metadata:
 
@@ -507,19 +504,71 @@ def _read_extract_low_memory(
     return cells
 
 
+def convert_legacy_targets(targets):
+    """Convert targets of the form:
+        protocol_name: {
+                "amplitudes": [50, 100],
+                "tolerances": [10, 10],
+                "efeatures": {"Spikecount": {'Threshold': -10.}},
+                "location": "soma"
+            }
+        }
+    To ones of the form:
+        [{
+            "efeature": "AP_amplitude",
+            "protocol": "IDRest",
+            "amplitude": 150.,
+            "tolerance": 10.,
+            "efel_settings": {
+                'stim_start': 200.,
+                'stim_end': 500.,
+                'Threshold': -10.
+            }
+        }]
+    """
+
+    formatted_targets = []
+
+    for protocol_name, target in targets.items():
+        for i, amplitude in enumerate(target["amplitudes"]):
+
+            tolerances = target["tolerances"]
+            if len(tolerances) == 1:
+                tolerances = tolerances * len(target["amplitudes"])
+
+            for efeature in target["efeatures"]:
+
+                formatted_target = {
+                    "efeature": efeature,
+                    "protocol": protocol_name,
+                    "amplitude": amplitude,
+                    "tolerance": tolerances[i],
+                    "efel_settings": {}
+                }
+
+                if isinstance(target["efeatures"], dict):
+                    formatted_target["efel_settings"] = target[
+                        "efeatures"][efeature]
+
+                formatted_targets.append(formatted_target)
+
+    return formatted_targets
+
+
 def extract_efeatures(
-    output_directory,
-    files_metadata,
-    targets,
-    threshold_nvalue_save,
-    protocols_rheobase=None,
-    recording_reader=None,
-    map_function=map,
-    write_files=False,
-    plot=False,
-    low_memory_mode=False,
-    spike_threshold_rheobase=1,
-    efel_settings=None
+        output_directory,
+        files_metadata,
+        targets,
+        threshold_nvalue_save,
+        protocols_rheobase=None,
+        recording_reader=None,
+        map_function=map,
+        write_files=False,
+        plot=False,
+        low_memory_mode=False,
+        spike_threshold_rheobase=1,
+        protocol_mode="mean",
+        efel_settings=None
 ):
     """
     Extract efeatures.
@@ -539,24 +588,20 @@ def extract_efeatures(
             As the file_metadata contain file paths, a same file path might
             need to be present in the file metadata of different protocols if
             the path contains data coming from different stimuli (eg: for NWB).
-        targets (dict): define the efeatures to extract for each protocols
-            and the amplitude around which these features should be
-            averaged. Of the form:
-            {
-                protocol_name: {
-                    "amplitudes": [50, 100],
-                    "tolerances": [10, 10],
-                    "efeatures": ["Spikecount", "AP_amplitude"],
-                    "location": "soma"
+        targets (list): define the efeatures to extract as well as which
+            protocols and current amplitude they should be extracted for. Of
+            the form:
+            [{
+                "efeature": "AP_amplitude",
+                "protocol": "IDRest",
+                "amplitude": 150.,
+                "tolerance": 10.,
+                "efel_settings": {
+                    'stim_start': 200.,
+                    'stim_end': 500.,
+                    'Threshold': -10.
                 }
-            }
-            If specific settings should be used by eFEL for an efeature, they
-            can be specified by using a dict instead of a list for the
-            efeatures, as in the following example:
-            "efeatures": {
-                "Spikecount": {'stim_start': 200., 'stim_end': 500.},
-                "AP_amplitude": {'Threshold': -10.},
-            }
+            }]
         threshold_nvalue_save (int): minimum number of values needed for
             an efeatures to be averaged and returned in the output.
         protocols_rheobase (list): names of the protocols that will be
@@ -574,6 +619,9 @@ def extract_efeatures(
             additional clean up. Not compatible with map_function.
         spike_threshold_rheobase (int): number of spikes above which a
             recording is considered to compute the rheobase.
+        protocol_mode (str): protocol_mode (mean): if a protocol matches
+            several recordings, the mode set the logic of how the output
+            will be generating. Must be 'mean', 'median' or 'lnmc'
         efel_settings (dict): efel settings in the form
             {setting_name: setting_value}. If settings are also informed
             in the targets per efeature, the latter will have priority.
@@ -589,6 +637,13 @@ def extract_efeatures(
 
     if low_memory_mode and plot:
         raise Exception('plot cannot be used in low_memory_mode mode.')
+
+    if isinstance(targets, dict):
+        logger.warning(
+            "targets seems to be in a legacy format. A conversion will"
+            " be performed."
+        )
+        targets = convert_legacy_targets(targets)
 
     if not low_memory_mode:
         cells = _read_extract(
@@ -610,7 +665,12 @@ def extract_efeatures(
             spike_threshold=spike_threshold_rheobase
         )
 
-    protocols = mean_efeatures(cells, targets, use_global_rheobase=True)
+    protocols = group_efeatures(
+        cells,
+        targets,
+        use_global_rheobase=True,
+        protocol_mode=protocol_mode
+    )
 
     efeatures, protocol_definitions, current = create_feature_protocol_files(
         cells,
@@ -629,10 +689,10 @@ def extract_efeatures(
 
 
 def plot_recordings(
-    files_metadata,
-    output_directory="./figures/",
-    recording_reader=None,
-    map_function=map,
+        files_metadata,
+        output_directory="./figures/",
+        recording_reader=None,
+        map_function=map,
 ):
     """
     Plots recordings.

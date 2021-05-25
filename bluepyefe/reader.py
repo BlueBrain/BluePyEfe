@@ -21,7 +21,6 @@ Copyright (c) 2020, EPFL/Blue Brain Project
 
 
 import logging
-
 import h5py
 import numpy
 import scipy.io
