@@ -1441,43 +1441,37 @@ class Extractor(object):
         in json file"""
         logger.info(" Saving config files to %s", directory)
 
-        if version == 'legacy':
-
+        if version == "legacy":
             indent = 8
             stim = OrderedDict()
             feat = OrderedDict()
 
             for i_exp, expname in enumerate(self.experiments):
                 if expname in dataset:
-                    location = dataset[expname]['location']
+                    location = dataset[expname]["location"]
 
                     for fi, feature in enumerate(self.features[expname]):
                         for it, target in enumerate(self.options["target"]):
 
-                            if str(target) in dataset[expname][
-                                    'mean_features'][feature]:
+                            if str(target) in dataset[expname]["mean_features"][feature]:
 
                                 t = str(target)
-                                stimname = expname + '_' + t
+                                stimname = expname + "_" + t
 
                                 m = round(
-                                    dataset[expname]['mean_features']
-                                    [feature][str(target)],
-                                    4)
+                                    dataset[expname]["mean_features"][feature][str(target)],
+                                    4,
+                                )
                                 s = round(
-                                    dataset[expname]['std_features']
-                                    [feature][str(target)],
-                                    4)
-                                n = int(dataset[expname]['n']
-                                        [feature][str(target)])
+                                    dataset[expname]["std_features"][feature][str(target)],
+                                    4,
+                                )
+                                n = int(dataset[expname]["n"][feature][str(target)])
 
-                                if "zero_std" in self.options and \
-                                        self.options["zero_std"]:
+                                if "zero_std" in self.options and self.options["zero_std"]:
                                     rules = [~numpy.isnan(m)]
                                 else:
-                                    rules = [
-                                        ~numpy.isnan(m), (s > 0.0) or
-                                        (m == 0.0)]
+                                    rules = [~numpy.isnan(m), (s > 0.0) or (m == 0.0)]
 
                                 if all(rules):
                                     if s == 0.0:  # prevent divison by 0
@@ -1490,100 +1484,94 @@ class Extractor(object):
                                         feat[stimname] = OrderedDict()
 
                                     if location not in feat[stimname]:
-                                        feat[stimname][location] = \
-                                            OrderedDict()
+                                        feat[stimname][location] = OrderedDict()
 
                                     feat[stimname][location][feature] = [m, s]
 
-                                    a = round(
-                                        dataset[expname]['mean_amp']
-                                        [str(target)],
-                                        6)
+                                    a = round(dataset[expname]["mean_amp"][str(target)], 6)
                                     h = round(
-                                        dataset[expname]['mean_hypamp']
-                                        [str(target)],
-                                        6)
-                                    ton = dataset[expname]['mean_ton']
-                                    toff = dataset[expname]['mean_toff']
-                                    tend = dataset[expname]['mean_tend']
+                                        dataset[expname]["mean_hypamp"][str(target)], 6
+                                    )
+                                    ton = dataset[expname]["mean_ton"]
+                                    toff = dataset[expname]["mean_toff"]
+                                    tend = dataset[expname]["mean_tend"]
 
-                                    if 'stimuli' not in stim[stimname]:
+                                    if "stimuli" not in stim[stimname]:
 
                                         totduration = round(tend)
-                                        delay = round(
-                                            self.options["delay"] + ton)
+                                        delay = round(self.options["delay"] + ton)
                                         duration = round(toff - ton)
 
-                                        stim[stimname]['stimuli'] = [
-                                            OrderedDict([
-                                                ("delay", delay),
-                                                ("amp", a),
-                                                ("duration", duration),
-                                                ("totduration", totduration),
-                                            ]),
-                                            OrderedDict([
-                                                ("delay", 0.0),
-                                                ("amp", h),
-                                                ("duration", totduration),
-                                                ("totduration", totduration),
-                                            ]),
+                                        stim[stimname]["stimuli"] = [
+                                            OrderedDict(
+                                                [
+                                                    ("delay", delay),
+                                                    ("amp", a),
+                                                    ("duration", duration),
+                                                    ("totduration", totduration),
+                                                ]
+                                            ),
+                                            OrderedDict(
+                                                [
+                                                    ("delay", 0.0),
+                                                    ("amp", h),
+                                                    ("duration", totduration),
+                                                    ("totduration", totduration),
+                                                ]
+                                            ),
                                         ]
 
             stim = OrderedDict([(self.mainname, stim)])
             feat = OrderedDict([(self.mainname, feat)])
 
         else:
-
             indent = 6
             stim = OrderedDict()
             feat = OrderedDict()
             featraw = OrderedDict()
 
             boxcox = False
-            if ('boxcox' in self.options) and self.options['boxcox']:
+            if ("boxcox" in self.options) and self.options["boxcox"]:
                 boxcox = True
 
             fid = 0
             for i_exp, expname in enumerate(self.experiments):
                 if expname in dataset:
-                    location = dataset[expname]['location']
+                    location = dataset[expname]["location"]
 
                     for fi, feature in enumerate(self.features[expname]):
                         for it, target in enumerate(self.options["target"]):
 
-                            if str(target) in dataset[expname][
-                                    'mean_features'][feature]:
+                            if str(target) in dataset[expname]["mean_features"][feature]:
 
                                 t = str(target)
-                                stimname = expname + '_' + t
+                                stimname = expname + "_" + t
 
                                 m = round(
-                                    dataset[expname]['mean_features']
-                                    [feature][str(target)],
-                                    4)
+                                    dataset[expname]["mean_features"][feature][str(target)],
+                                    4,
+                                )
                                 s = round(
-                                    dataset[expname]['std_features']
-                                    [feature][str(target)],
-                                    4)
-                                n = int(dataset[expname]['n']
-                                        [feature][str(target)])
+                                    dataset[expname]["std_features"][feature][str(target)],
+                                    4,
+                                )
+                                n = int(dataset[expname]["n"][feature][str(target)])
 
                                 if self.saveraw:
-                                    raw = dataset[expname]['raw'][feature][
-                                        str(target)]
+                                    raw = dataset[expname]["raw"][feature][str(target)]
 
-                                bcm = dataset[expname]['bc_mean_features'][
-                                    feature][
-                                    str(target)]
-                                bcs = dataset[expname]['bc_std_features'][
-                                    feature][
-                                    str(target)]
-                                bcshift = dataset[expname][
-                                    'bc_shift_features'][feature][
-                                    str(target)]
-                                bcld = dataset[expname]['bc_ld_features'][
-                                    feature][
-                                    str(target)]
+                                bcm = dataset[expname]["bc_mean_features"][feature][
+                                    str(target)
+                                ]
+                                bcs = dataset[expname]["bc_std_features"][feature][
+                                    str(target)
+                                ]
+                                bcshift = dataset[expname]["bc_shift_features"][feature][
+                                    str(target)
+                                ]
+                                bcld = dataset[expname]["bc_ld_features"][feature][
+                                    str(target)
+                                ]
 
                                 if boxcox:
                                     do_add = ~numpy.isnan(bcm)
@@ -1611,153 +1599,173 @@ class Extractor(object):
 
                                     if boxcox and (bcshift is not False):
                                         feat[stimname][location].append(
-                                            OrderedDict([
-                                                ("feature", feature),
-                                                ("val",
-                                                 [m, s, bcm, bcs,
-                                                  bcld, bcshift]),
-                                                ("n", n),
-                                                ("fid", fid)
-                                            ]))
+                                            OrderedDict(
+                                                [
+                                                    ("feature", feature),
+                                                    (
+                                                        "val",
+                                                        [m, s, bcm, bcs, bcld, bcshift],
+                                                    ),
+                                                    ("n", n),
+                                                    ("fid", fid),
+                                                ]
+                                            )
+                                        )
 
                                         if self.saveraw:
                                             featraw[stimname][location].append(
-                                                OrderedDict([
-                                                    ("feature", feature),
-                                                    ("val", [m, s, bcm, bcs,
-                                                             bcld, bcshift]),
-                                                    ("n", n),
-                                                    ("fid", fid),
-                                                    ("raw", raw)
-                                                ]))
+                                                OrderedDict(
+                                                    [
+                                                        ("feature", feature),
+                                                        (
+                                                            "val",
+                                                            [m, s, bcm, bcs, bcld, bcshift],
+                                                        ),
+                                                        ("n", n),
+                                                        ("fid", fid),
+                                                        ("raw", raw),
+                                                    ]
+                                                )
+                                            )
 
                                     else:
 
                                         feat[stimname][location].append(
-                                            OrderedDict([
-                                                ("feature", feature),
-                                                ("val", [m, s]),
-                                                ("n", n),
-                                                ("fid", fid)
-                                            ]))
-
-                                        if self.saveraw:
-                                            featraw[stimname][location].append(
-                                                OrderedDict([
+                                            OrderedDict(
+                                                [
                                                     ("feature", feature),
                                                     ("val", [m, s]),
                                                     ("n", n),
                                                     ("fid", fid),
-                                                    ("raw", raw)
-                                                ]))
+                                                ]
+                                            )
+                                        )
+
+                                        if self.saveraw:
+                                            featraw[stimname][location].append(
+                                                OrderedDict(
+                                                    [
+                                                        ("feature", feature),
+                                                        ("val", [m, s]),
+                                                        ("n", n),
+                                                        ("fid", fid),
+                                                        ("raw", raw),
+                                                    ]
+                                                )
+                                            )
 
                                     fid += 1
 
-                                    if expname in self.options[
-                                            "strict_stiminterval"].keys(
+                                    if (
+                                        expname
+                                        in self.options["strict_stiminterval"].keys()
                                     ):
                                         strict_stiminterval = self.options[
-                                            "strict_stiminterval"][expname]
+                                            "strict_stiminterval"
+                                        ][expname]
                                     else:
                                         strict_stiminterval = self.options[
-                                            "strict_stiminterval"]['base']
+                                            "strict_stiminterval"
+                                        ]["base"]
                                     feat[stimname][location][-1][
-                                        "strict_stim"] = strict_stiminterval
+                                        "strict_stim"
+                                    ] = strict_stiminterval
 
                                     if self.saveraw:
                                         featraw[stimname][location][-1][
-                                            "strict_stim"] = \
-                                            strict_stiminterval
+                                            "strict_stim"
+                                        ] = strict_stiminterval
 
-                                    a = round(
-                                        dataset[expname]['mean_amp']
-                                        [str(target)],
-                                        6)
+                                    a = round(dataset[expname]["mean_amp"][str(target)], 6)
                                     h = round(
-                                        dataset[expname]['mean_hypamp']
-                                        [str(target)],
-                                        6)
+                                        dataset[expname]["mean_hypamp"][str(target)], 6
+                                    )
                                     threshold = round(
-                                        dataset[expname]
-                                        ['mean_amp_rel']
-                                        [str(target)],
-                                        4)
-                                    ton = dataset[expname]['mean_ton']
-                                    toff = dataset[expname]['mean_toff']
-                                    tend = dataset[expname]['mean_tend']
+                                        dataset[expname]["mean_amp_rel"][str(target)], 4
+                                    )
+                                    ton = dataset[expname]["mean_ton"]
+                                    toff = dataset[expname]["mean_toff"]
+                                    tend = dataset[expname]["mean_tend"]
 
-                                    if 'stimuli' not in stim[stimname]:
+                                    if "stimuli" not in stim[stimname]:
 
                                         try:
                                             totduration = round(tend)
                                         except ValueError:
                                             totduration = numpy.NaN
-                                        delay = round(
-                                            self.options["delay"] + ton)
+                                        delay = round(self.options["delay"] + ton)
                                         duration = round(toff - ton)
 
                                         # special frequency pulse stimulus
-                                        if expname == 'H40S8':
+                                        if expname == "H40S8":
                                             n = 8
                                             duration = 2.5
-                                            stim[stimname]['type'] = \
-                                                'StepProtocol'
-                                            stim[stimname]['stimuli'] = \
-                                                OrderedDict()
-                                            stim[stimname][
-                                                'stimuli']['step'] = []
-                                            totduration = delay + n * 25.
+                                            stim[stimname]["type"] = "StepProtocol"
+                                            stim[stimname]["stimuli"] = OrderedDict()
+                                            stim[stimname]["stimuli"]["step"] = []
+                                            totduration = delay + n * 25.0
                                             # threshold not estimated,
                                             # used fixed values
-                                            threshold = 600.
+                                            threshold = 600.0
 
                                             for s in range(n):
-                                                stim[stimname]['stimuli'][
-                                                    'step'].append(
+                                                stim[stimname]["stimuli"]["step"].append(
                                                     OrderedDict(
-                                                        [("delay", delay + s *
-                                                          25.),
-                                                         ("amp", a),
-                                                         ("thresh_perc",
-                                                          threshold),
-                                                         ("duration",
-                                                          duration),
-                                                         ("totduration",
-                                                          totduration), ]))
+                                                        [
+                                                            ("delay", delay + s * 25.0),
+                                                            ("amp", a),
+                                                            ("thresh_perc", threshold),
+                                                            ("duration", duration),
+                                                            ("totduration", totduration),
+                                                        ]
+                                                    )
+                                                )
 
-                                            stim[stimname]['stimuli'][
-                                                'holding'] = OrderedDict(
-                                                [("delay", 0.0),
-                                                 ("amp", h),
-                                                 ("duration", totduration),
-                                                 ("totduration",
-                                                  totduration), ])
+                                            stim[stimname]["stimuli"][
+                                                "holding"
+                                            ] = OrderedDict(
+                                                [
+                                                    ("delay", 0.0),
+                                                    ("amp", h),
+                                                    ("duration", totduration),
+                                                    ("totduration", totduration),
+                                                ]
+                                            )
                                         else:
-                                            stim[stimname]['type'] = \
-                                                'StepProtocol'
-                                            stim[stimname][
-                                                'stimuli'] = OrderedDict([
-                                                    ('step',
-                                                     OrderedDict([
-                                                         ("delay", delay),
-                                                         ("amp", a),
-                                                         ("thresh_perc",
-                                                             threshold),
-                                                         ("duration",
-                                                             duration),
-                                                         ("totduration",
-                                                             totduration),
-                                                     ])),
-                                                    ('holding',
-                                                     OrderedDict([
-                                                         ("delay", 0.0),
-                                                         ("amp", h),
-                                                         ("duration",
-                                                             totduration),
-                                                         ("totduration",
-                                                             totduration),
-                                                     ])),
-                                                ])
+                                            stim[stimname]["type"] = "StepProtocol"
+                                            stim[stimname]["stimuli"] = OrderedDict(
+                                                [
+                                                    (
+                                                        "step",
+                                                        OrderedDict(
+                                                            [
+                                                                ("delay", delay),
+                                                                ("amp", a),
+                                                                ("thresh_perc", threshold),
+                                                                ("duration", duration),
+                                                                (
+                                                                    "totduration",
+                                                                    totduration,
+                                                                ),
+                                                            ]
+                                                        ),
+                                                    ),
+                                                    (
+                                                        "holding",
+                                                        OrderedDict(
+                                                            [
+                                                                ("delay", 0.0),
+                                                                ("amp", h),
+                                                                ("duration", totduration),
+                                                                (
+                                                                    "totduration",
+                                                                    totduration,
+                                                                ),
+                                                            ]
+                                                        ),
+                                                    ),
+                                                ]
+                                            )
 
         s = json.dumps(stim, indent=2, cls=tools.NumpyEncoder)
         s = tools.collapse_json(s, indent=indent)
@@ -1773,7 +1781,7 @@ class Extractor(object):
             s = json.dumps(featraw, indent=2, cls=tools.NumpyEncoder)
             s = tools.collapse_json(s, indent=indent)
             with gzip.open(directory + "features_sources.json.gz", "wb") as f:
-                f.write(s.encode('utf-8'))
+                f.write(s.encode("utf-8"))
 
     def create_metadataset(self):
         """
