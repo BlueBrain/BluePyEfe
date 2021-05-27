@@ -29,9 +29,6 @@ import numpy
 
 logger = logging.getLogger(__name__)
 
-DPI = 100
-PLOT_PER_COLUMN = 5
-
 
 def _save_fig(directory, filename):
     dir_path = pathlib.Path(directory)
@@ -39,7 +36,7 @@ def _save_fig(directory, filename):
 
     fig_path = dir_path / filename
 
-    plt.savefig(fig_path, dpi=DPI)
+    plt.savefig(fig_path, dpi=80)
     plt.close("all")
     plt.clf()
 
@@ -72,12 +69,12 @@ def _plot_legend(colors, markers, output_dir):
         zip(colors.keys(), colors.values(), markers.values())
     ):
         axs[0, 0].scatter(
-            x=2.0 * int(i / ncols), y=i % ncols, c=c, marker=m, s=8.0
+            x=2.5 * int(i / ncols), y=0.5 * (i % ncols), c=c, marker=m, s=8.0
         )
 
         axs[0, 0].text(
-            x=2.0 * int(i / ncols) + 0.1,
-            y=(i % ncols) - 0.08,
+            x=2.5 * int(i / ncols) + 0.1,
+            y=0.5 * (i % ncols) - 0.08,
             s=cellname,
             fontsize=5,
         )
@@ -173,6 +170,97 @@ def plot_all_recordings(cells, output_dir):
             plot_cell_recordings(cell, protocol_name, output_dir)
 
 
+def plot_efeature(
+        cells,
+        efeature,
+        protocol_name,
+        output_dir,
+        protocols=[],
+        key_amp="amp",
+        colors=None,
+        markers=None,
+):
+    """Plot one efeature for a protocol"""
+
+    if not cells:
+        logger.warning("In plot_efeature, no cells object to plot.")
+        return None
+
+    if not colors or not markers:
+        colors, markers = _get_colors_markers_wheels(cells)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+
+    has_data = False
+
+    for cell in cells:
+
+        x, y = [], []
+        for rec in cell.get_recordings_by_protocol_name(protocol_name):
+            if hasattr(rec, key_amp) and getattr(rec, key_amp):
+                x.append(getattr(rec, key_amp))
+                y.append(rec.efeatures[efeature])
+
+        if y:
+            has_data = True
+
+        ax.scatter(
+            x, y, c=colors[cell.name], marker=markers[cell.name], s=5.0
+        )
+
+        for protocol in protocols:
+            if protocol.name == protocol_name:
+
+                if key_amp == "amp_rel":
+                    x_key = protocol.amplitude
+                elif key_amp == "amp":
+                    x_key = numpy.mean([t.amp for t in protocol.recordings])
+
+                target = next(
+                    (t for t in protocol.feature_targets if
+                     t.efel_feature_name == efeature),
+                    None
+                )
+
+                ax.errorbar(
+                    x_key,
+                    target.mean,
+                    yerr=target.std,
+                    marker="o",
+                    elinewidth=0.7,
+                    markersize=3.0,
+                    c="gray",
+                    zorder=100,
+                    alpha=0.6,
+                )
+
+    if not has_data:
+        return
+
+    if key_amp == "amp_rel":
+        ax.set_xlabel(
+            "Relative step amplitude" " ($I/I_{thresh}$)", size="x-large"
+        )
+    elif key_amp == "amp":
+        ax.set_xlabel("Step amplitude (nA)", size="x-large")
+    ax.set_ylabel(efeature, size="x-large")
+    ax.set_title(
+        f"Protocol: {protocol_name}, EFeature: {efeature}", size="xx-large"
+    )
+
+    if len(cells) == 1:
+        filename = "{}_{}_{}_{}.pdf".format(
+            cells[0].name, protocol_name, efeature, key_amp
+        )
+        dirname = pathlib.Path(output_dir) / cells[0].name
+    else:
+        filename = "{}_{}_{}.pdf".format(protocol_name, efeature, key_amp)
+        dirname = pathlib.Path(output_dir)
+
+    _save_fig(dirname, filename)
+
+
 def plot_efeatures(
     cells,
     protocol_name,
@@ -180,7 +268,7 @@ def plot_efeatures(
     protocols=[],
     key_amp="amp",
     colors=None,
-    markers=None,
+    markers=None
 ):
     """
     Plot the efeatures of a cell or a group of cells versus current amplitude
@@ -191,134 +279,22 @@ def plot_efeatures(
         logger.warning("In plot_efeatures, no cells object to plot.")
         return None, None
 
-    if not colors or not markers:
-        colors, markers = _get_colors_markers_wheels(cells)
-
     efeatures = set()
     for p in protocols:
         if p.name == protocol_name:
             efeatures.update([t.efel_feature_name for t in p.feature_targets])
 
-    figsize = [
-        3.0 + 1.7 * int(len(efeatures) / PLOT_PER_COLUMN),
-        2.0 * PLOT_PER_COLUMN,
-    ]
-
-    NCOL = math.ceil(len(efeatures) / PLOT_PER_COLUMN)
-    if NCOL == 0:
-        NCOL += 1
-
-    fig, axs = plt.subplots(
-        PLOT_PER_COLUMN,
-        NCOL,
-        figsize=figsize,
-        squeeze=False,
-    )
-
-    xpos = None
     for fi, efeature in enumerate(efeatures):
-
-        xpos = fi % PLOT_PER_COLUMN
-        ypos = int(fi / PLOT_PER_COLUMN)
-
-        for cell in cells:
-
-            x, y = [], []
-
-            for rec in cell.get_recordings_by_protocol_name(protocol_name):
-
-                try:
-                    x.append(getattr(rec, key_amp))
-                except ObjectDoesNotExist:
-                    raise Exception(
-                        "The key_amp you are trying to use does not exist"
-                        " for this protocol."
-                    )
-
-                y.append(rec.efeatures[efeature])
-
-            axs[xpos][ypos].scatter(
-                x, y, c=colors[cell.name], marker=markers[cell.name], s=5.0
-            )
-
-            # Plot the mean and standard deviation for the targets
-            for protocol in protocols:
-
-                if protocol.name == protocol_name:
-
-                    if key_amp == "amp_rel":
-                        x_key = protocol.amplitude
-                    elif key_amp == "amp":
-                        x_key = numpy.mean(
-                            [t.amp for t in protocol.recordings]
-                        )
-
-                    target = next(
-                        (t for t in protocol.feature_targets if
-                         t.efel_feature_name == efeature),
-                        None
-                    )
-
-                    axs[xpos][ypos].errorbar(
-                        x_key,
-                        target.mean,
-                        yerr=target.std,
-                        marker="o",
-                        elinewidth=0.7,
-                        markersize=3.0,
-                        c="gray",
-                        zorder=100,
-                        alpha=0.6,
-                    )
-
-        if xpos is not None:
-            axs[xpos][ypos].set_ylabel(efeature, size="small")
-
-            axs[xpos][ypos].tick_params(
-                axis="both", which="major", labelsize=6
-            )
-            axs[xpos][ypos].tick_params(
-                axis="both", which="minor", labelsize=3
-            )
-            axs[xpos][ypos].tick_params(
-                axis="both", which="major", labelsize=6
-            )
-            axs[xpos][ypos].tick_params(
-                axis="both", which="minor", labelsize=3
-            )
-
-    # Remove surplus of subplots
-    if xpos:
-        for ax_idx in range(xpos + 1, PLOT_PER_COLUMN):
-            fig.delaxes(axs[ax_idx, -1])
-
-    if key_amp == "amp_rel":
-        fig.text(
-            0.5,
-            0.01,
-            r"Relative step amplitude" " ($I/I_{thresh}$)",
-            ha="center",
+        plot_efeature(
+            cells,
+            efeature,
+            protocol_name,
+            output_dir,
+            protocols=[],
+            key_amp=key_amp,
+            colors=colors,
+            markers=markers,
         )
-    elif key_amp == "amp":
-        fig.text(0.5, 0.01, "Step amplitude (nA)", ha="center")
-
-    fig.suptitle("Protocol: {}".format(protocol_name))
-
-    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-
-    if len(cells) == 1:
-        filename = "{}_{}_efeatures_{}.pdf".format(
-            cells[0].name, protocol_name, key_amp
-        )
-        dirname = pathlib.Path(output_dir) / cells[0].name
-
-    else:
-        filename = "{}_efeatures_{}.pdf".format(protocol_name, key_amp)
-        dirname = pathlib.Path(output_dir)
-
-    _save_fig(dirname, filename)
-
-    return fig, axs
 
 
 def plot_individual_efeatures(
