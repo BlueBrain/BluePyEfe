@@ -1115,6 +1115,9 @@ class Extractor(object):
                     self.dataset_mean[expname]['bc_ld_features'][feature][
                         str(target)] = bcld
 
+        with open(self.maindirname + "dataset_means.json", "w") as handle:
+            json.dump(self.dataset_mean, handle, indent=4, cls=tools.NumpyEncoder)
+
     def get_threshold(self, amp, numspikes):
         """Get the spiking threshold of a cell by taking the smallest current
         amplitude for which it fires"""
