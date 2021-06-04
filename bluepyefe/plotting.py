@@ -36,7 +36,7 @@ def _save_fig(directory, filename):
 
     fig_path = dir_path / filename
 
-    plt.savefig(fig_path, dpi=80)
+    plt.savefig(fig_path, dpi=80, pad_inches=0)
     plt.close("all")
     plt.clf()
 
@@ -93,7 +93,7 @@ def _plot_legend(colors, markers, output_dir):
 
 
 def plot_cell_recordings(cell, protocol_name, output_dir):
-    """Plot the recordings of a cell for a protocol"""
+    """Plot all the recordings of a cell matching a protocol name"""
 
     recordings = cell.get_recordings_by_protocol_name(protocol_name)
 
@@ -103,17 +103,19 @@ def plot_cell_recordings(cell, protocol_name, output_dir):
     recordings_amp = [rec.amp for rec in recordings]
     recordings = [recordings[k] for k in numpy.argsort(recordings_amp)]
 
-    nbr_x = 10.0
-    nbr_y = 2 * math.ceil(len(recordings) / nbr_x)
-    figsize = [3.0 + 1.7 * int(nbr_x), 2.2 * nbr_y]
+    n_cols = 10
+    n_rows = int(2 * math.ceil(len(recordings) / n_cols))
+
     fig, axs = plt.subplots(
-        int(nbr_y), int(nbr_x), figsize=figsize, squeeze=False
+        n_rows, n_cols,
+        figsize=[3.0 + 1.9 * int(n_cols), 2.4 * n_rows],
+        squeeze=False
     )
 
     for i, rec in enumerate(recordings):
 
-        xpos = 2 * int(i / nbr_x)
-        ypos = i % int(nbr_x)
+        col = i % int(n_cols)
+        row = 2 * int(i / n_cols)
 
         title = "Amp = {:.03f}".format(rec.amp)
 
@@ -126,34 +128,41 @@ def plot_cell_recordings(cell, protocol_name, output_dir):
         if rec.repetition is not None:
             title += "\nRepetition: {}".format(rec.repetition)
 
-        axs[xpos][ypos].set_title(title, size="x-small")
+        axs[row][col].set_title(title, size="x-small")
 
-        axs[xpos][ypos].plot(rec.t, rec.current, c="C0")
+        axs[row][col].plot(rec.t, rec.current, c="C0")
 
         gen_t, gen_i = rec.generate()
-        axs[xpos][ypos].plot(gen_t, gen_i, c="C1", ls="--")
+        axs[row][col].plot(gen_t, gen_i, c="C1", ls="--")
 
-        axs[xpos + 1][ypos].plot(rec.t, rec.voltage, c="C0")
+        axs[row + 1][col].plot(rec.t, rec.voltage, c="C0")
 
-        if ypos == 0:
-            axs[xpos][ypos].set_ylabel("Current (nA)")
-        if ypos == 0:
-            axs[xpos + 1][ypos].set_ylabel("Voltage (mV)")
+        if col == 0:
+            axs[row][col].set_ylabel("Current (nA)")
+        if col == 0:
+            axs[row + 1][col].set_ylabel("Voltage (mV)")
+        if row + 1 == axs.shape[0]:
+            axs[row][col].set_ylabel("Time (ms)")
 
-        axs[xpos][ypos].tick_params(axis="both", which="major", labelsize=8)
-        axs[xpos][ypos].tick_params(axis="both", which="minor", labelsize=6)
-        axs[xpos + 1][ypos].tick_params(
+        axs[row][col].tick_params(axis="both", which="major", labelsize=8)
+        axs[row][col].tick_params(axis="both", which="minor", labelsize=6)
+        axs[row + 1][col].tick_params(
             axis="both", which="major", labelsize=8
         )
-        axs[xpos + 1][ypos].tick_params(
+        axs[row + 1][col].tick_params(
             axis="both", which="minor", labelsize=6
         )
 
-    fig.text(0.5, 0.04, "Time (ms)", ha="center")
-
     fig.suptitle("Cell: {}, Experiment: {}".format(cell.name, protocol_name))
 
-    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.subplots_adjust(wspace=0.53, hspace=0.7)
+
+    for ax in axs.flatten():
+        if not ax.lines:
+            ax.set_visible(False)
+
+    # Do not use tight-layout, it significantly increases the runtime
+    plt.margins(0, 0)
 
     filename = "{}_{}_recordings.pdf".format(cell.name, protocol_name)
     dirname = pathlib.Path(output_dir) / cell.name
