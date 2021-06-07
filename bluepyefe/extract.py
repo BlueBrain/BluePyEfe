@@ -490,7 +490,7 @@ def _read_extract_low_memory(
         cell.recordings = [rec for rec in cell.recordings if rec.amp > 0.]
 
         extract_efeatures_at_targets(
-            [cell], targets, map_function=map, efel_settings
+            [cell], targets, map, efel_settings
         )
 
         # clean traces voltage and time
