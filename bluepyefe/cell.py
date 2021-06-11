@@ -55,7 +55,7 @@ class Cell(object):
             return recording_reader(config_data)
         if ".abf" in filename:
             return axon_reader(config_data)
-        if ".ibw" in filename:
+        if ".ibw" in filename or ".bwav" in filename:
             return igor_reader(config_data)
         if ".nwb" in filename:
             return nwb_reader_BBP(config_data)
