@@ -202,9 +202,8 @@ def nwb_reader_BBP(in_data):
     for cell_id in r["data_organization"].keys():
 
         if ecode not in r["data_organization"][cell_id]:
-            raise Exception(
-                f"No eCode {ecode} in nwb  {in_data['filepath']}."
-            )
+            logger.warning(f"No eCode {ecode} in nwb  {in_data['filepath']}.")
+            return [] 
 
         av_reps = list(r["data_organization"][cell_id][ecode].keys())
         av_reps_id = [int(rep.replace("repetition ", "")) for rep in av_reps]
