@@ -104,6 +104,16 @@ def igor_reader(in_data):
     notes_v, voltage = igorpy.read(in_data["v_file"])
     notes_i, current = igorpy.read(in_data["i_file"])
 
+    if "A" in notes_v.dUnits and "V" in notes_i.dUnits:
+
+        logger.warning(
+            "It seems that the i_file and v_file are reversed for file: "
+            "{}".format(in_data["v_file"])
+        )
+
+        voltage, current = current, voltage
+        notes_v, notes_i = notes_i, notes_v
+
     # Extract data
     trace_data = {}
     trace_data["voltage"] = numpy.asarray(voltage)
@@ -203,7 +213,7 @@ def nwb_reader_BBP(in_data):
 
         if ecode not in r["data_organization"][cell_id]:
             logger.warning(f"No eCode {ecode} in nwb  {in_data['filepath']}.")
-            return [] 
+            return []
 
         av_reps = list(r["data_organization"][cell_id][ecode].keys())
         av_reps_id = [int(rep.replace("repetition ", "")) for rep in av_reps]
