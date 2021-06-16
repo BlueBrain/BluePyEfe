@@ -207,57 +207,59 @@ def nwb_reader_BBP(in_data):
 
     data = []
 
-    ecode = in_data['protocol_name']
+    ecodes = in_data['protocol_name']
+    if isinstance(ecodes, str):
+        ecodes = [ecodes]
+    for ecode in ecodes:
+        for cell_id in r["data_organization"].keys():
 
-    for cell_id in r["data_organization"].keys():
+            if ecode not in r["data_organization"][cell_id]:
+                logger.warning(f"No eCode {ecode} in nwb  {in_data['filepath']}.")
+                return []
 
-        if ecode not in r["data_organization"][cell_id]:
-            logger.warning(f"No eCode {ecode} in nwb  {in_data['filepath']}.")
-            return []
+            av_reps = list(r["data_organization"][cell_id][ecode].keys())
+            av_reps_id = [int(rep.replace("repetition ", "")) for rep in av_reps]
 
-        av_reps = list(r["data_organization"][cell_id][ecode].keys())
-        av_reps_id = [int(rep.replace("repetition ", "")) for rep in av_reps]
-
-        if "repetition" in in_data and in_data["repetition"]:
-            if isinstance(in_data["repetition"], list):
-                rep_iter = [av_reps[av_reps_id.index(i)]
-                            for i in in_data["repetition"]]
+            if "repetition" in in_data and in_data["repetition"]:
+                if isinstance(in_data["repetition"], list):
+                    rep_iter = [av_reps[av_reps_id.index(i)]
+                                for i in in_data["repetition"]]
+                else:
+                    rep_iter = [av_reps[av_reps_id.index(in_data["repetition"])]]
             else:
-                rep_iter = [av_reps[av_reps_id.index(in_data["repetition"])]]
-        else:
-            rep_iter = r["data_organization"][cell_id][ecode].keys()
+                rep_iter = r["data_organization"][cell_id][ecode].keys()
 
-        for rep in rep_iter:
+            for rep in rep_iter:
 
-            for sweep in r["data_organization"][cell_id][ecode][rep].keys():
+                for sweep in r["data_organization"][cell_id][ecode][rep].keys():
 
-                sweeps = r["data_organization"][cell_id][ecode][rep][sweep]
+                    sweeps = r["data_organization"][cell_id][ecode][rep][sweep]
 
-                for trace in list(sweeps.keys()):
+                    for trace in list(sweeps.keys()):
 
-                    if "ccs_" in trace:
-                        key_current = trace.replace("ccs_", "ccss_")
-                    else:
-                        continue
+                        if "ccs_" in trace:
+                            key_current = trace.replace("ccs_", "ccss_")
+                        else:
+                            continue
 
-                    v = r["acquisition"][trace]
-                    i = r["stimulus"]["presentation"][key_current]
+                        v = r["acquisition"][trace]
+                        i = r["stimulus"]["presentation"][key_current]
 
-                    trace_data = {
-                        "voltage": numpy.array(
-                            v["data"][()] * v["data"].attrs["conversion"],
-                            dtype="float32"
-                        ),
-                        "current": numpy.array(
-                            i["data"][()] * i["data"].attrs["conversion"],
-                            dtype="float32",
-                        ),
-                        "dt": 1.0 / float(v["starting_time"].attrs["rate"]),
-                        "id": str(trace),
-                        "repetition": int(rep.replace("repetition ", ""))
-                    }
+                        trace_data = {
+                            "voltage": numpy.array(
+                                v["data"][()] * v["data"].attrs["conversion"],
+                                dtype="float32"
+                            ),
+                            "current": numpy.array(
+                                i["data"][()] * i["data"].attrs["conversion"],
+                                dtype="float32",
+                            ),
+                            "dt": 1.0 / float(v["starting_time"].attrs["rate"]),
+                            "id": str(trace),
+                            "repetition": int(rep.replace("repetition ", ""))
+                        }
 
-                    data.append(trace_data)
+                        data.append(trace_data)
 
     return data
 
