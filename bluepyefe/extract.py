@@ -562,7 +562,7 @@ def extract_efeatures(
         files_metadata,
         targets,
         threshold_nvalue_save,
-        protocols_rheobase=None,
+        protocols_rheobase,
         recording_reader=None,
         map_function=map,
         write_files=False,
@@ -629,14 +629,10 @@ def extract_efeatures(
             in the targets per efeature, the latter will have priority.
     """
 
-    if protocols_rheobase is None:
-        protocols_rheobase = []
-
-    if low_memory_mode and map_function != map:
+    if low_memory_mode and map_function not in [map, None]:
         logger.warning(
             "low_memory_mode is not compatible with the use of map_function"
         )
-
     if low_memory_mode and plot:
         raise Exception('plot cannot be used in low_memory_mode mode.')
 
