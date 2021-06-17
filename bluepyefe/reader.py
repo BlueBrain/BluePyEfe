@@ -217,6 +217,7 @@ def nwb_reader_BBP(in_data):
                 logger.warning(
                     f"No eCode {ecode} in nwb  {in_data['filepath']}."
                 )
+                continue
 
             av_reps = list(r["data_organization"][cell_id][ecode].keys())
             av_reps_id = [int(rep.replace("repetition ", ""))
