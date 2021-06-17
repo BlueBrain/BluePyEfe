@@ -214,24 +214,29 @@ def nwb_reader_BBP(in_data):
         for cell_id in r["data_organization"].keys():
 
             if ecode not in r["data_organization"][cell_id]:
-                logger.warning(f"No eCode {ecode} in nwb  {in_data['filepath']}.")
+                logger.warning(
+                    f"No eCode {ecode} in nwb  {in_data['filepath']}."
+                )
                 return []
 
             av_reps = list(r["data_organization"][cell_id][ecode].keys())
-            av_reps_id = [int(rep.replace("repetition ", "")) for rep in av_reps]
+            av_reps_id = [int(rep.replace("repetition ", ""))
+                          for rep in av_reps]
 
             if "repetition" in in_data and in_data["repetition"]:
                 if isinstance(in_data["repetition"], list):
                     rep_iter = [av_reps[av_reps_id.index(i)]
                                 for i in in_data["repetition"]]
                 else:
-                    rep_iter = [av_reps[av_reps_id.index(in_data["repetition"])]]
+                    rep_iter = [
+                        av_reps[av_reps_id.index(in_data["repetition"])]]
             else:
                 rep_iter = r["data_organization"][cell_id][ecode].keys()
 
             for rep in rep_iter:
 
-                for sweep in r["data_organization"][cell_id][ecode][rep].keys():
+                for sweep in r["data_organization"][cell_id][ecode][
+                        rep].keys():
 
                     sweeps = r["data_organization"][cell_id][ecode][rep][sweep]
 
@@ -254,7 +259,8 @@ def nwb_reader_BBP(in_data):
                                 i["data"][()] * i["data"].attrs["conversion"],
                                 dtype="float32",
                             ),
-                            "dt": 1.0 / float(v["starting_time"].attrs["rate"]),
+                            "dt": 1.0
+                            / float(v["starting_time"].attrs["rate"]),
                             "id": str(trace),
                             "repetition": int(rep.replace("repetition ", ""))
                         }
