@@ -570,7 +570,8 @@ def extract_efeatures(
         low_memory_mode=False,
         spike_threshold_rheobase=1,
         protocol_mode="mean",
-        efel_settings=None
+        efel_settings=None,
+        extract_per_cell=False
 ):
     """
     Extract efeatures.
@@ -627,6 +628,8 @@ def extract_efeatures(
         efel_settings (dict): efel settings in the form
             {setting_name: setting_value}. If settings are also informed
             in the targets per efeature, the latter will have priority.
+        extract_per_cell (bool): if True, also generates the features.json and
+            protocol.json for each individual cells.
     """
 
     if low_memory_mode and map_function not in [map, None]:
@@ -656,12 +659,11 @@ def extract_efeatures(
             files_metadata, recording_reader, targets, efel_settings
         )
 
-    if protocols_rheobase:
-        compute_rheobase(
-            cells,
-            protocols_rheobase=protocols_rheobase,
-            spike_threshold=spike_threshold_rheobase
-        )
+    compute_rheobase(
+        cells,
+        protocols_rheobase=protocols_rheobase,
+        spike_threshold=spike_threshold_rheobase
+    )
 
     protocols = group_efeatures(
         cells,
@@ -682,6 +684,32 @@ def extract_efeatures(
         plot_all_recordings_efeatures(
             cells, protocols, output_dir=output_directory
         )
+
+    if extract_per_cell and write_files:
+
+        for cell_name in files_metadata:
+
+            cell_directory = str(pathlib.Path(output_directory) / cell_name)
+
+            for cell in cells:
+
+                if cell.name != cell_name:
+                    continue
+
+                cell_protocols = group_efeatures(
+                    [cell],
+                    targets,
+                    use_global_rheobase=True,
+                    protocol_mode=protocol_mode
+                )
+
+                _ = create_feature_protocol_files(
+                    [cell],
+                    cell_protocols,
+                    output_directory=cell_directory,
+                    threshold_nvalue_save=threshold_nvalue_save,
+                    write_files=write_files,
+                )
 
     return efeatures, protocol_definitions, current
 
