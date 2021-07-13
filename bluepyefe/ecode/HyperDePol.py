@@ -179,7 +179,7 @@ class HyperDePol(Recording):
     def in_target(self, target, tolerance):
         """Returns a boolean. True if the amplitude of the eCode is close to
         target and False otherwise."""
-        if numpy.abs(target - self.amp2_rel) < tolerance:
+        if numpy.abs(target - self.amp_rel) < tolerance:
             return True
         else:
             return False
