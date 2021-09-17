@@ -166,6 +166,14 @@ class Protocol():
 
         for key in params[0]:
 
+            if isinstance(params[0][key], (list, numpy.ndarray)):
+                logger.warning(
+                    "Parameter {} for protocol {} is a list and cannot be "
+                    "averaged across recordings".format(key, self.name)
+                )
+                setattr(ecode, key, params[0][key])
+                continue
+
             if key == "amp" and self.global_rheobase:
                 amp_rel = operator([c["amp_rel"] for c in params])
                 mean_param = float(amp_rel) * self.global_rheobase / 100.
