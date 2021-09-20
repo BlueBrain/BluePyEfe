@@ -244,6 +244,8 @@ def nwb_reader_BBP(in_data):
 
                         if "ccs_" in trace:
                             key_current = trace.replace("ccs_", "ccss_")
+                        elif "ic_" in trace:
+                            key_current = trace.replace("ic_", "ics_")
                         else:
                             continue
 
