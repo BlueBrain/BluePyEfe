@@ -122,9 +122,11 @@ class SpikeRec(Recording):
 
         ecode_params = {
             "delay": self.tspike[0],
+            "n_spikes": len(self.tspike),
+            "delta": self.delta,
             "amp": self.amp,
             "thresh_perc": self.amp_rel,
-            "duration": self.tspike[-1] - self.tspike[0] + self.spike_duration,
+            "spike_duration": self.spike_duration,
             "totduration": self.tend,
         }
 
