@@ -37,7 +37,8 @@ class EFeatureTarget():
             efel_feature_name,
             protocol_name,
             amplitude,
-            tolerance
+            tolerance,
+            efel_settings=None,
     ):
         """Constructor
 
@@ -53,6 +54,7 @@ class EFeatureTarget():
                 an experimental recording will be seen as a hit during
                 efeatures extraction (expressed as a percentage of the
                 threshold amplitude (rheobase))
+            efel_settings (dict): target specific efel settings.
         """
 
         self.efel_feature_name = efel_feature_name
@@ -60,6 +62,10 @@ class EFeatureTarget():
 
         self.amplitude = amplitude
         self.tolerance = tolerance
+
+        self.efel_settings = efel_settings
+        if self.efel_settings is None:
+            self.efel_settings = {}
 
         self._values = []
         self._files = []
@@ -121,6 +127,7 @@ class EFeatureTarget():
             "protocol_name": self.protocol_name,
             "amplitude": self.amplitude,
             "tolerance": self.tolerance,
+            "efel_settings": self.efel_settings,
         }
 
     def as_legacy_dict(self, save_files_used=False):
@@ -139,7 +146,8 @@ class EFeatureTarget():
         feature_dict = {
             "feature": self.efel_feature_name,
             "val": [self.mean, std],
-            "n": self.sample_size
+            "n": self.sample_size,
+            "efel_settings": self.efel_settings,
         }
 
         if save_files_used:

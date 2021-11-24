@@ -245,7 +245,8 @@ def _build_protocols(targets, global_rheobase, protocol_mode):
             efel_feature_name=target['efeature'],
             protocol_name=target['protocol'],
             amplitude=target['amplitude'],
-            tolerance=target['tolerance']
+            tolerance=target['tolerance'],
+            efel_settings=target.get('efel_settings', None),
         )
 
         for i, p in enumerate(protocols):
