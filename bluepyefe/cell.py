@@ -21,6 +21,8 @@ Copyright (c) 2020, EPFL/Blue Brain Project
 from bluepyefe.ecode import eCodes
 from bluepyefe.reader import *
 
+import numpy as np
+
 logger = logging.getLogger(__name__)
 
 
@@ -119,38 +121,74 @@ class Cell(object):
         for i in self.get_recordings_id_by_protocol_name(protocol_name):
             self.recordings[i].compute_efeatures(efeatures, efel_settings)
 
-    def compute_rheobase(self, protocols_rheobase, spike_threshold=1):
+    def compute_rheobase(self, protocols_rheobase, spike_threshold=1, min_step=0.001,
+                         majority=0.5):
         """
         Compute the rheobase by finding the smallest current amplitude
-        triggering at least one spike.
+        triggering at least 'spike_threshold' spikes (default one) in the
+        majority (default 50%) of the sweeps with a certain amplitude.
 
         Args:
             protocols_rheobase (list): names of the protocols that will be
                 used to compute the rheobase of the cells. E.g: ['IDthresh'].
             spike_threshold (int): number of spikes above which a recording
                 is considered to compute the rheobase.
+            min_step (float): minimum step above which amplitudes can be
+                considered as separate steps
+            majority (float): the proportion of sweeps with spike_threshold
+                spikes to consider the target amplitude as rheobase
         """
-
         amps = []
+        spike_counts = []
 
+        # collect all amps and spikecounts for the protocol_rheobase
         for i, rec in enumerate(self.recordings):
             if rec.protocol_name in protocols_rheobase:
-                if rec.spikecount is not None and \
-                        rec.spikecount >= spike_threshold:
+                amps.append(rec.amp)
+                spike_counts.append(rec.spikecount)
 
-                    if rec.amp < 0.01:
-                        logger.warning(
-                            f"A recording of cell {self.name} protocol "
-                            f"{rec.protocol_name} shows spikes at a "
-                            "suspiciously low current in a trace from file"
-                            f" {rec.files}. Check that the ton and toff are"
-                            "correct or for the presence of unwanted spikes."
-                        )
+                if rec.amp < 0.01 and rec.spikecount >= spike_threshold:
+                    logger.warning(
+                        f"A recording of cell {self.name} protocol "
+                        f"{rec.protocol_name} shows spikes at a "
+                        "suspiciously low current in a trace from file"
+                        f" {rec.files}. Check that the ton and toff are"
+                        "correct or for the presence of unwanted spikes."
+                    )
 
-                    amps.append(rec.amp)
+        # discretize values based on the min_step 
+        amps_discrete = []
+        spike_counts_discrete = []
+        sort_idxs = np.argsort(amps)
+        spike_counts_sorted = np.array(spike_counts)[sort_idxs]
+        amps_sorted = np.array(amps)[sort_idxs]
+        step_idxs = np.where(np.diff(amps_sorted) > min_step)[0] + 1
 
-        if len(amps):
-            self.rheobase = numpy.min(amps)
+        for i, idx in enumerate(step_idxs):
+            if i == 0:
+                amp_median = np.median(amps_sorted[:idx])
+                amps_discrete.append(amp_median)
+                spike_counts_discrete.append(spike_counts_sorted[:idx])
+            elif i < len(step_idxs):
+                amp_median = np.median(amps_sorted[step_idxs[i - 1]:idx])
+                amps_discrete.append(amp_median)
+                spike_counts_discrete.append(spike_counts_sorted[step_idxs[i - 1]:idx])
+        # append last
+        amp_median = np.median(amps_sorted[step_idxs[-1]:])
+        amps_discrete.append(amp_median)
+        spike_counts_discrete.append(spike_counts_sorted[step_idxs[-1]:])
+
+        # now for each value, count the number of spike_threshold
+        for (amp, counts) in zip(amps_discrete, spike_counts_discrete):
+            if len(counts) > 1:
+                num_target = len(np.where(counts == spike_threshold)[0])
+                if num_target / len(counts) > majority:
+                    self.rheobase = amp
+                    break
+            else:
+                if counts[0] == spike_threshold:
+                    self.rheobase = amp
+                    break
 
     def compute_relative_amp(self):
         """
