@@ -4,6 +4,7 @@ import unittest
 
 import bluepyefe.cell
 import bluepyefe.recording
+from bluepyefe.rheobase import compute_rheobase_absolute
 
 
 class CellTest(unittest.TestCase):
@@ -46,7 +47,7 @@ class CellTest(unittest.TestCase):
 
     def test_amp_threshold(self):
         recording = self.cell.recordings[0]
-        self.cell.compute_rheobase(["IDRest"])
+        compute_rheobase_absolute(self.cell, ["IDRest"])
         self.cell.compute_relative_amp()
         self.assertEqual(recording.amp, self.cell.rheobase)
         self.assertEqual(recording.amp_rel, 100.0)
