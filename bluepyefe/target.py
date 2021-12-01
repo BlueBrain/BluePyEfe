@@ -18,11 +18,10 @@ Copyright (c) 2021, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
-
-
 import numpy
 import logging
 
+from .tools import merge_efel_settings
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +126,7 @@ class EFeatureTarget():
             "protocol_name": self.protocol_name,
             "amplitude": self.amplitude,
             "tolerance": self.tolerance,
-            "efel_settings": self.efel_settings,
+            "efel_settings": merge_efel_settings(self.efel_settings),
         }
 
     def as_legacy_dict(self, save_files_used=False):
@@ -147,7 +146,7 @@ class EFeatureTarget():
             "feature": self.efel_feature_name,
             "val": [self.mean, std],
             "n": self.sample_size,
-            "efel_settings": self.efel_settings,
+            "efel_settings": merge_efel_settings(self.efel_settings),
         }
 
         if save_files_used:
