@@ -18,50 +18,17 @@ Copyright (c) 2020, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
-
-
 import logging
 import numpy
 import efel
 
-from .tools import to_ms
-from .tools import to_mV
-from .tools import to_nA
+from .tools import to_ms, to_mV, to_nA, set_efel_settings
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_EFEL_SETTINGS = {
-    'strict_stiminterval': True,
-    'Threshold': -20.,
-    'interp_step': 0.025
-}
-
-
-def _set_efel_settings(efeature_settings):
-    """ Reset the eFEl settings and set them as requested by the user (uses
-        default value otherwise).
-    """
-
-    efel.reset()
-
-    settings = {**DEFAULT_EFEL_SETTINGS, **efeature_settings}
-
-    for setting, value in settings.items():
-
-        if setting == 'Threshold':
-            efel.setThreshold(value)
-
-        elif isinstance(value, bool) or isinstance(value, int):
-            efel.setIntSetting(setting, int(value))
-
-        elif isinstance(value, float):
-            efel.setDoubleSetting(setting, value)
-
-        elif isinstance(value, str):
-            efel.setStrSetting(setting, value)
-
 
 class Recording(object):
+
     def __init__(self, config_data, reader_data, protocol_name):
 
         self.config_data = config_data
@@ -171,6 +138,7 @@ class Recording(object):
             )
 
         # Correct for the liquid junction potential
+        # WARNING: the ljp is past as a positive float but we substract it from the voltage
         if "ljp" in config_data and config_data["ljp"] is not None:
             voltage = voltage - config_data["ljp"]
 
@@ -189,7 +157,7 @@ class Recording(object):
             "stim_end": [self.toff]
         }
 
-        _set_efel_settings({"stimulus_current": self.amp})
+        set_efel_settings({"stimulus_current": self.amp})
 
         efel_vals = efel.getFeatureValues(
             [efel_trace], ['peak_time'], raise_warnings=False
@@ -207,7 +175,7 @@ class Recording(object):
         for setting in efel_settings:
             if setting not in ['stim_start', 'stim_end']:
                 settings[setting] = efel_settings[setting]
-        _set_efel_settings(settings)
+        set_efel_settings(settings)
 
         efel_trace = {
             "T": self.t,

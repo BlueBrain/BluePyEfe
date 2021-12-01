@@ -18,10 +18,16 @@ Copyright (c) 2020, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
-
-
 import json
 import numpy
+import efel
+
+
+DEFAULT_EFEL_SETTINGS = {
+    'strict_stiminterval': True,
+    'Threshold': -20.,
+    'interp_step': 0.025
+}
 
 
 def to_ms(t, t_unit):
@@ -59,6 +65,36 @@ def to_mV(voltage, v_unit):
         return voltage
     else:
         raise Exception("Voltage unit '{}' is unknown.".format(v_unit))
+
+
+def merge_efel_settings(efeature_settings):
+    """Combine the current efeature's settings with the default ones"""
+
+    return {**DEFAULT_EFEL_SETTINGS, **efeature_settings}
+
+
+def set_efel_settings(efeature_settings):
+    """ Reset the eFEl settings and set them as requested by the user (uses
+        default value otherwise).
+    """
+
+    efel.reset()
+
+    settings = merge_efel_settings(efeature_settings)
+
+    for setting, value in settings.items():
+
+        if setting == 'Threshold':
+            efel.setThreshold(value)
+
+        elif isinstance(value, bool) or isinstance(value, int):
+            efel.setIntSetting(setting, int(value))
+
+        elif isinstance(value, float):
+            efel.setDoubleSetting(setting, value)
+
+        elif isinstance(value, str):
+            efel.setStrSetting(setting, value)
 
 
 def dict_to_json(data, path):
