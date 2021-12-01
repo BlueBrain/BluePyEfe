@@ -31,7 +31,7 @@ DEFAULT_EFEL_SETTINGS = {
 
 
 def to_ms(t, t_unit):
-    if t_unit == "s":
+    if t_unit == "s" or t_unit == "sec":
         return t * 1e3
     elif t_unit == "ms":
         return t

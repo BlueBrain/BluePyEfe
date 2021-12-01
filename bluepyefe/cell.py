@@ -93,12 +93,13 @@ class Cell(object):
         for config_data in protocol_data:
             for reader_data in self.reader(config_data, recording_reader):
 
-                if protocol_name.lower() in eCodes.keys():
-                    rec = eCodes[protocol_name.lower()](
-                        config_data, reader_data, protocol_name
-                    )
-
-                    self.recordings.append(rec)
+                for ecode in eCodes.keys():
+                    if ecode in protocol_name.lower():
+                        rec = eCodes[ecode](
+                            config_data, reader_data, protocol_name
+                        )
+                        self.recordings.append(rec)
+                        break
                 else:
                     raise KeyError(
                         "There is no eCode linked to the stimulus name {}. "
