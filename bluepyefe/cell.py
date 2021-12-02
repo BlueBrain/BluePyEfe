@@ -18,6 +18,9 @@ Copyright (c) 2020, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
+import logging
+import numpy
+
 from bluepyefe.ecode import eCodes
 from bluepyefe.reader import *
 
@@ -119,39 +122,6 @@ class Cell(object):
 
         for i in self.get_recordings_id_by_protocol_name(protocol_name):
             self.recordings[i].compute_efeatures(efeatures, efel_settings)
-
-    def compute_rheobase(self, protocols_rheobase, spike_threshold=1):
-        """
-        Compute the rheobase by finding the smallest current amplitude
-        triggering at least one spike.
-
-        Args:
-            protocols_rheobase (list): names of the protocols that will be
-                used to compute the rheobase of the cells. E.g: ['IDthresh'].
-            spike_threshold (int): number of spikes above which a recording
-                is considered to compute the rheobase.
-        """
-
-        amps = []
-
-        for i, rec in enumerate(self.recordings):
-            if rec.protocol_name in protocols_rheobase:
-                if rec.spikecount is not None and \
-                        rec.spikecount >= spike_threshold:
-
-                    if rec.amp < 0.01:
-                        logger.warning(
-                            f"A recording of cell {self.name} protocol "
-                            f"{rec.protocol_name} shows spikes at a "
-                            "suspiciously low current in a trace from file"
-                            f" {rec.files}. Check that the ton and toff are"
-                            "correct or for the presence of unwanted spikes."
-                        )
-
-                    amps.append(rec.amp)
-
-        if len(amps):
-            self.rheobase = numpy.min(amps)
 
     def compute_relative_amp(self):
         """

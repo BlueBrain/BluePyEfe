@@ -32,6 +32,7 @@ from bluepyefe.plotting import plot_all_recordings
 from bluepyefe.plotting import plot_all_recordings_efeatures
 from bluepyefe.protocol import Protocol
 from bluepyefe.target import EFeatureTarget
+from bluepyefe.rheobase import compute_rheobase_absolute, compute_rheobase_majority_bin
 
 logger = logging.getLogger(__name__)
 
@@ -214,7 +215,12 @@ def extract_efeatures_at_targets(
     return list(cells)
 
 
-def compute_rheobase(cells, protocols_rheobase, spike_threshold=1):
+def compute_rheobase(
+        cells,
+        protocols_rheobase,
+        rheobase_strategy="absolute",
+        rheobase_settings=None
+):
     """
     For each cell, finds the smallest current inducing a spike (rheobase).
     This currents are then use it to compute the relative amplitude of
@@ -225,12 +231,26 @@ def compute_rheobase(cells, protocols_rheobase, spike_threshold=1):
             computed
         protocols_rheobase (list): names of the protocols that will be
             used to compute the rheobase of the cells. E.g: ['IDthresh'].
-        spike_threshold (int): number of spikes above which a recording
-            is considered to compute the rheobase.
+        rheobase_strategy (str): function used to compute the rheobase. Can be
+            'absolute' (amplitude of the lowest amplitude inducing at least a spike)
+            or 'majority' (amplitude of the bin in which a majority of sweeps induced
+            at least one spike).
+        rheobase_settings (dict): settings related to the rheobase computation. Keys
+            have to match the arguments expected by the rheobase computation function
     """
 
+    if rheobase_settings is None:
+        rheobase_settings = {}
+
+    if rheobase_strategy == "absolute":
+        rheobase_function = compute_rheobase_absolute
+    elif rheobase_strategy == "majority":
+        rheobase_function = compute_rheobase_majority_bin
+    else:
+        logger.error(f"Rheobase strategy {rheobase_strategy} unknown.")
+
     for cell in cells:
-        cell.compute_rheobase(protocols_rheobase, spike_threshold)
+        rheobase_function(cell, protocols_rheobase, **rheobase_settings)
         cell.compute_relative_amp()
 
 
@@ -569,10 +589,11 @@ def extract_efeatures(
         write_files=False,
         plot=False,
         low_memory_mode=False,
-        spike_threshold_rheobase=1,
         protocol_mode="mean",
         efel_settings=None,
-        extract_per_cell=False
+        extract_per_cell=False,
+        rheobase_strategy="absolute",
+        rheobase_settings=None
 ):
     """
     Extract efeatures.
@@ -621,8 +642,6 @@ def extract_efeatures(
         low_memory_mode (bool): if True, minimizes the amount of memory used
             during the data reading and feature extraction steps by performing
             additional clean up. Not compatible with map_function.
-        spike_threshold_rheobase (int): number of spikes above which a
-            recording is considered to compute the rheobase.
         protocol_mode (str): protocol_mode (mean): if a protocol matches
             several recordings, the mode set the logic of how the output
             will be generating. Must be 'mean', 'median' or 'lnmc'
@@ -631,6 +650,12 @@ def extract_efeatures(
             in the targets per efeature, the latter will have priority.
         extract_per_cell (bool): if True, also generates the features.json and
             protocol.json for each individual cells.
+        rheobase_strategy (str): function used to compute the rheobase. Can be
+            'absolute' (amplitude of the lowest amplitude inducing at least a spike)
+            or 'majority' (amplitude of the bin in which a majority of sweeps induced
+            at least one spike).
+        rheobase_settings (dict): settings related to the rheobase computation. Keys
+            have to match the arguments expected by the rheobase computation function
     """
 
     if low_memory_mode and map_function not in [map, None]:
@@ -663,7 +688,8 @@ def extract_efeatures(
     compute_rheobase(
         cells,
         protocols_rheobase=protocols_rheobase,
-        spike_threshold=spike_threshold_rheobase
+        rheobase_strategy=rheobase_strategy,
+        rheobase_settings=rheobase_settings
     )
 
     protocols = group_efeatures(
