@@ -138,7 +138,8 @@ class Recording(object):
             )
 
         # Correct for the liquid junction potential
-        # WARNING: the ljp is past as a positive float but we substract it from the voltage
+        # WARNING: the ljp is informed as a positive float but we substract it
+        # from the voltage
         if "ljp" in config_data and config_data["ljp"] is not None:
             voltage = voltage - config_data["ljp"]
 
@@ -184,9 +185,15 @@ class Recording(object):
             'stim_end': [efel_settings.get('stim_end', self.toff)]
         }
 
-        efel_vals = efel.getFeatureValues(
-            [efel_trace], efeatures, raise_warnings=False
-        )
+        try:
+            efel_vals = efel.getFeatureValues(
+                [efel_trace], efeatures, raise_warnings=False
+            )
+        except TypeError as e:
+            if "Unknown feature name" in str(e):
+                str_f = " ".join(efeatures)
+                raise Exception("One of the following feature name does not "
+                                f"exist in eFEL: {str_f}")
 
         for efeature in efeatures:
 

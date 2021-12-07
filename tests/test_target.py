@@ -52,7 +52,7 @@ class TestEFeatureTarget(unittest.TestCase):
         dict_form_legacy = self.target.as_legacy_dict()
         self.assertEqual(len(dict_form_legacy), 4)
         self.assertEqual(len(dict_form_legacy['val']), 2)
-        self.assertEqual(len(dict_form_legacy['efel_settings']), 3)
+        self.assertEqual(len(dict_form_legacy['efel_settings']), 0)
 
     def test_str(self):
         print(self.target)

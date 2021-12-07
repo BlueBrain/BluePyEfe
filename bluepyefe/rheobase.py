@@ -58,9 +58,12 @@ def compute_rheobase_absolute(cell, protocols_rheobase, spike_threshold=1):
         cell.rheobase = numpy.min(amps)
 
 
-def compute_rheobase_majority_bin(cell, protocols_rheobase, min_step=0.01, majority=0.5):
+def compute_rheobase_majority_bin(
+    cell, protocols_rheobase, min_step=0.01, majority=0.5
+):
     """ Compute the rheobase by finding the smallest current amplitude
-    triggering at least 1 spikes in the majority (default 50%) of the recordings.
+    triggering at least 1 spikes in the majority (default 50%) of the
+    recordings.
 
     Args:
         cell (Cell): cell for which to compute the rheobase
@@ -96,7 +99,9 @@ def compute_rheobase_majority_bin(cell, protocols_rheobase, min_step=0.01, major
 
     for i, bin in enumerate(bins):
 
-        spikes = [spike_counts[j] for j, idx in enumerate(bins_of_amps) if idx == i]
+        spikes = [
+            spike_counts[j] for j, idx in enumerate(bins_of_amps) if idx == i
+        ]
         perc_spiking = numpy.mean([bool(s) for s in spikes])
 
         if perc_spiking >= majority:
