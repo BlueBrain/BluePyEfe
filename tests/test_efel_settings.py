@@ -41,17 +41,20 @@ class EfelSettingTest(unittest.TestCase):
         self.assertLess(abs(recording.efeatures["AP1_amp"] - 66.68), 0.01)
 
     def test_efel_strictstim(self):
-        
+
         self.cell.recordings[0].efeatures = {}
 
         self.cell.extract_efeatures(
             protocol_name="IDRest",
             efeatures=["Spikecount"],
-            efel_settings={'stim_start': 0, 'stim_end': 500}
+            efel_settings={
+                'stim_start': 0,
+                'stim_end': 100,
+                'strict_stiminterval': True
+            }
         )
 
-        recording = self.cell.recordings[0]
-        self.assertEqual(recording.efeatures["Spikecount"], 0.)
+        self.assertEqual(self.cell.recordings[0].efeatures["Spikecount"], 0.)
 
     def test_efel_threshold(self):
 
@@ -65,6 +68,7 @@ class EfelSettingTest(unittest.TestCase):
 
         recording = self.cell.recordings[0]
         self.assertEqual(recording.efeatures["Spikecount"], 0.)
+
 
 if __name__ == "__main__":
     unittest.main()

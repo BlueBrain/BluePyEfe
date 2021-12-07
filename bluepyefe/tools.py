@@ -67,12 +67,6 @@ def to_mV(voltage, v_unit):
         raise Exception("Voltage unit '{}' is unknown.".format(v_unit))
 
 
-def merge_efel_settings(efeature_settings):
-    """Combine the current efeature's settings with the default ones"""
-
-    return {**DEFAULT_EFEL_SETTINGS, **efeature_settings}
-
-
 def set_efel_settings(efeature_settings):
     """ Reset the eFEl settings and set them as requested by the user (uses
         default value otherwise).
@@ -80,9 +74,7 @@ def set_efel_settings(efeature_settings):
 
     efel.reset()
 
-    settings = merge_efel_settings(efeature_settings)
-
-    for setting, value in settings.items():
+    for setting, value in efeature_settings.items():
 
         if setting == 'Threshold':
             efel.setThreshold(value)

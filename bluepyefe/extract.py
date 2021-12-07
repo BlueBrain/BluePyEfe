@@ -32,7 +32,9 @@ from bluepyefe.plotting import plot_all_recordings
 from bluepyefe.plotting import plot_all_recordings_efeatures
 from bluepyefe.protocol import Protocol
 from bluepyefe.target import EFeatureTarget
-from bluepyefe.rheobase import compute_rheobase_absolute, compute_rheobase_majority_bin
+from bluepyefe.rheobase import compute_rheobase_absolute
+from bluepyefe.rheobase import compute_rheobase_majority_bin
+from bluepyefe.tools import DEFAULT_EFEL_SETTINGS
 
 logger = logging.getLogger(__name__)
 
@@ -232,11 +234,12 @@ def compute_rheobase(
         protocols_rheobase (list): names of the protocols that will be
             used to compute the rheobase of the cells. E.g: ['IDthresh'].
         rheobase_strategy (str): function used to compute the rheobase. Can be
-            'absolute' (amplitude of the lowest amplitude inducing at least a spike)
-            or 'majority' (amplitude of the bin in which a majority of sweeps induced
-            at least one spike).
-        rheobase_settings (dict): settings related to the rheobase computation. Keys
-            have to match the arguments expected by the rheobase computation function
+            'absolute' (amplitude of the lowest amplitude inducing at least a
+            spike) or 'majority' (amplitude of the bin in which a majority of
+            sweeps induced at least one spike).
+        rheobase_settings (dict): settings related to the rheobase computation.
+            Keys have to match the arguments expected by the rheobase
+            computation function.
     """
 
     if rheobase_settings is None:
@@ -254,19 +257,26 @@ def compute_rheobase(
         cell.compute_relative_amp()
 
 
-def _build_protocols(targets, global_rheobase, protocol_mode):
+def _build_protocols(
+    targets, global_rheobase, protocol_mode, efel_settings=None
+):
     """Build a list of Protocols that matches the expected targets"""
+
+    if efel_settings is None:
+        efel_settings = {}
 
     protocols = []
 
     for target in targets:
+
+        efel_settings = {**efel_settings, **target.get('efel_settings', {})}
 
         efeature_target = EFeatureTarget(
             efel_feature_name=target['efeature'],
             protocol_name=target['protocol'],
             amplitude=target['amplitude'],
             tolerance=target['tolerance'],
-            efel_settings=target.get('efel_settings', None),
+            efel_settings=efel_settings,
         )
 
         for i, p in enumerate(protocols):
@@ -647,16 +657,26 @@ def extract_efeatures(
             will be generating. Must be 'mean', 'median' or 'lnmc'
         efel_settings (dict): efel settings in the form
             {setting_name: setting_value}. If settings are also informed
-            in the targets per efeature, the latter will have priority.
+            in the targets per efeature, the latter will have priority. If
+            None, will be set to:
+            {
+                'strict_stiminterval': True,
+                'Threshold': -20.,
+                'interp_step': 0.025
+            }
         extract_per_cell (bool): if True, also generates the features.json and
             protocol.json for each individual cells.
         rheobase_strategy (str): function used to compute the rheobase. Can be
-            'absolute' (amplitude of the lowest amplitude inducing at least a spike)
-            or 'majority' (amplitude of the bin in which a majority of sweeps induced
-            at least one spike).
-        rheobase_settings (dict): settings related to the rheobase computation. Keys
-            have to match the arguments expected by the rheobase computation function
+            'absolute' (amplitude of the lowest amplitude inducing at least a
+            spike) or 'majority' (amplitude of the bin in which a majority of
+            sweeps induced at least one spike).
+        rheobase_settings (dict): settings related to the rheobase computation.
+            Keys have to match the arguments expected by the rheobase
+            computation function.
     """
+
+    if efel_settings is None:
+        efel_settings = DEFAULT_EFEL_SETTINGS.copy()
 
     if low_memory_mode and map_function not in [map, None]:
         logger.warning(
