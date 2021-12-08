@@ -96,8 +96,10 @@ class Protocol():
         if not self.recordings:
             return None
 
-        if self.name.lower() in eCodes:
-            ecode = eCodes[self.name.lower()]({}, {}, self.name)
+        for ecode in eCodes.keys():
+            if ecode.lower() in self.name.lower():
+                ecode = eCodes[ecode]({}, {}, self.name)
+            break
         else:
             raise KeyError(
                 "There is no eCode linked to the stimulus name {}. See "
