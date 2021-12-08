@@ -97,7 +97,7 @@ class Cell(object):
             for reader_data in self.reader(config_data, recording_reader):
 
                 for ecode in eCodes.keys():
-                    if ecode in protocol_name.lower():
+                    if ecode.lower() in protocol_name.lower():
                         rec = eCodes[ecode](
                             config_data, reader_data, protocol_name
                         )

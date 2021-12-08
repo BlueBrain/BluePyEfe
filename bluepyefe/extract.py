@@ -88,6 +88,11 @@ def _extract_efeatures_cell(cell, targets, efel_settings=None):
                 'efeatures': [target["efeature"]]
             })
 
+    for i, group in enumerate(setting_groups):
+        setting_groups[i]["efeatures"] = list(
+            set(setting_groups[i]["efeatures"])
+        )
+
     for group in setting_groups:
         cell.extract_efeatures(
             group['protocol'],
