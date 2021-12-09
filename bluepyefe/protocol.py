@@ -99,7 +99,7 @@ class Protocol():
         for ecode in eCodes.keys():
             if ecode.lower() in self.name.lower():
                 ecode = eCodes[ecode]({}, {}, self.name)
-            break
+                break
         else:
             raise KeyError(
                 "There is no eCode linked to the stimulus name {}. See "
