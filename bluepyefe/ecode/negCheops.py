@@ -31,7 +31,13 @@ logger = logging.getLogger(__name__)
 
 
 class NegCheops(Recording):
-    def __init__(self, config_data, reader_data, protocol_name="NegCheops"):
+    def __init__(
+        self,
+        config_data,
+        reader_data,
+        protocol_name="NegCheops",
+        efel_settings=None
+    ):
 
         super(NegCheops, self).__init__(
             config_data, reader_data, protocol_name
@@ -56,7 +62,7 @@ class NegCheops(Recording):
             )
 
         if self.voltage is not None:
-            self.compute_spikecount()
+            self.compute_spikecount(efel_settings)
 
     def get_params(self):
         """Returns the eCode parameters"""

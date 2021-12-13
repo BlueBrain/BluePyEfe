@@ -39,7 +39,7 @@ from bluepyefe.tools import DEFAULT_EFEL_SETTINGS
 logger = logging.getLogger(__name__)
 
 
-def _create_cell(cell_definition, recording_reader):
+def _create_cell(cell_definition, recording_reader, efel_settings=None):
     """
     Initialize a Cell object and populate it with the content of the associated
     recording files.
@@ -57,6 +57,7 @@ def _create_cell(cell_definition, recording_reader):
             protocol_data=cell[prot_name],
             protocol_name=prot_name,
             recording_reader=recording_reader,
+            efel_settings=efel_settings
         )
 
     return out_cell
@@ -126,7 +127,12 @@ def _saving_data(output_directory, feat, stim, currents):
     )
 
 
-def read_recordings(files_metadata, recording_reader=None, map_function=map):
+def read_recordings(
+    files_metadata,
+    recording_reader=None,
+    map_function=map,
+    efel_settings=None
+):
     """
     Read recordings from a group of files. The files are expected to be
     identified by both a cell id and a protocol name (see files_metadata).
@@ -150,6 +156,8 @@ def read_recordings(files_metadata, recording_reader=None, map_function=map):
         map_function (function): Function used to map (parallelize) the
             recording reading operations. Note: the parallelization is
             done across cells an not across files.
+        efel_settings (dict): efel settings in the form
+            {setting_name: setting_value}.
 
     Return:
          cells (list): list of Cell objects containing the data of the
@@ -160,6 +168,7 @@ def read_recordings(files_metadata, recording_reader=None, map_function=map):
         functools.partial(
             _create_cell,
             recording_reader=recording_reader,
+            efel_settings=efel_settings
         ),
         list(files_metadata.items()),
     )
@@ -503,6 +512,7 @@ def _read_extract(
         files_metadata,
         recording_reader=recording_reader,
         map_function=map_function,
+        efel_settings=efel_settings
     )
 
     cells = extract_efeatures_at_targets(
@@ -521,6 +531,7 @@ def _read_extract_low_memory(
         cell = read_recordings(
             {cell_name: files_metadata[cell_name]},
             recording_reader=recording_reader,
+            read_recordings=read_recordings
         )[0]
 
         cell.recordings = [rec for rec in cell.recordings if rec.amp > 0.]

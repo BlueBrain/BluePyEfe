@@ -36,16 +36,20 @@ def group_indexes(values, gap=10):
     values follow each other forming clusters
     eg: [12, 14, 15, 20, 56, 60, 61, 62, 63] -> [[12, 14, 15, 20], [56, 60,
     61, 62, 63]]"""
+
     clusters = []
+
     for v in values:
         if not (len(clusters)) or clusters[-1][-1] + gap < v:
             clusters.append([v])
         else:
             clusters[-1].append(v)
+
     return clusters
 
 
 def detect_spike(amp, hypamp, smooth_current, dt):
+
     tspike = []
     duration = []
     delta = []
@@ -67,11 +71,18 @@ def detect_spike(amp, hypamp, smooth_current, dt):
     tspike = numpy.asarray(tspike) * dt
     duration = numpy.mean(numpy.asarray(duration) * dt)
     delta = numpy.mean(delta)
+
     return tspike, duration, delta
 
 
 class SpikeRec(Recording):
-    def __init__(self, config_data, reader_data, protocol_name="SpikeRec"):
+    def __init__(
+        self,
+        config_data,
+        reader_data,
+        protocol_name="SpikeRec",
+        efel_settings=None
+    ):
 
         super(SpikeRec, self).__init__(config_data, reader_data, protocol_name)
 
@@ -92,7 +103,7 @@ class SpikeRec(Recording):
             )
 
         if self.voltage is not None:
-            self.compute_spikecount()
+            self.compute_spikecount(efel_settings)
 
     @property
     def ton(self):

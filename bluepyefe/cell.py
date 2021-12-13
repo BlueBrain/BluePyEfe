@@ -86,7 +86,11 @@ class Cell(object):
         ]
 
     def read_recordings(
-        self, protocol_data, protocol_name, recording_reader=None
+        self,
+        protocol_data,
+        protocol_name,
+        recording_reader=None,
+        efel_settings=None
     ):
         """
         For each recording's metadata, instance a recording object and
@@ -99,7 +103,10 @@ class Cell(object):
                 for ecode in eCodes.keys():
                     if ecode.lower() in protocol_name.lower():
                         rec = eCodes[ecode](
-                            config_data, reader_data, protocol_name
+                            config_data,
+                            reader_data,
+                            protocol_name,
+                            efel_settings
                         )
                         self.recordings.append(rec)
                         break

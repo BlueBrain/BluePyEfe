@@ -31,7 +31,13 @@ logger = logging.getLogger(__name__)
 
 
 class HyperDePol(Recording):
-    def __init__(self, config_data, reader_data, protocol_name="HyperDePol"):
+    def __init__(
+        self,
+        config_data,
+        reader_data,
+        protocol_name="HyperDePol",
+        efel_settings=None
+    ):
 
         super(HyperDePol, self).__init__(
             config_data, reader_data, protocol_name
@@ -56,7 +62,7 @@ class HyperDePol(Recording):
             )
 
         if self.voltage is not None:
-            self.compute_spikecount()
+            self.compute_spikecount(efel_settings)
 
     def get_params(self):
         """Returns the eCode parameters"""
