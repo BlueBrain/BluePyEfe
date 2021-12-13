@@ -148,25 +148,7 @@ class Recording(object):
 
         return t, current, voltage
 
-    def compute_spikecount(self):
-        """Compute the number of spikecounts in the trace"""
-
-        efel_trace = {
-            "T": self.t,
-            "V": self.voltage,
-            "stim_start": [self.ton],
-            "stim_end": [self.toff]
-        }
-
-        set_efel_settings({"stimulus_current": self.amp})
-
-        efel_vals = efel.getFeatureValues(
-            [efel_trace], ['peak_time'], raise_warnings=False
-        )
-
-        self.spikecount = len(efel_vals[0]['peak_time'])
-
-    def compute_efeatures(self, efeatures, efel_settings=None):
+    def call_efel(self, efeatures, efel_settings=None):
         """ Calls efel to computed the wanted efeature """
 
         if efel_settings is None:
@@ -186,7 +168,7 @@ class Recording(object):
         }
 
         try:
-            efel_vals = efel.getFeatureValues(
+            return efel.getFeatureValues(
                 [efel_trace], efeatures, raise_warnings=False
             )
         except TypeError as e:
@@ -195,6 +177,11 @@ class Recording(object):
                 raise Exception("One of the following feature name does not "
                                 f"exist in eFEL: {str_f}")
 
+    def compute_efeatures(self, efeatures, efel_settings=None):
+        """ Compute a set of efeatures """
+
+        efel_vals = self.call_efel(efeatures, efel_settings)
+
         for efeature in efeatures:
 
             value = efel_vals[0][efeature]
@@ -202,3 +189,13 @@ class Recording(object):
                 value = numpy.nan
 
             self.efeatures[efeature] = numpy.nanmean(value)
+
+    def compute_spikecount(self, efel_settings=None):
+        """Compute the number of spikes in the trace"""
+        
+        efel_vals = self.call_efel(['peak_time'], efel_settings)
+        print()
+        print(self.protocol_name)
+        print(efel_settings)
+        print(efel_vals[0]['peak_time'])
+        self.spikecount = len(efel_vals[0]['peak_time'])

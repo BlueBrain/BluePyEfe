@@ -32,7 +32,13 @@ logger = logging.getLogger(__name__)
 
 
 class Step(Recording):
-    def __init__(self, config_data, reader_data, protocol_name="step"):
+    def __init__(
+        self,
+        config_data,
+        reader_data,
+        protocol_name="step",
+        efel_settings=None
+    ):
 
         super(Step, self).__init__(config_data, reader_data, protocol_name)
 
@@ -52,7 +58,7 @@ class Step(Recording):
             )
 
         if self.voltage is not None:
-            self.compute_spikecount()
+            self.compute_spikecount(efel_settings)
 
     def get_params(self):
         """Returns the eCode parameters"""

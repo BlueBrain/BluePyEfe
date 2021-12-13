@@ -31,7 +31,13 @@ logger = logging.getLogger(__name__)
 
 
 class PosCheops(Recording):
-    def __init__(self, config_data, reader_data, protocol_name="PosCheops"):
+    def __init__(
+        self,
+        config_data,
+        reader_data,
+        protocol_name="PosCheops",
+        efel_settings=None
+    ):
 
         super(PosCheops, self).__init__(
             config_data, reader_data, protocol_name
@@ -56,7 +62,7 @@ class PosCheops(Recording):
             )
 
         if self.voltage is not None:
-            self.compute_spikecount()
+            self.compute_spikecount(efel_settings)
 
     def get_params(self):
         """Returns the eCode parameters"""
