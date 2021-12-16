@@ -192,7 +192,7 @@ class Recording(object):
 
     def compute_spikecount(self, efel_settings=None):
         """Compute the number of spikes in the trace"""
-        
+
         efel_vals = self.call_efel(['peak_time'], efel_settings)
 
         self.spikecount = len(efel_vals[0]['peak_time'])
