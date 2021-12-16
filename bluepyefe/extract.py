@@ -33,7 +33,9 @@ from bluepyefe.plotting import plot_all_recordings_efeatures
 from bluepyefe.protocol import Protocol
 from bluepyefe.target import EFeatureTarget
 from bluepyefe.rheobase import compute_rheobase_absolute
+from bluepyefe.rheobase import compute_rheobase_flush
 from bluepyefe.rheobase import compute_rheobase_majority_bin
+from bluepyefe.rheobase import compute_rheobase_interpolation
 from bluepyefe.tools import DEFAULT_EFEL_SETTINGS
 
 logger = logging.getLogger(__name__)
@@ -261,10 +263,14 @@ def compute_rheobase(
 
     if rheobase_strategy == "absolute":
         rheobase_function = compute_rheobase_absolute
+    elif rheobase_strategy == "flush":
+        rheobase_function = compute_rheobase_flush
     elif rheobase_strategy == "majority":
         rheobase_function = compute_rheobase_majority_bin
+    elif rheobase_strategy == "interpolation":
+        rheobase_function = compute_rheobase_interpolation
     else:
-        logger.error(f"Rheobase strategy {rheobase_strategy} unknown.")
+        raise Exception(f"Rheobase strategy {rheobase_strategy} unknown.")
 
     for cell in cells:
         rheobase_function(cell, protocols_rheobase, **rheobase_settings)
