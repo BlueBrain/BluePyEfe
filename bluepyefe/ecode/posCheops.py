@@ -86,10 +86,15 @@ class PosCheops(Recording):
         """Returns the eCode parameters"""
         ecode_params = {
             "delay": self.ton,
+            "t1": self.t1,
+            "t2": self.t2,
+            "t3": self.t3,
+            "t4": self.t4,
+            "toff": self.toff,
             "amp": self.amp,
             "thresh_perc": self.amp_rel,
             "duration": self.toff - self.ton,
-            "totduration": self.tend,
+            "totduration": self.tend
         }
         return ecode_params
 
