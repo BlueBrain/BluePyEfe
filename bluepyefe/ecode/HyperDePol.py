@@ -86,6 +86,7 @@ class HyperDePol(Recording):
         ecode_params = {
             "delay": self.ton,
             "tmid": self.tmid,
+            "toff": self.toff,
             "amp": self.amp,
             "amp2": self.amp2,
             "thresh_perc": self.amp2_rel,
