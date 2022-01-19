@@ -85,11 +85,16 @@ def _extract_efeatures_cell(cell, targets, efel_settings=None):
                 setting_groups[i]["efeatures"].append(target["efeature"])
                 break
         else:
-            setting_groups.append({
+            setting_group = {
                 'efel_settings': target["efel_settings"],
                 'protocol': target["protocol"],
                 'efeatures': [target["efeature"]]
-            })
+            }
+            if "efeature_name" in target:
+                setting_group['efeature_names'] = [target["efeature_name"]]
+            else:
+                setting_group['efeature_names'] = None
+            setting_groups.append(setting_group)
 
     for i, group in enumerate(setting_groups):
         setting_groups[i]["efeatures"] = list(
@@ -100,6 +105,7 @@ def _extract_efeatures_cell(cell, targets, efel_settings=None):
         cell.extract_efeatures(
             group['protocol'],
             group["efeatures"],
+            group["efeature_names"],
             efel_settings={**efel_settings, **group["efel_settings"]}
         )
 
