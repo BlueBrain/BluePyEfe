@@ -182,6 +182,7 @@ class Recording(object):
 
         if efeature_names is None:
             efeature_names = efeatures
+
         efel_vals = self.call_efel(efeatures, efel_settings)
         for efeature_name, efeature in zip(efeature_names, efeatures):
 
