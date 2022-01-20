@@ -95,7 +95,9 @@ def compute_rheobase_flush(cell, protocols_rheobase, flush_length=1):
 
             end_flush = min(i + 1 + flush_length, len(amps))
 
-            if numpy.count_nonzero(spike_counts[i + 1:end_flush]) == flush_length:
+            if (
+                numpy.count_nonzero(spike_counts[i + 1:end_flush]) == flush_length
+            ):
                 cell.rheobase = amp
                 break
 

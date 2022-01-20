@@ -79,27 +79,31 @@ def _extract_efeatures_cell(cell, targets, efel_settings=None):
     setting_groups = []
     for target in targets:
 
+        efeature_name = target.get("efeature_name", target["efeature"])
+
         for i, group in enumerate(setting_groups):
+
             if target["efel_settings"] == group['efel_settings'] and \
                     target["protocol"] == group['protocol']:
                 setting_groups[i]["efeatures"].append(target["efeature"])
+                setting_groups[i]['efeature_names'].append(efeature_name)
                 break
+
         else:
-            setting_groups.append({
+
+            setting_group = {
                 'efel_settings': target["efel_settings"],
                 'protocol': target["protocol"],
-                'efeatures': [target["efeature"]]
-            })
-
-    for i, group in enumerate(setting_groups):
-        setting_groups[i]["efeatures"] = list(
-            set(setting_groups[i]["efeatures"])
-        )
+                'efeatures': [target["efeature"]],
+                'efeature_names': [efeature_name]
+            }
+            setting_groups.append(setting_group)
 
     for group in setting_groups:
         cell.extract_efeatures(
             group['protocol'],
             group["efeatures"],
+            group["efeature_names"],
             efel_settings={**efel_settings, **group["efel_settings"]}
         )
 
@@ -290,8 +294,10 @@ def _build_protocols(
     for target in targets:
 
         efel_settings = {**efel_settings, **target.get('efel_settings', {})}
+        efeature_name = target.get("efeature_name", target["efeature"])
 
         efeature_target = EFeatureTarget(
+            efeature_name=efeature_name,
             efel_feature_name=target['efeature'],
             protocol_name=target['protocol'],
             amplitude=target['amplitude'],

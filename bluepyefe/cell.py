@@ -121,6 +121,7 @@ class Cell(object):
             self,
             protocol_name,
             efeatures,
+            efeature_names=None,
             efel_settings=None
     ):
         """
@@ -128,7 +129,8 @@ class Cell(object):
         """
 
         for i in self.get_recordings_id_by_protocol_name(protocol_name):
-            self.recordings[i].compute_efeatures(efeatures, efel_settings)
+            self.recordings[i].compute_efeatures(
+                efeatures, efeature_names, efel_settings)
 
     def compute_relative_amp(self):
         """

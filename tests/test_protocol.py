@@ -11,6 +11,7 @@ class TestProtocol(unittest.TestCase):
 
     def setUp(self):
         target = EFeatureTarget(
+            efeature_name='test_spikecount',
             efel_feature_name='Spikecount',
             protocol_name='IDRest',
             amplitude=150.,
@@ -28,7 +29,7 @@ class TestProtocol(unittest.TestCase):
     def test_append_clear(self):
 
         rec = Recording("IDRest", {}, {})
-        rec.efeatures = {"Spikecount": 10.}
+        rec.efeatures = {"test_spikecount": 10.}
 
         self.protocol.append(rec)
         self.protocol.append(rec)

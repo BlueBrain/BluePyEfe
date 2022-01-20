@@ -120,9 +120,9 @@ class Protocol():
         """Append a Recording to the present protocol"""
 
         for i, target in enumerate(self.feature_targets):
-            if target.efel_feature_name in recording.efeatures:
+            if target.efeature_name in recording.efeatures:
                 self.feature_targets[i].append(
-                    recording.efeatures[target.efel_feature_name],
+                    recording.efeatures[target.efeature_name],
                     recording.files
                 )
 
