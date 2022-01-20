@@ -31,6 +31,7 @@ class EFeatureTarget():
 
     def __init__(
             self,
+            efeature_name,
             efel_feature_name,
             protocol_name,
             amplitude,
@@ -40,6 +41,8 @@ class EFeatureTarget():
         """Constructor
 
         Args:
+            efeature_name (str): name of the feature (can be different than
+                the efel_feature_name - e.g. Spikecount_phase1)
             efel_feature_name (str): name of the eFeature in the eFEL library
                 (ex: 'AP1_peak')
             protocol_name (str): name of the recording from which the efeature
@@ -53,7 +56,7 @@ class EFeatureTarget():
                 threshold amplitude (rheobase))
             efel_settings (dict): target specific efel settings.
         """
-
+        self.efeature_name = efeature_name
         self.efel_feature_name = efel_feature_name
         self.protocol_name = protocol_name
 
@@ -117,6 +120,7 @@ class EFeatureTarget():
         """Returns the target in the form of a dictionary"""
 
         return {
+            "efeature_name": self.efeature_name,
             "feature": self.efel_feature_name,
             "mean": self.mean,
             "std": self.std,

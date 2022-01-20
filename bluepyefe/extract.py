@@ -299,8 +299,10 @@ def _build_protocols(
     for target in targets:
 
         efel_settings = {**efel_settings, **target.get('efel_settings', {})}
+        efeature_name = target.get("efeature_name", target["efeature"])
 
         efeature_target = EFeatureTarget(
+            efeature_name=efeature_name,
             efel_feature_name=target['efeature'],
             protocol_name=target['protocol'],
             amplitude=target['amplitude'],
