@@ -177,7 +177,9 @@ class Recording(object):
                 raise Exception("One of the following feature name does not "
                                 f"exist in eFEL: {str_f}")
 
-    def compute_efeatures(self, efeatures, efeature_names=None, efel_settings=None):
+    def compute_efeatures(
+        self, efeatures, efeature_names=None, efel_settings=None
+    ):
         """ Compute a set of efeatures """
 
         if efeature_names is None:

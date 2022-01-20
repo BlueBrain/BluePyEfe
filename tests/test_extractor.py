@@ -77,6 +77,13 @@ class ExtractorTest(unittest.TestCase):
 
         bluepyefe.extract.compute_rheobase(cells, protocols_rheobase=["IDRest"])
 
+        self.assertEqual(len(cells), 2)
+        self.assertEqual(len(cells[0].recordings), 5)
+        self.assertEqual(len(cells[1].recordings), 5)
+
+        self.assertLess(abs(cells[0].rheobase - 0.119), 0.01)
+        self.assertLess(abs(cells[1].rheobase - 0.0923), 0.01)
+
         protocols = bluepyefe.extract.group_efeatures(
             cells,
             targets,
@@ -87,13 +94,6 @@ class ExtractorTest(unittest.TestCase):
         _ = bluepyefe.extract.create_feature_protocol_files(
             cells=cells, protocols=protocols, output_directory="MouseCells"
         )
-
-        self.assertEqual(len(cells), 2)
-        self.assertEqual(len(cells[0].recordings), 5)
-        self.assertEqual(len(cells[1].recordings), 5)
-
-        self.assertLess(abs(cells[0].rheobase - 0.119), 0.01)
-        self.assertLess(abs(cells[1].rheobase - 0.0923), 0.01)
 
         for protocol in protocols:
             if protocol.name == "IDRest" and protocol.amplitude == 250.:

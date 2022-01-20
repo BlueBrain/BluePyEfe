@@ -11,6 +11,7 @@ class TestEFeatureTarget(unittest.TestCase):
 
     def setUp(self):
         self.target = EFeatureTarget(
+            efeature_name='test_spikecount',
             efel_feature_name='Spikecount',
             protocol_name='IDRest',
             amplitude=150.,
@@ -47,7 +48,7 @@ class TestEFeatureTarget(unittest.TestCase):
         self.target.append(1.)
         self.target.append(2.)
         dict_form = self.target.as_dict()
-        self.assertEqual(len(dict_form), 8)
+        self.assertEqual(len(dict_form), 9)
         self.assertEqual(dict_form['mean'], 1.5)
         dict_form_legacy = self.target.as_legacy_dict()
         self.assertEqual(len(dict_form_legacy), 4)
