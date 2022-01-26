@@ -134,10 +134,10 @@ def _saving_data(output_directory, feat, stim, currents):
 
 
 def read_recordings(
-    files_metadata,
-    recording_reader=None,
-    map_function=map,
-    efel_settings=None
+        files_metadata,
+        recording_reader=None,
+        map_function=map,
+        efel_settings=None
 ):
     """
     Read recordings from a group of files. The files are expected to be
@@ -282,7 +282,7 @@ def compute_rheobase(
 
 
 def _build_protocols(
-    targets, global_rheobase, protocol_mode, efel_settings=None
+        targets, global_rheobase, protocol_mode, efel_settings=None
 ):
     """Build a list of Protocols that matches the expected targets"""
 
@@ -293,7 +293,7 @@ def _build_protocols(
 
     for target in targets:
 
-        efel_settings = {**efel_settings, **target.get('efel_settings', {})}
+        settings = {**efel_settings, **target.get('efel_settings', {})}
         efeature_name = target.get("efeature_name", target["efeature"])
 
         efeature_target = EFeatureTarget(
@@ -302,7 +302,7 @@ def _build_protocols(
             protocol_name=target['protocol'],
             amplitude=target['amplitude'],
             tolerance=target['tolerance'],
-            efel_settings=efel_settings,
+            efel_settings=settings,
         )
 
         for i, p in enumerate(protocols):
@@ -329,7 +329,8 @@ def group_efeatures(
         cells,
         targets,
         use_global_rheobase=True,
-        protocol_mode='mean'
+        protocol_mode='mean',
+        efel_settings=None
 ):
     """
     Group the recordings and their efeatures and associate them to the
@@ -362,7 +363,13 @@ def group_efeatures(
         protocol_mode (mean): if a protocol matches several recordings, the
             mode set the logic of how the output will be generating. Must be
             'mean', 'median' or 'lnmc'
+        efel_settings (dict): efel settings in the form
+            {setting_name: setting_value}. If settings are also informed
+            in the targets per efeature, the latter will have priority.
     """
+
+    if efel_settings is None:
+        efel_settings = {}
 
     global_rheobase = None
     if use_global_rheobase:
@@ -373,7 +380,8 @@ def group_efeatures(
     protocols = _build_protocols(
         targets,
         global_rheobase=global_rheobase,
-        protocol_mode=protocol_mode
+        protocol_mode=protocol_mode,
+        efel_settings=efel_settings
     )
 
     for protocol in protocols:
@@ -744,7 +752,8 @@ def extract_efeatures(
         cells,
         targets,
         use_global_rheobase=True,
-        protocol_mode=protocol_mode
+        protocol_mode=protocol_mode,
+        efel_settings=efel_settings
     )
 
     efeatures, protocol_definitions, current = create_feature_protocol_files(
