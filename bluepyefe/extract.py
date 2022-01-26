@@ -551,7 +551,7 @@ def _read_extract_low_memory(
         cell = read_recordings(
             {cell_name: files_metadata[cell_name]},
             recording_reader=recording_reader,
-            read_recordings=read_recordings
+            efel_settings=efel_settings
         )[0]
 
         cell.recordings = [rec for rec in cell.recordings if rec.amp > 0.]
