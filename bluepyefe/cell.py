@@ -98,6 +98,10 @@ class Cell(object):
         """
 
         for config_data in protocol_data:
+
+            if "protocol_name" not in config_data:
+                config_data["protocol_name"] = protocol_name
+
             for reader_data in self.reader(config_data, recording_reader):
 
                 for ecode in eCodes.keys():

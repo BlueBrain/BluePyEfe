@@ -181,6 +181,58 @@ def nwb_reader(in_data):
     return data
 
 
+def _get_repetition_keys_nwb(ecode_content, request_repetitions=None):
+
+    if isinstance(request_repetitions, (int, str)):
+        request_repetitions = [int(request_repetitions)]
+
+    reps = list(ecode_content.keys())
+    reps_id = [int(rep.replace("repetition ", "")) for rep in reps]
+
+    if request_repetitions:
+        return [reps[reps_id.index(i)] for i in request_repetitions]
+    else:
+        return list(ecode_content.keys())
+
+
+def _format_nwb_trace(content, trace_name, repetition):
+
+    if "ccs_" in trace_name:
+        key_current = trace_name.replace("ccs_", "ccss_")
+    elif "ic_" in trace_name:
+        key_current = trace_name.replace("ic_", "ics_")
+    else:
+        return None
+
+    voltage = content["acquisition"][trace_name]["data"]
+    v_array = numpy.array(
+        voltage[()] * voltage.attrs["conversion"], dtype="float32"
+    )
+
+    current = content["stimulus"]["presentation"][key_current]["data"]
+    i_array = numpy.array(
+        current[()] * current.attrs["conversion"], dtype="float32"
+    )
+
+    time = content["stimulus"]["presentation"][key_current]["starting_time"]
+
+    dt = 1.0 / float(time.attrs["rate"])
+    v_unit = voltage.attrs["unit"]
+    i_unit = current.attrs["unit"]
+    t_unit = time.attrs["unit"]
+
+    return {
+        "voltage": v_array,
+        "current": i_array,
+        "dt": dt,
+        "id": str(trace_name),
+        "repetition": int(repetition.replace("repetition ", "")),
+        "i_unit": i_unit,
+        "v_unit": v_unit,
+        "t_unit": t_unit,
+    }
+
+
 def nwb_reader_BBP(in_data):
     """ Reader to read .nwb from LNMC
 
@@ -188,9 +240,6 @@ def nwb_reader_BBP(in_data):
         in_data (dict): of the format
         {
             'filepath': './XXX.nwb',
-            'v_unit': 'V',
-            't_unit': 's',
-            'i_unit': 'A',
             "protocol_name": "IV",
             "repetition": 1 (or [1, 3, ...])
         }
@@ -199,75 +248,46 @@ def nwb_reader_BBP(in_data):
     _check_metadata(
         in_data,
         nwb_reader_BBP.__name__,
-        ["filepath", "i_unit", "v_unit", "t_unit", "protocol_name"],
+        ["filepath", "protocol_name"],
     )
 
     filepath = in_data["filepath"]
-    r = h5py.File(filepath, "r")
 
-    data = []
+    with h5py.File(filepath, "r") as content:
 
-    ecodes = in_data['protocol_name']
-    if isinstance(ecodes, str):
-        ecodes = [ecodes]
-    for ecode in ecodes:
-        for cell_id in r["data_organization"].keys():
+        data = []
 
-            if ecode not in r["data_organization"][cell_id]:
-                logger.warning(
-                    f"No eCode {ecode} in nwb  {in_data['filepath']}."
+        ecodes = in_data['protocol_name']
+        if isinstance(ecodes, str):
+            ecodes = [ecodes]
+
+        for ecode in ecodes:
+
+            for cell_id in content["data_organization"].keys():
+
+                if ecode not in content["data_organization"][cell_id]:
+                    logger.warning(
+                        f"No eCode {ecode} in nwb {in_data['filepath']}."
+                    )
+                    continue
+
+                ecode_content = content["data_organization"][cell_id][ecode]
+
+                rep_iter = _get_repetition_keys_nwb(
+                    ecode_content,
+                    request_repetitions=in_data.get("repetition", None)
                 )
-                continue
 
-            av_reps = list(r["data_organization"][cell_id][ecode].keys())
-            av_reps_id = [int(rep.replace("repetition ", ""))
-                          for rep in av_reps]
+                for rep in rep_iter:
+                    for sweep in ecode_content[rep].keys():
+                        for trace_name in list(ecode_content[rep][sweep].keys()):
 
-            if "repetition" in in_data and in_data["repetition"]:
-                if isinstance(in_data["repetition"], list):
-                    rep_iter = [av_reps[av_reps_id.index(i)]
-                                for i in in_data["repetition"]]
-                else:
-                    rep_iter = [
-                        av_reps[av_reps_id.index(in_data["repetition"])]]
-            else:
-                rep_iter = r["data_organization"][cell_id][ecode].keys()
+                            formatted_trace = _format_nwb_trace(
+                                content, trace_name, rep
+                            )
 
-            for rep in rep_iter:
-
-                for sweep in r["data_organization"][cell_id][ecode][
-                        rep].keys():
-
-                    sweeps = r["data_organization"][cell_id][ecode][rep][sweep]
-
-                    for trace in list(sweeps.keys()):
-
-                        if "ccs_" in trace:
-                            key_current = trace.replace("ccs_", "ccss_")
-                        elif "ic_" in trace:
-                            key_current = trace.replace("ic_", "ics_")
-                        else:
-                            continue
-
-                        v = r["acquisition"][trace]
-                        i = r["stimulus"]["presentation"][key_current]
-
-                        trace_data = {
-                            "voltage": numpy.array(
-                                v["data"][()] * v["data"].attrs["conversion"],
-                                dtype="float32"
-                            ),
-                            "current": numpy.array(
-                                i["data"][()] * i["data"].attrs["conversion"],
-                                dtype="float32",
-                            ),
-                            "dt": 1.0
-                            / float(v["starting_time"].attrs["rate"]),
-                            "id": str(trace),
-                            "repetition": int(rep.replace("repetition ", ""))
-                        }
-
-                        data.append(trace_data)
+                            if formatted_trace:
+                                data.append(formatted_trace)
 
     return data
 
