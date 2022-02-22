@@ -151,6 +151,8 @@ class EFeatureTarget():
             "efel_settings": self.efel_settings
         }
 
+        if self.efeature_name:
+            feature_dict['efeature_name'] = self.efeature_name
         if save_files_used:
             feature_dict['files'] = self.files
 
