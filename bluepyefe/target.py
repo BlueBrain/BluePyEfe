@@ -57,6 +57,8 @@ class EFeatureTarget():
             efel_settings (dict): target specific efel settings.
         """
         self.efeature_name = efeature_name
+        if self.efeature_name is None:
+            self.efeature_name = efel_feature_name
         self.efel_feature_name = efel_feature_name
         self.protocol_name = protocol_name
 
