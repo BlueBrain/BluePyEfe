@@ -61,7 +61,7 @@ class Cell(object):
         if ".ibw" in filename or ".bwav" in filename:
             return igor_reader(config_data)
         if ".nwb" in filename:
-            return nwb_reader_BBP(config_data)
+            return nwb_reader(config_data)
 
         raise Exception(
             "The format of the files is unknown and no custom reader were"

@@ -125,173 +125,6 @@ def igor_reader(in_data):
     return [trace_data]
 
 
-def nwb_reader(in_data):
-    """Reader to read old .nwb from LNMC
-
-    Args:
-        in_data (dict): of the format
-        {
-            'filepath': './XXX.nwb',
-            'v_unit': 'V',
-            't_unit': 's',
-            'i_unit': 'A',
-            "protocol_name": "Name_of_the_protocol"
-        }
-    """
-
-    _check_metadata(
-        in_data,
-        nwb_reader.__name__,
-        ["filepath", "i_unit", "v_unit", "t_unit", "protocol_name"],
-    )
-
-    filepath = in_data["filepath"]
-    r = h5py.File(filepath, "r")
-
-    data = []
-    for sweep in list(r["acquisition"]["timeseries"].keys()):
-
-        key_current = "Experiment_{}".format(sweep.replace("Sweep_", ""))
-        protocol_name = str(
-            r["acquisition"]["timeseries"][sweep]["aibs_stimulus_name"][()]
-        )
-
-        if protocol_name == in_data["protocol_name"]:
-
-            trace_data = {
-                "voltage": numpy.array(
-                    r["acquisition"]["timeseries"][sweep]["data"][()],
-                    dtype="float32",
-                ),
-                "current": numpy.array(
-                    r["epochs"][key_current]["stimulus"]["timeseries"]["data"],
-                    dtype="float32",
-                ),
-                "dt": 1.0
-                / float(
-                    r["acquisition"]["timeseries"][sweep][
-                        "starting_time"
-                    ].attrs["rate"]
-                ),
-                "id": str(key_current)
-            }
-
-            data.append(trace_data)
-
-    return data
-
-
-def _get_repetition_keys_nwb(ecode_content, request_repetitions=None):
-
-    if isinstance(request_repetitions, (int, str)):
-        request_repetitions = [int(request_repetitions)]
-
-    reps = list(ecode_content.keys())
-    reps_id = [int(rep.replace("repetition ", "")) for rep in reps]
-
-    if request_repetitions:
-        return [reps[reps_id.index(i)] for i in request_repetitions]
-    else:
-        return list(ecode_content.keys())
-
-
-def _format_nwb_trace(content, trace_name, repetition):
-
-    if "ccs_" in trace_name:
-        key_current = trace_name.replace("ccs_", "ccss_")
-    elif "ic_" in trace_name:
-        key_current = trace_name.replace("ic_", "ics_")
-    else:
-        return None
-
-    voltage = content["acquisition"][trace_name]["data"]
-    v_array = numpy.array(
-        voltage[()] * voltage.attrs["conversion"], dtype="float32"
-    )
-
-    current = content["stimulus"]["presentation"][key_current]["data"]
-    i_array = numpy.array(
-        current[()] * current.attrs["conversion"], dtype="float32"
-    )
-
-    time = content["stimulus"]["presentation"][key_current]["starting_time"]
-
-    dt = 1.0 / float(time.attrs["rate"])
-    v_unit = voltage.attrs["unit"]
-    i_unit = current.attrs["unit"]
-    t_unit = time.attrs["unit"]
-
-    return {
-        "voltage": v_array,
-        "current": i_array,
-        "dt": dt,
-        "id": str(trace_name),
-        "repetition": int(repetition.replace("repetition ", "")),
-        "i_unit": i_unit,
-        "v_unit": v_unit,
-        "t_unit": t_unit,
-    }
-
-
-def nwb_reader_BBP(in_data):
-    """ Reader to read .nwb from LNMC
-
-    Args:
-        in_data (dict): of the format
-        {
-            'filepath': './XXX.nwb',
-            "protocol_name": "IV",
-            "repetition": 1 (or [1, 3, ...])
-        }
-    """
-
-    _check_metadata(
-        in_data,
-        nwb_reader_BBP.__name__,
-        ["filepath", "protocol_name"],
-    )
-
-    filepath = in_data["filepath"]
-
-    with h5py.File(filepath, "r") as content:
-
-        data = []
-
-        ecodes = in_data['protocol_name']
-        if isinstance(ecodes, str):
-            ecodes = [ecodes]
-
-        for ecode in ecodes:
-
-            for cell_id in content["data_organization"].keys():
-
-                if ecode not in content["data_organization"][cell_id]:
-                    logger.warning(
-                        f"No eCode {ecode} in nwb {in_data['filepath']}."
-                    )
-                    continue
-
-                ecode_content = content["data_organization"][cell_id][ecode]
-
-                rep_iter = _get_repetition_keys_nwb(
-                    ecode_content,
-                    request_repetitions=in_data.get("repetition", None)
-                )
-
-                for rep in rep_iter:
-                    for sweep in ecode_content[rep].keys():
-                        for trace_name in list(ecode_content[rep][sweep].keys()):
-
-                            formatted_trace = _format_nwb_trace(
-                                content, trace_name, rep
-                            )
-
-                            if formatted_trace:
-                                data.append(formatted_trace)
-
-    return data
-
-
 def read_matlab(in_data):
     """To read .mat from http://gigadb.org/dataset/100535
 
@@ -329,3 +162,168 @@ def read_matlab(in_data):
             data.append(trace_data)
 
     return data
+
+
+def _format_nwb_trace(voltage, current, start_time, trace_name=None, repetition=None):
+
+    v_array = numpy.array(
+        voltage[()] * voltage.attrs["conversion"], dtype="float32"
+    )
+
+    i_array = numpy.array(
+        current[()] * current.attrs["conversion"], dtype="float32"
+    )
+
+    dt = 1. / float(start_time.attrs["rate"])
+
+    v_unit = voltage.attrs["unit"].decode('UTF-8')
+    i_unit = current.attrs["unit"].decode('UTF-8')
+    t_unit = start_time.attrs["unit"].decode('UTF-8')
+
+    return {
+        "voltage": v_array,
+        "current": i_array,
+        "dt": dt,
+        "id": str(trace_name),
+        "repetition": repetition,
+        "i_unit": i_unit,
+        "v_unit": v_unit,
+        "t_unit": t_unit,
+    }
+
+
+def _nwb_reader_AIBS(content, target_protocols):
+
+    data = []
+
+    for sweep in list(content["acquisition"]["timeseries"].keys()):
+
+        protocol_name = str(
+            content["acquisition"]["timeseries"][sweep]["aibs_stimulus_name"][()].decode('UTF-8')
+        )
+
+        if target_protocols and protocol_name not in target_protocols:
+            continue
+
+        data.append(_format_nwb_trace(
+            voltage=content["acquisition"]["timeseries"][sweep]["data"],
+            current=content["stimulus"]["presentation"][sweep]["data"],
+            start_time=content["acquisition"]["timeseries"][sweep]["starting_time"],
+            trace_name=sweep
+        ))
+
+    return data
+
+
+def _nwb_reader_Scala(content, target_protocols):
+
+    data = []
+
+    for sweep in list(content['acquisition'].keys()):
+
+        key_current = sweep.replace('Series', 'StimulusSeries')
+        protocol_name = "Step"
+
+        if target_protocols and protocol_name not in target_protocols:
+            continue
+
+        if key_current not in content['stimulus']['presentation']:
+            continue
+
+        data.append(_format_nwb_trace(
+            voltage=content['acquisition'][sweep]['data'],
+            current=content['stimulus']['presentation'][key_current]['data'],
+            start_time=content["acquisition"][sweep]["starting_time"],
+            trace_name=sweep,
+        ))
+
+    return data
+
+
+def _get_repetition_keys_nwb(ecode_content, request_repetitions=None):
+
+    if isinstance(request_repetitions, (int, str)):
+        request_repetitions = [int(request_repetitions)]
+
+    reps = list(ecode_content.keys())
+    reps_id = [int(rep.replace("repetition ", "")) for rep in reps]
+
+    if request_repetitions:
+        return [reps[reps_id.index(i)] for i in request_repetitions]
+    else:
+        return list(ecode_content.keys())
+
+
+def _nwb_reader_BBP(content, target_protocols, repetition):
+
+    data = []
+
+    for ecode in target_protocols:
+
+        for cell_id in content["data_organization"].keys():
+
+            if ecode not in content["data_organization"][cell_id]:
+                logger.info(
+                    f"No eCode {ecode} in nwb {in_data['filepath']}."
+                )
+                continue
+
+            ecode_content = content["data_organization"][cell_id][ecode]
+
+            rep_iter = _get_repetition_keys_nwb(
+                ecode_content, request_repetitions=repetition
+            )
+
+            for rep in rep_iter:
+
+                for sweep in ecode_content[rep].keys():
+                    for trace_name in list(ecode_content[rep][sweep].keys()):
+
+                        if "ccs_" in trace_name:
+                            key_current = trace_name.replace("ccs_", "ccss_")
+                        elif "ic_" in trace_name:
+                            key_current = trace_name.replace("ic_", "ics_")
+                        else:
+                            continue
+
+                        data.append(_format_nwb_trace(
+                            voltage=content["acquisition"][trace_name]["data"],
+                            current=content["stimulus"]["presentation"][key_current]["data"],
+                            start_time=content["stimulus"]["presentation"][key_current]["starting_time"],
+                            trace_name=trace_name,
+                            repetition=int(rep.replace("repetition ", ""))
+                        ))
+
+    return data
+
+
+def nwb_reader(in_data):
+    """ Reader for .nwb
+
+    Args:
+        in_data (dict): of the format
+        {
+            'filepath': './XXX.nwb',
+            "protocol_name": "IV",
+            "repetition": 1 (or [1, 3, ...]) # Optional
+        }
+    """
+
+    _check_metadata(
+        in_data,
+        nwb_reader.__name__,
+        ["filepath", "protocol_name"],
+    )
+
+    target_protocols = in_data['protocol_name']
+    if isinstance(target_protocols, str):
+        target_protocols = [target_protocols]
+
+    with h5py.File(in_data["filepath"], "r") as content:
+
+        if "data_organization" in content:
+            return _nwb_reader_BBP(content, target_protocols, in_data.get("repetition", None))
+        elif "timeseries" in content["acquisition"].keys():
+            return _nwb_reader_AIBS(content, target_protocols)
+        else:
+            return _nwb_reader_Scala(content, target_protocols)
