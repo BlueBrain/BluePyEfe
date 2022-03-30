@@ -31,7 +31,7 @@ DEFAULT_EFEL_SETTINGS = {
 
 
 def to_ms(t, t_unit):
-    if t_unit == "s" or t_unit == "sec" or t_unit == "seconds":
+    if t_unit.lower() in ["s", "sec", "seconds"]:
         return t * 1e3
     elif t_unit == "ms":
         return t
@@ -42,7 +42,7 @@ def to_ms(t, t_unit):
 
 
 def to_nA(current, i_unit):
-    if i_unit == "A" or i_unit == "amperes":
+    if i_unit.lower() in ["a", "amperes", "amps"]:
         return current * 1e9
     elif i_unit == "mA":
         return current * 1e6
@@ -57,7 +57,7 @@ def to_nA(current, i_unit):
 
 
 def to_mV(voltage, v_unit):
-    if v_unit == "V" or v_unit == "volts":
+    if v_unit.lower() in ["v", "volts"]:
         return voltage * 1e3
     elif v_unit == "uV":
         return voltage * 1e-3

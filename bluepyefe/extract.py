@@ -482,7 +482,7 @@ def create_feature_protocol_files(
 
             if target.sample_size < threshold_nvalue_save:
                 logger.warning(
-                    "Number of values < threshold_nvalue_save for efeature"
+                    "Number of values < threshold_nvalue_save for efeature "
                     "{} stimulus {}. The efeature will be ignored"
                     "".format(target.efel_feature_name, stimname)
                 )
@@ -711,6 +711,12 @@ def extract_efeatures(
             computation function.
     """
 
+    if not files_metadata:
+        raise ValueError("Argument 'files_metadata' is empty")
+
+    if not targets:
+        raise ValueError("Argument 'targets' is empty")
+
     if efel_settings is None:
         efel_settings = DEFAULT_EFEL_SETTINGS.copy()
 
@@ -794,6 +800,12 @@ def extract_efeatures(
                     threshold_nvalue_save=threshold_nvalue_save,
                     write_files=write_files,
                 )
+
+    if not efeatures or not protocol_definitions:
+        logger.warning("The output of the extraction is empty. Something went "
+                       "wrong. Please check that your targets, files_metadata "
+                       "and protocols_rheobase match the data you have "
+                       "available.")
 
     return efeatures, protocol_definitions, current
 

@@ -69,7 +69,7 @@ def register_vcs_handler(vcs, method):  # decorator
 
 
 def run_command(
-    commands, args, cwd=None, verbose=False, hide_stderr=False, env=None
+        commands, args, cwd=None, verbose=False, hide_stderr=False, env=None
 ):
     """Call the given command(s)."""
     assert isinstance(commands, list)
@@ -84,7 +84,7 @@ def run_command(
                 env=env,
                 stdout=subprocess.PIPE,
                 stderr=(subprocess.PIPE if hide_stderr else None),
-            )
+                )
             break
         except EnvironmentError:
             e = sys.exc_info()[1]
@@ -263,7 +263,7 @@ def git_pieces_from_vcs(tag_prefix, root, verbose, run_command=run_command):
             "--long",
             "--match",
             "%s*" % tag_prefix,
-        ],
+            ],
         cwd=root,
     )
     # --long was added in git-1.5.5
@@ -298,7 +298,7 @@ def git_pieces_from_vcs(tag_prefix, root, verbose, run_command=run_command):
         if not mo:
             # unparseable. Maybe git-describe is misbehaving?
             pieces["error"] = (
-                "unable to parse git-describe output: '%s'" % describe_out
+                    "unable to parse git-describe output: '%s'" % describe_out
             )
             return pieces
 
