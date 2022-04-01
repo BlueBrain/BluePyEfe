@@ -176,9 +176,13 @@ def _format_nwb_trace(voltage, current, start_time, trace_name=None, repetition=
 
     dt = 1. / float(start_time.attrs["rate"])
 
-    v_unit = voltage.attrs["unit"].decode('UTF-8')
-    i_unit = current.attrs["unit"].decode('UTF-8')
-    t_unit = start_time.attrs["unit"].decode('UTF-8')
+    v_unit = voltage.attrs["unit"]
+    i_unit = current.attrs["unit"]
+    t_unit = start_time.attrs["unit"]
+    if not isinstance(v_unit, str):
+        v_unit = voltage.attrs["unit"].decode('UTF-8')
+        i_unit = current.attrs["unit"].decode('UTF-8')
+        t_unit = start_time.attrs["unit"].decode('UTF-8')
 
     return {
         "voltage": v_array,
@@ -198,9 +202,9 @@ def _nwb_reader_AIBS(content, target_protocols):
 
     for sweep in list(content["acquisition"]["timeseries"].keys()):
 
-        protocol_name = str(
-            content["acquisition"]["timeseries"][sweep]["aibs_stimulus_name"][()].decode('UTF-8')
-        )
+        protocol_name = content["acquisition"]["timeseries"][sweep]["aibs_stimulus_name"][()]
+        if not isinstance(protocol_name, str):
+            protocol_name = protocol_name.decode('UTF-8')
 
         if target_protocols and protocol_name not in target_protocols:
             continue
