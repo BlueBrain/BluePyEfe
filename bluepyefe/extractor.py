@@ -1227,11 +1227,14 @@ class Extractor(object):
 
                                 if "zero_std" in self.options and \
                                         self.options["zero_std"]:
-                                    rules = [~numpy.isnan(m)]
+                                    rules = [
+                                        ~numpy.isnan(m) and ~numpy.isnan(s)
+                                    ]
                                 else:
                                     rules = [
-                                        ~numpy.isnan(m), (s > 0.0) or
-                                        (m == 0.0)]
+                                        ~numpy.isnan(m) and ~numpy.isnan(s),
+                                        (s > 0.0) or (m == 0.0)
+                                    ]
                                 if all(rules):
                                     amp_rel_list.append(a)
                                     mean_list.append(m)
@@ -1280,11 +1283,12 @@ class Extractor(object):
 
                             if "zero_std" in self.options and \
                                     self.options["zero_std"]:
-                                rules = [~numpy.isnan(m)]
+                                rules = [~numpy.isnan(m) and ~numpy.isnan(s)]
                             else:
                                 rules = [
-                                    ~numpy.isnan(m), (s > 0.0) or
-                                    (m == 0.0)]
+                                    ~numpy.isnan(m) and ~numpy.isnan(s),
+                                    (s > 0.0) or (m == 0.0)
+                                ]
                             if all(rules):
                                 amp_rel_list.append(a)
                                 mean_list.append(m)
