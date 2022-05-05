@@ -1,0 +1,19 @@
+name: Keep-alive
+
+on:
+  schedule:
+    # Runs every sunday at 3 a.m.
+    - cron: '0 3 * * SUN'
+
+jobs:
+  call-test-workflow:
+    uses: BlueBrain/BluePyEfe/.github/workflows/test.yml@master
+  
+  keep-workflow-alive:
+    name: Keep workflow alive
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: master
+      - uses: gautamkrishnar/keepalive-workflow@master
