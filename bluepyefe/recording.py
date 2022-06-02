@@ -182,6 +182,9 @@ class Recording(object):
     ):
         """ Compute a set of efeatures """
 
+        if efeature_names is None:
+            efeature_names = efeatures
+
         for i, f in enumerate(efeatures):
             if efeature_names[i] is None:
                 efeature_names[i] = f
