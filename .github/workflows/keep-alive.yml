@@ -1,7 +1,6 @@
 name: Keep-alive
 
 on:
-
   schedule:
     # Runs every sunday at 3 a.m.
     # Reset to '0 3 * * SUN' before MR
