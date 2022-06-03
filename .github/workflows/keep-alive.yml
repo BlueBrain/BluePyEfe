@@ -5,7 +5,7 @@ on:
   schedule:
     # Runs every sunday at 3 a.m.
     # Reset to '0 3 * * SUN' before MR
-    - cron: '0 13 * * FRI'
+    - cron: '0 1 * * *'
 
 jobs:
   call-test-workflow:
