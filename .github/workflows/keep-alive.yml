@@ -3,8 +3,7 @@ name: Keep-alive
 on:
   schedule:
     # Runs every sunday at 3 a.m.
-    # Reset to '0 3 * * SUN' before MR
-    - cron: '0 1 * * *'
+    - cron: '0 3 * * SUN'
 
 jobs:
   call-test-workflow:
@@ -23,20 +22,15 @@ jobs:
           datethen=`date -d "-50 days" --utc +%FT%TZ`
           echo "datelimit=$datethen" >> $GITHUB_ENV
 
-      - name: Get date from 1 hour ago
-        run: |
-          datethen2=`date -d "-1 hour" --utc +%FT%TZ`
-          echo "datelimit=$datethen2" >> $GITHUB_ENV
-
       - name: setup git config
-        if: github.event.base.repo.updated_at <= env.datelimit2
+        if: github.event.base.repo.updated_at <= env.datelimit
         run: |
           # setup the username and email.
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
 
-      - name: commit
-        if: github.event.base.repo.updated_at <= env.datelimit2
+      - name: commit IF last commit is older than 50 days
+        if: github.event.base.repo.updated_at <= env.datelimit
         run: |
           git commit -m "Empty commit to keep the gihub workflows alive" --allow-empty
           git push origin master
