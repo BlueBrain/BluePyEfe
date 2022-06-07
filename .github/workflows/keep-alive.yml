@@ -26,7 +26,7 @@ jobs:
         if: github.event.base.repo.updated_at <= env.datelimit
         run: |
           # setup the username and email.
-          git config user.name "GitHub Actions Bot"
+          git config user.name "Github Actions Keepalive Bot"
           git config user.email "<>"
 
       - name: commit IF last commit is older than 50 days
