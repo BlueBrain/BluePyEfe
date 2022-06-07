@@ -16,4 +16,21 @@ jobs:
       - uses: actions/checkout@v2
         with:
           ref: master
-      - uses: gautamkrishnar/keepalive-workflow@master
+
+      - name: Get date from 50 days ago
+        run: |
+          datethen=`date -d "-50 days" --utc +%FT%TZ`
+          echo "datelimit=$datethen" >> $GITHUB_ENV
+
+      - name: setup git config
+        if: github.event.base.repo.updated_at <= env.datelimit
+        run: |
+          # setup the username and email.
+          git config user.name "Github Actions Keepalive Bot"
+          git config user.email "<>"
+
+      - name: commit IF last commit is older than 50 days
+        if: github.event.base.repo.updated_at <= env.datelimit
+        run: |
+          git commit -m "Empty commit to keep the gihub workflows alive" --allow-empty
+          git push origin master
