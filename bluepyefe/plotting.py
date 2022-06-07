@@ -20,7 +20,6 @@ Copyright (c) 2020, EPFL/Blue Brain Project
 """
 
 import logging
-import math
 import pathlib
 from itertools import cycle
 
@@ -53,7 +52,7 @@ def _get_colors_markers_wheels(cells):
     return colors, markers
 
 
-def _plot_legend(colors, markers, output_dir):
+def _plot_legend(colors, markers, output_dir, show=False):
     """Draw a separate legend figure"""
 
     if not len(colors):
@@ -61,7 +60,7 @@ def _plot_legend(colors, markers, output_dir):
     if not len(markers):
         raise Exception("Plot legend needs an non-empty markers dictionary.")
 
-    ncols = math.ceil(numpy.sqrt(len(colors)))
+    ncols = numpy.ceil(numpy.sqrt(len(colors)))
 
     fig, axs = plt.subplots(1, figsize=(6, 6), squeeze=False)
 
@@ -87,96 +86,20 @@ def _plot_legend(colors, markers, output_dir):
 
     axs[0, 0].set_frame_on(False)
 
-    _save_fig(output_dir, "legend.pdf")
+    if show:
+        fig.show()
+
+    if output_dir:
+        _save_fig(output_dir, "legend.pdf")
 
     return fig, axs
 
 
-def plot_cell_recordings(cell, protocol_name, output_dir):
-    """Plot all the recordings of a cell matching a protocol name"""
-
-    recordings = cell.get_recordings_by_protocol_name(protocol_name)
-
-    if not len(recordings):
-        return None, None
-
-    recordings_amp = [rec.amp for rec in recordings]
-    recordings = [recordings[k] for k in numpy.argsort(recordings_amp)]
-
-    n_cols = 10
-    n_rows = int(2 * math.ceil(len(recordings) / n_cols))
-
-    fig, axs = plt.subplots(
-        n_rows, n_cols,
-        figsize=[3.0 + 1.9 * int(n_cols), 2.4 * n_rows],
-        squeeze=False
-    )
-
-    for i, rec in enumerate(recordings):
-
-        col = i % int(n_cols)
-        row = 2 * int(i / n_cols)
-
-        title = "Amp = {:.03f}".format(rec.amp)
-
-        if rec.amp_rel is not None:
-            title += " ({:.01f}%)".format(rec.amp_rel)
-
-        if rec.id is not None:
-            title += "\nid: {}".format(rec.id)
-
-        if rec.repetition is not None:
-            title += "\nRepetition: {}".format(rec.repetition)
-
-        axs[row][col].set_title(title, size="x-small")
-
-        axs[row][col].plot(rec.t, rec.current, c="C0")
-
-        gen_t, gen_i = rec.generate()
-        axs[row][col].plot(gen_t, gen_i, c="C1", ls="--")
-
-        axs[row + 1][col].plot(rec.t, rec.voltage, c="C0")
-
-        if col == 0:
-            axs[row][col].set_ylabel("Current (nA)")
-        if col == 0:
-            axs[row + 1][col].set_ylabel("Voltage (mV)")
-        if row + 1 == axs.shape[0]:
-            axs[row][col].set_ylabel("Time (ms)")
-
-        axs[row][col].tick_params(axis="both", which="major", labelsize=8)
-        axs[row][col].tick_params(axis="both", which="minor", labelsize=6)
-        axs[row + 1][col].tick_params(
-            axis="both", which="major", labelsize=8
-        )
-        axs[row + 1][col].tick_params(
-            axis="both", which="minor", labelsize=6
-        )
-
-    fig.suptitle("Cell: {}, Experiment: {}".format(cell.name, protocol_name))
-
-    plt.subplots_adjust(wspace=0.53, hspace=0.7)
-
-    for ax in axs.flatten():
-        if not ax.lines:
-            ax.set_visible(False)
-
-    # Do not use tight-layout, it significantly increases the runtime
-    plt.margins(0, 0)
-
-    filename = "{}_{}_recordings.pdf".format(cell.name, protocol_name)
-    dirname = pathlib.Path(output_dir) / cell.name
-    _save_fig(dirname, filename)
-
-    return fig, axs
-
-
-def plot_all_recordings(cells, output_dir):
+def plot_all_recordings(cells, output_dir, show=False):
     """Plot recordings for all cells and all protocols"""
 
     for cell in cells:
-        for protocol_name in cell.get_protocol_names():
-            plot_cell_recordings(cell, protocol_name, output_dir)
+        cell.plot_all_recordings(output_dir, show=show)
 
 
 def plot_efeature(
@@ -188,6 +111,7 @@ def plot_efeature(
         key_amp="amp",
         colors=None,
         markers=None,
+        show=False
 ):
     """Plot one efeature for a protocol"""
 
@@ -258,14 +182,18 @@ def plot_efeature(
         f"Protocol: {protocol_name}, EFeature: {efeature}", size="xx-large"
     )
 
-    if len(cells) == 1:
-        filename = "{}_{}_{}_{}.pdf".format(
-            cells[0].name, protocol_name, efeature, key_amp
-        )
-        dirname = pathlib.Path(output_dir) / cells[0].name
-    else:
-        filename = "{}_{}_{}.pdf".format(protocol_name, efeature, key_amp)
-        dirname = pathlib.Path(output_dir)
+    if show:
+        fig.show()
+
+    if output_dir:
+        if len(cells) == 1:
+            filename = "{}_{}_{}_{}.pdf".format(
+                cells[0].name, protocol_name, efeature, key_amp
+            )
+            dirname = pathlib.Path(output_dir) / cells[0].name
+        else:
+            filename = "{}_{}_{}.pdf".format(protocol_name, efeature, key_amp)
+            dirname = pathlib.Path(output_dir)
 
     _save_fig(dirname, filename)
 
@@ -273,11 +201,12 @@ def plot_efeature(
 def plot_efeatures(
     cells,
     protocol_name,
-    output_dir,
+    output_dir=None,
     protocols=[],
     key_amp="amp",
     colors=None,
-    markers=None
+    markers=None,
+    show=False
 ):
     """
     Plot the efeatures of a cell or a group of cells versus current amplitude
@@ -303,11 +232,18 @@ def plot_efeatures(
             key_amp=key_amp,
             colors=colors,
             markers=markers,
+            show=show
         )
 
 
 def plot_individual_efeatures(
-    cells, protocols, output_dir, colors=None, markers=None, key_amp="amp"
+    cells,
+    protocols,
+    output_dir=None,
+    colors=None,
+    markers=None,
+    key_amp="amp",
+    show=False
 ):
 
     if not colors or not markers:
@@ -325,11 +261,18 @@ def plot_individual_efeatures(
                 key_amp=key_amp,
                 colors=colors,
                 markers=markers,
+                show=show
             )
 
 
 def plot_grouped_efeatures(
-    cells, protocols, output_dir, colors=None, markers=None, key_amp="amp"
+    cells,
+    protocols,
+    output_dir=None,
+    colors=None,
+    markers=None,
+    key_amp="amp",
+    show=False
 ):
 
     if not cells:
@@ -351,12 +294,16 @@ def plot_grouped_efeatures(
             key_amp=key_amp,
             colors=colors,
             markers=markers,
+            show=show
         )
 
-    _ = _plot_legend(colors, markers, output_dir)
+    _ = _plot_legend(colors, markers, output_dir, show=show)
 
 
-def plot_all_recordings_efeatures(cells, protocols, output_dir):
+def plot_all_recordings_efeatures(
+    cells, protocols, output_dir=None, show=False
+):
+
     colors, markers = _get_colors_markers_wheels(cells)
 
     plot_all_recordings(cells, output_dir)
@@ -369,6 +316,7 @@ def plot_all_recordings_efeatures(cells, protocols, output_dir):
             colors=colors,
             markers=markers,
             key_amp=key_amp,
+            show=show
         )
         plot_grouped_efeatures(
             cells,
@@ -377,4 +325,5 @@ def plot_all_recordings_efeatures(cells, protocols, output_dir):
             colors=colors,
             markers=markers,
             key_amp=key_amp,
+            show=show
         )

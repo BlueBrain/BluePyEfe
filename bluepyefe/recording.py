@@ -21,6 +21,7 @@ Copyright (c) 2020, EPFL/Blue Brain Project
 import logging
 import numpy
 import efel
+import matplotlib.pyplot as plt
 
 from .tools import to_ms, to_mV, to_nA, set_efel_settings
 
@@ -58,6 +59,14 @@ class Recording(object):
             self.t, self.current, self.voltage = self.standardize_trace(
                 config_data, reader_data
             )
+
+    @property
+    def time(self):
+        return self.t
+
+    @time.setter
+    def time(self, value):
+        self.t = value
 
     def get_params(self):
         """Returns the eCode parameters"""
@@ -204,3 +213,43 @@ class Recording(object):
         efel_vals = self.call_efel(['peak_time'], efel_settings)
 
         self.spikecount = len(efel_vals[0]['peak_time'])
+
+    def plot(
+        self,
+        axis_current=None,
+        axis_voltage=None,
+        display_xlabel=True,
+        display_ylabel=True
+    ):
+        """Plot the recording"""
+
+        if axis_current is None or axis_voltage is None:
+            _, axs = plt.subplots(nrows=2, ncols=1, figsize=[4.9, 4.8])
+            axis_current, axis_voltage = axs[0], axs[1]
+
+        title = "Amp = {:.03f} nA".format(self.amp)
+        if self.amp_rel is not None:
+            title += " ({:.01f}%)".format(self.amp_rel)
+        if self.id is not None:
+            title += "\nid: {}".format(self.id)
+        if self.repetition is not None:
+            title += "\nRepetition: {}".format(self.repetition)
+        axis_current.set_title(title, size="x-small")
+
+        gen_t, gen_i = self.generate()
+        axis_current.plot(self.t, self.current, c="C0")
+        axis_current.plot(gen_t, gen_i, c="C1", ls="--")
+        axis_voltage.plot(self.t, self.voltage, c="C0")
+
+        if display_xlabel:
+            axis_voltage.set_xlabel("Time (ms)")
+        if display_ylabel:
+            axis_current.set_ylabel("Current (nA)")
+            axis_voltage.set_ylabel("Voltage (mV)")
+
+        axis_current.tick_params(axis="both", which="major", labelsize=8)
+        axis_current.tick_params(axis="both", which="minor", labelsize=6)
+        axis_voltage.tick_params(axis="both", which="major", labelsize=8)
+        axis_voltage.tick_params(axis="both", which="minor", labelsize=6)
+
+        return axis_current, axis_voltage
