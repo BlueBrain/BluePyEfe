@@ -554,8 +554,6 @@ def _read_extract_low_memory(
             efel_settings=efel_settings
         )[0]
 
-        cell.recordings = [rec for rec in cell.recordings if rec.amp > 0.]
-
         extract_efeatures_at_targets(
             [cell], targets, map, efel_settings
         )
