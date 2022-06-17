@@ -25,7 +25,7 @@ jobs:
           python-version: 3.6
       - name: Build a source tarball and wheel
         run: |
-            python install wheel
+            pip install wheel
             python setup.py sdist bdist_wheel
 
       - name: Publish package to PyPI
