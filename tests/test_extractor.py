@@ -114,6 +114,50 @@ class ExtractorTest(unittest.TestCase):
 
         self.assertEqual(len(features), len(protocols))
 
+    def test_extract_auto_fail_rheobase(self):
+
+        files_metadata, _ = get_config()
+
+        efeatures, protocol_definitions, current = bluepyefe.extract.extract_efeatures(
+            output_directory="./",
+            files_metadata=files_metadata,
+            rheobase_strategy="flush",
+            rheobase_settings={"upper_bound_spikecount": 4}
+        )
+
+        self.assertEqual(len(efeatures), 0)
+
+    def test_extract_auto(self):
+
+        files_metadata, _ = get_config()
+
+        auto_targets = bluepyefe.auto_targets.default_auto_targets()
+
+        cells = bluepyefe.extract.read_recordings(
+            files_metadata,
+            recording_reader=None,
+            map_function=map,
+            efel_settings=bluepyefe.tools.DEFAULT_EFEL_SETTINGS
+        )
+
+        for cell in cells:
+            cell.rheobase = 0.07
+            cell.compute_relative_amp()
+
+        recordings = []
+        for c in cells:
+            recordings += c.recordings
+
+        for i in range(len(auto_targets)):
+            auto_targets[i].select_ecode_and_amplitude(recordings)
+
+        # Extract the efeatures and group them around the preset of targets.
+        targets = []
+        for at in auto_targets:
+            targets += at.generate_targets()
+
+        self.assertEqual(len(targets), 48)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,5 +1,4 @@
 """Efeature extraction functions"""
-
 """
 Copyright (c) 2020, EPFL/Blue Brain Project
 
@@ -36,7 +35,8 @@ from bluepyefe.rheobase import compute_rheobase_absolute
 from bluepyefe.rheobase import compute_rheobase_flush
 from bluepyefe.rheobase import compute_rheobase_majority_bin
 from bluepyefe.rheobase import compute_rheobase_interpolation
-from bluepyefe.tools import DEFAULT_EFEL_SETTINGS
+from bluepyefe.tools import DEFAULT_EFEL_SETTINGS, PRESET_PROTOCOLS_RHEOBASE
+from bluepyefe.auto_targets import default_auto_targets
 
 logger = logging.getLogger(__name__)
 
@@ -622,22 +622,168 @@ def convert_legacy_targets(targets):
     return formatted_targets
 
 
-def extract_efeatures(
-        output_directory,
-        files_metadata,
+def _extract_with_targets(
+    files_metadata,
+    targets=None,
+    protocols_rheobase=None,
+    recording_reader=None,
+    map_function=map,
+    low_memory_mode=False,
+    protocol_mode="mean",
+    efel_settings=None,
+    rheobase_strategy="absolute",
+    rheobase_settings=None
+):
+    """Read the recordings and extract the efeatures at the requested
+    targets"""
+
+    if not low_memory_mode:
+        cells = _read_extract(
+            files_metadata,
+            recording_reader,
+            map_function,
+            targets,
+            efel_settings
+        )
+    else:
+        cells = _read_extract_low_memory(
+            files_metadata, recording_reader, targets, efel_settings
+        )
+
+    compute_rheobase(
+        cells,
+        protocols_rheobase=protocols_rheobase,
+        rheobase_strategy=rheobase_strategy,
+        rheobase_settings=rheobase_settings
+    )
+
+    protocols = group_efeatures(
+        cells,
         targets,
-        threshold_nvalue_save,
-        protocols_rheobase,
-        recording_reader=None,
-        map_function=map,
-        write_files=False,
-        plot=False,
-        low_memory_mode=False,
-        protocol_mode="mean",
-        efel_settings=None,
-        extract_per_cell=False,
-        rheobase_strategy="absolute",
-        rheobase_settings=None
+        use_global_rheobase=True,
+        protocol_mode=protocol_mode,
+        efel_settings=efel_settings
+    )
+
+    return cells, protocols
+
+
+def _extract_auto_targets(
+    files_metadata,
+    protocols_rheobase,
+    recording_reader,
+    map_function,
+    protocol_mode,
+    efel_settings,
+    auto_targets=None,
+    rheobase_strategy="flush",
+    rheobase_settings=None
+):
+    """Read the recordings and extract the efeatures using AutoTargets"""
+
+    if rheobase_settings is None and rheobase_strategy == "flush":
+        rheobase_settings = {"upper_bound_spikecount": 4}
+
+    if auto_targets is None:
+        auto_targets = default_auto_targets()
+
+    cells = read_recordings(
+        files_metadata,
+        recording_reader=recording_reader,
+        map_function=map_function,
+        efel_settings=efel_settings
+    )
+
+    compute_rheobase(
+        cells,
+        protocols_rheobase=protocols_rheobase,
+        rheobase_strategy=rheobase_strategy,
+        rheobase_settings=rheobase_settings
+    )
+
+    if not sum(bool(c.rheobase) for c in cells):
+        logger.warning("No cells with valid rheobase")
+        return cells, [], []
+
+    recordings = []
+    for c in cells:
+        recordings += c.recordings
+
+    for i in range(len(auto_targets)):
+        auto_targets[i].select_ecode_and_amplitude(recordings)
+
+    # Extract the efeatures and group them around the preset of targets.
+    targets = []
+    for at in auto_targets:
+        targets += at.generate_targets()
+
+    cells = extract_efeatures_at_targets(
+        cells, targets, map_function=map_function, efel_settings=efel_settings
+    )
+
+    protocols = group_efeatures(
+        cells,
+        targets,
+        use_global_rheobase=True,
+        protocol_mode=protocol_mode,
+        efel_settings=efel_settings
+    )
+
+    return cells, protocols, targets
+
+
+def extract_efeatures_per_cell(
+    files_metadata,
+    cells,
+    output_directory,
+    targets,
+    protocol_mode,
+    threshold_nvalue_save,
+    write_files
+):
+
+    for cell_name in files_metadata:
+
+        cell_directory = str(pathlib.Path(output_directory) / cell_name)
+
+        for cell in cells:
+
+            if cell.name != cell_name:
+                continue
+
+            cell_protocols = group_efeatures(
+                [cell],
+                targets,
+                use_global_rheobase=True,
+                protocol_mode=protocol_mode
+            )
+
+            _ = create_feature_protocol_files(
+                [cell],
+                cell_protocols,
+                output_directory=cell_directory,
+                threshold_nvalue_save=threshold_nvalue_save,
+                write_files=write_files,
+            )
+
+
+def extract_efeatures(
+    output_directory,
+    files_metadata,
+    targets=None,
+    threshold_nvalue_save=1,
+    protocols_rheobase=None,
+    recording_reader=None,
+    map_function=map,
+    write_files=False,
+    plot=False,
+    low_memory_mode=False,
+    protocol_mode="mean",
+    efel_settings=None,
+    extract_per_cell=False,
+    rheobase_strategy="absolute",
+    rheobase_settings=None,
+    auto_targets=None
 ):
     """
     Extract efeatures.
@@ -658,8 +804,9 @@ def extract_efeatures(
             need to be present in the file metadata of different protocols if
             the path contains data coming from different stimuli (eg: for NWB).
         targets (list): define the efeatures to extract as well as which
-            protocols and current amplitude they should be extracted for. Of
-            the form:
+            protocols and current amplitude they should be extracted for. If
+            targets are not probided, automatic targets will be used.
+            Of the form:
             [{
                 "efeature": "AP_amplitude",
                 "protocol": "IDRest",
@@ -707,16 +854,23 @@ def extract_efeatures(
         rheobase_settings (dict): settings related to the rheobase computation.
             Keys have to match the arguments expected by the rheobase
             computation function.
+        auto_targets (list of AutoTarget): targets with more flexible goals.
     """
 
     if not files_metadata:
         raise ValueError("Argument 'files_metadata' is empty")
 
-    if not targets:
-        raise ValueError("Argument 'targets' is empty")
-
     if efel_settings is None:
+        logger.warning(
+            "efel_settings is None. Default settings will be used"
+        )
         efel_settings = DEFAULT_EFEL_SETTINGS.copy()
+
+    if protocols_rheobase is None:
+        logger.warning(
+            "protocols_rheobase is None. Default protocol names will be used"
+        )
+        protocols_rheobase = PRESET_PROTOCOLS_RHEOBASE.copy()
 
     if low_memory_mode and map_function not in [map, None]:
         logger.warning(
@@ -725,40 +879,41 @@ def extract_efeatures(
     if low_memory_mode and plot:
         raise Exception('plot cannot be used in low_memory_mode mode.')
 
-    if isinstance(targets, dict):
+    if targets is not None and isinstance(targets, dict):
         logger.warning(
             "targets seems to be in a legacy format. A conversion will"
             " be performed."
         )
         targets = convert_legacy_targets(targets)
 
-    if not low_memory_mode:
-        cells = _read_extract(
+    if targets is not None and auto_targets is not None:
+        raise Exception("Cannot specify both targets and auto_targets.")
+
+    if targets is None or auto_targets is not None:
+        cells, protocols, targets = _extract_auto_targets(
             files_metadata,
+            protocols_rheobase,
             recording_reader,
             map_function,
-            targets,
-            efel_settings
+            protocol_mode,
+            efel_settings,
+            auto_targets,
+            rheobase_strategy,
+            rheobase_settings
         )
     else:
-        cells = _read_extract_low_memory(
-            files_metadata, recording_reader, targets, efel_settings
+        cells, protocols = _extract_with_targets(
+            files_metadata,
+            targets,
+            protocols_rheobase,
+            recording_reader,
+            map_function,
+            low_memory_mode,
+            protocol_mode,
+            efel_settings,
+            rheobase_strategy,
+            rheobase_settings
         )
-
-    compute_rheobase(
-        cells,
-        protocols_rheobase=protocols_rheobase,
-        rheobase_strategy=rheobase_strategy,
-        rheobase_settings=rheobase_settings
-    )
-
-    protocols = group_efeatures(
-        cells,
-        targets,
-        use_global_rheobase=True,
-        protocol_mode=protocol_mode,
-        efel_settings=efel_settings
-    )
 
     efeatures, protocol_definitions, current = create_feature_protocol_files(
         cells,
@@ -774,30 +929,15 @@ def extract_efeatures(
         )
 
     if extract_per_cell and write_files:
-
-        for cell_name in files_metadata:
-
-            cell_directory = str(pathlib.Path(output_directory) / cell_name)
-
-            for cell in cells:
-
-                if cell.name != cell_name:
-                    continue
-
-                cell_protocols = group_efeatures(
-                    [cell],
-                    targets,
-                    use_global_rheobase=True,
-                    protocol_mode=protocol_mode
-                )
-
-                _ = create_feature_protocol_files(
-                    [cell],
-                    cell_protocols,
-                    output_directory=cell_directory,
-                    threshold_nvalue_save=threshold_nvalue_save,
-                    write_files=write_files,
-                )
+        extract_efeatures_per_cell(
+            files_metadata,
+            cells,
+            output_directory,
+            targets,
+            protocol_mode,
+            threshold_nvalue_save,
+            write_files
+        )
 
     if not efeatures or not protocol_definitions:
         logger.warning("The output of the extraction is empty. Something went "
@@ -809,10 +949,10 @@ def extract_efeatures(
 
 
 def plot_recordings(
-        files_metadata,
-        output_directory="./figures/",
-        recording_reader=None,
-        map_function=map,
+    files_metadata,
+    output_directory="./figures/",
+    recording_reader=None,
+    map_function=map,
 ):
     """
     Plots recordings.

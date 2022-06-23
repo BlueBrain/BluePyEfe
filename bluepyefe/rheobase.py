@@ -73,30 +73,37 @@ def compute_rheobase_absolute(cell, protocols_rheobase, spike_threshold=1):
             break
 
 
-def compute_rheobase_flush(cell, protocols_rheobase, flush_length=1):
+def compute_rheobase_flush(cell, protocols_rheobase, flush_length=1, upper_bound_spikecount=None):
     """ Compute the rheobase by finding the smallest current amplitude that:
         1. Triggered at least one spike
         2. Is followed by flush_length other traces that also trigger spikes.
     The advantage of this strategy is that it ignores traces showing spurious
     spikes at low amplitudes.
-
     Args:
         cell (Cell): cell for which to compute the rheobase
         protocols_rheobase (list): names of the protocols that will be
             used to compute the rheobase of the cells. E.g: ['IDthresh'].
         flush_length (int): number of traces that needs to show spikes for
             the candidate trace to be considered the rheobase.
+        upper_bound_spikecount (int): if the spikecount of a recording is higher
+            than this number, the recording will not trigger the start of a flush
     """
 
     amps, spike_counts = _get_list_spiking_amplitude(cell, protocols_rheobase)
 
     for i, amp in enumerate(amps):
+
+        # We missed the threshold
+        if upper_bound_spikecount is not None:
+            if spike_counts[i] > upper_bound_spikecount:
+                break
+
         if spike_counts[i]:
 
             end_flush = min(i + 1 + flush_length, len(amps))
 
             if (
-                numpy.count_nonzero(spike_counts[i + 1:end_flush]) == flush_length
+                    numpy.count_nonzero(spike_counts[i + 1:end_flush]) == flush_length
             ):
                 cell.rheobase = amp
                 break
