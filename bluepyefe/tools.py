@@ -30,6 +30,11 @@ DEFAULT_EFEL_SETTINGS = {
 }
 
 
+PRESET_PROTOCOLS_RHEOBASE = [
+    "IV", "Step", "FirePattern", "IDrest", "IDRest", "IDthresh", "IDThresh", "IDThres", "IDthres"
+]
+
+
 def to_ms(t, t_unit):
     if t_unit.lower() in ["s", "sec", "seconds"]:
         return t * 1e3
