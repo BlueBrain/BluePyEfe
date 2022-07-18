@@ -132,8 +132,9 @@ def plot_efeature(
         x, y = [], []
         for rec in cell.get_recordings_by_protocol_name(protocol_name):
             if hasattr(rec, key_amp) and getattr(rec, key_amp):
-                x.append(getattr(rec, key_amp))
-                y.append(rec.efeatures[efeature])
+                if efeature in rec.efeatures:
+                    x.append(getattr(rec, key_amp))
+                    y.append(rec.efeatures[efeature])
 
         if y:
             has_data = True
