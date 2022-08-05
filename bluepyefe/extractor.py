@@ -372,33 +372,20 @@ class Extractor(object):
 
                 n_plot = len(voltages)
 
-                if n_plot <= self.max_per_plot:
-                    frames = n_plot
-                    n_fig = 1
-                else:
-                    frames = self.max_per_plot
-                    n_fig = int(numpy.ceil(n_plot / float(self.max_per_plot)))
-
-                axs = []
                 figs = OrderedDict()
-
-                axs_c = []
                 figs_c = OrderedDict()
 
-                for i_fig in range(n_fig):
-                    figname = cellname.split(
-                        '/')[-1] + "_" + expname + "_" + str(i_fig)
-                    axs = plottools.tiled_figure(
-                        figname, frames=frames, columns=2, figs=figs, axs=axs,
-                        top=0.97, bottom=0.04, left=0.07, right=0.97,
-                        hspace=0.75, wspace=0.2)
+                figname = cellname.split('/')[-1] + "_" + expname
+                axs = plottools.tiled_figure(
+                    figname, frames=n_plot, columns=2, figs=figs,
+                    top=0.97, bottom=0.04, left=0.07, right=0.97,
+                    hspace=0.75, wspace=0.2)
 
-                    figname_c = cellname.split(
-                        '/')[-1] + "_" + expname + "_" + str(i_fig) + "_i"
-                    axs_c = plottools.tiled_figure(
-                        figname_c, frames=frames, columns=2, figs=figs_c,
-                        axs=axs_c, top=0.97, bottom=0.04, left=0.07,
-                        right=0.97, hspace=0.75, wspace=0.2)
+                figname_c = cellname.split('/')[-1] + "_" + expname + "_i"
+                axs_c = plottools.tiled_figure(
+                    figname_c, frames=n_plot, columns=2, figs=figs_c,
+                    top=0.97, bottom=0.04, left=0.07,
+                    right=0.97, hspace=0.75, wspace=0.2)
 
                 for i_plot in range(n_plot):
                     # reduce figure title length if too long
@@ -429,19 +416,17 @@ class Extractor(object):
                         str(amps[i_plot]) +
                         " file:" + filename_fin)
 
-                # plt.show()
+                for figname in figs:
+                    with PdfPages(dirname + '/' + figname + '.pdf') as pdf:
+                        for fig in figs[figname]['fig']:
+                            pdf.savefig(fig)
+                            plt.close(fig)
 
-                for i_fig, figname in enumerate(figs):
-                    fig = figs[figname]
-                    fig['fig'].savefig(
-                        dirname + '/' + figname + '.pdf', dpi=300)
-                    plt.close(fig['fig'])
-
-                for i_fig, figname in enumerate(figs_c):
-                    fig = figs_c[figname]
-                    fig['fig'].savefig(
-                        dirname + '/' + figname + '.pdf', dpi=300)
-                    plt.close(fig['fig'])
+                for figname in figs_c:
+                    with PdfPages(dirname + '/' + figname + '.pdf') as pdf:
+                        for fig in figs_c[figname]['fig']:
+                            pdf.savefig(fig)
+                            plt.close(fig)
 
     def extract_features(self, threshold=-20):
         """Extract features from the traces"""
@@ -578,7 +563,7 @@ class Extractor(object):
                                 f = None
                             else:
                                 logger.info(
-                                    "Unrecognized value " +
+                                    " Unrecognized value " +
                                     "for zero_to_nan option")
                         else:
                             f = fel_vals[0][feature]
@@ -1162,8 +1147,7 @@ class Extractor(object):
                 figname = "features_" + cellname.split('/')[-1] + "_" + expname
                 axs_cell = plottools.tiled_figure(
                     figname,
-                    frames=len(
-                        self.features[expname]),
+                    frames=len(self.features[expname]),
                     columns=3,
                     figs=cellfigs,
                     dirname=dirname,
@@ -1246,11 +1230,14 @@ class Extractor(object):
 
                                 if "zero_std" in self.options and \
                                         self.options["zero_std"]:
-                                    rules = [~numpy.isnan(m)]
+                                    rules = [
+                                        ~numpy.isnan(m) and ~numpy.isnan(s)
+                                    ]
                                 else:
                                     rules = [
-                                        ~numpy.isnan(m), (s > 0.0) or
-                                        (m == 0.0)]
+                                        ~numpy.isnan(m) and ~numpy.isnan(s),
+                                        (s > 0.0) or (m == 0.0)
+                                    ]
                                 if all(rules):
                                     amp_rel_list.append(a)
                                     mean_list.append(m)
@@ -1270,11 +1257,13 @@ class Extractor(object):
                             b.set_clip_on(False)
 
             # close single cell figures
-            for i_fig, figname in enumerate(cellfigs):
-                fig = cellfigs[figname]
-                fig['fig'].savefig(
-                    fig['dirname'] + '/' + figname + '.pdf', dpi=300)
-                plt.close(fig['fig'])
+            for figname in cellfigs:
+                with PdfPages(
+                    cellfigs[figname]['dirname'] + '/' + figname + '.pdf'
+                ) as pdf:
+                    for fig in cellfigs[figname]['fig']:
+                        pdf.savefig(fig)
+                        plt.close(fig)
 
         for i_exp, expname in enumerate(self.experiments):
 
@@ -1297,11 +1286,12 @@ class Extractor(object):
 
                             if "zero_std" in self.options and \
                                     self.options["zero_std"]:
-                                rules = [~numpy.isnan(m)]
+                                rules = [~numpy.isnan(m) and ~numpy.isnan(s)]
                             else:
                                 rules = [
-                                    ~numpy.isnan(m), (s > 0.0) or
-                                    (m == 0.0)]
+                                    ~numpy.isnan(m) and ~numpy.isnan(s),
+                                    (s > 0.0) or (m == 0.0)
+                                ]
                             if all(rules):
                                 amp_rel_list.append(a)
                                 mean_list.append(m)
@@ -1319,15 +1309,13 @@ class Extractor(object):
                     for b in e[1]:
                         b.set_clip_on(False)
 
-        for i_fig, figname in enumerate(figs):
-            fig = figs[figname]
-            fig['fig'].savefig(
-                fig['dirname'] +
-                '/' +
-                figname +
-                '.pdf',
-                dpi=300)
-            plt.close(fig['fig'])
+        for figname in figs:
+            with PdfPages(
+                figs[figname]['dirname'] + '/' + figname + '.pdf'
+            ) as pdf:
+                for fig in figs[figname]['fig']:
+                    pdf.savefig(fig)
+                    plt.close(fig)
 
     def plt_features_dist(self):
         """Plot the distribution of features"""
@@ -1339,57 +1327,54 @@ class Extractor(object):
 
         for i_exp, expname in enumerate(self.experiments):
 
-            figpath = dirname + '/features_' + expname + '.pdf'
-            pdf_pages = PdfPages(figpath)
+            with PdfPages(dirname + '/features_' + expname + '.pdf') as pdf:
 
-            for feature in self.features[expname]:
+                for feature in self.features[expname]:
 
-                figname = "features_" + expname + "_" + feature
-                axs = plottools.tiled_figure(
-                    figname, frames=2 * len(self.options["target"]),
-                    columns=6, figs=figs, dirname=dirname, top=0.92,
-                    bottom=0.04, left=0.07, right=0.97, hspace=0.75,
-                    wspace=0.3)
+                    figname = "features_" + expname + "_" + feature
+                    axs = plottools.tiled_figure(
+                        figname, frames=2 * len(self.options["target"]),
+                        columns=3, figs=figs, dirname=dirname, top=0.92,
+                        bottom=0.04, left=0.07, right=0.97, hspace=0.75,
+                        wspace=0.3)
 
-                for it, target in enumerate(self.options["target"]):
+                    for it, target in enumerate(self.options["target"]):
 
-                    feat = numpy.array(
-                        self.dataset_mean[expname]['features'][feature]
-                        [str(target)])
+                        feat = numpy.array(
+                            self.dataset_mean[expname]['features'][feature]
+                            [str(target)])
 
-                    ax = axs[2 * it]
-                    ax_bc = axs[2 * it + 1]
-                    ax.set_title(str(target))
-                    ax_bc.set_title(str(target) + " boxcox")
-                    feat[numpy.isinf(feat)] = float('nan')
+                        ax = axs[2 * it]
+                        ax_bc = axs[2 * it + 1]
+                        ax.set_title(str(target))
+                        ax_bc.set_title(str(target) + " boxcox")
+                        feat[numpy.isinf(feat)] = float('nan')
 
-                    bcshift = \
-                        self.dataset_mean[expname][
-                            'bc_shift_features'][feature][str(
-                                target)]
-                    bcld = self.dataset_mean[expname]['bc_ld_features'][
-                        feature][
-                        str(target)]
+                        bcshift = \
+                            self.dataset_mean[expname][
+                                'bc_shift_features'][feature][str(
+                                    target)]
+                        bcld = self.dataset_mean[expname]['bc_ld_features'][
+                            feature][
+                            str(target)]
 
-                    # removing nan values before plotting
-                    feat = feat[numpy.logical_not(numpy.isnan(feat))]
-                    if (all(numpy.isnan(feat)) is False):
+                        # removing nan values before plotting
+                        feat = feat[numpy.logical_not(numpy.isnan(feat))]
+                        if (all(numpy.isnan(feat)) is False):
 
-                        ax.hist(feat, max(1, int(len(feat) / 2)),
-                                histtype='stepfilled', color='b',
-                                edgecolor='none')
-                        ax_bc.set_title(
-                            str(target) +
-                            " boxcox\nld:" +
-                            str(bcld) +
-                            "\nshift:" +
-                            str(bcshift))
+                            ax.hist(feat, max(1, int(len(feat) / 2)),
+                                    histtype='stepfilled', color='b',
+                                    edgecolor='none')
+                            ax_bc.set_title(
+                                str(target) +
+                                " boxcox\nld:" +
+                                str(bcld) +
+                                "\nshift:" +
+                                str(bcshift))
 
-                fig = figs[figname]
-                fig['fig'].suptitle(feature)
-                pdf_pages.savefig(fig['fig'])
-
-            pdf_pages.close()
+                    for fig in figs[figname]['fig']:
+                        fig.suptitle(feature)
+                        pdf.savefig(fig)
 
     def feature_config_all(self, version=None):
         self.create_feature_config(self.maindirname,
@@ -1525,6 +1510,15 @@ class Extractor(object):
                                         ]
 
             stim = OrderedDict([(self.mainname, stim)])
+
+            # sort step keys
+            try:
+                feat = OrderedDict(sorted(
+                    feat.items(), key=lambda x: float(x[0][5:]), reverse=True)
+                )
+            except ValueError:
+                logger.warning(" Unable to sort features keys")
+
             feat = OrderedDict([(self.mainname, feat)])
 
         else:
@@ -1770,6 +1764,14 @@ class Extractor(object):
                                                 ]
                                             )
 
+            # sort step keys
+            try:
+                feat = OrderedDict(sorted(
+                    feat.items(), key=lambda x: float(x[0][5:]), reverse=True)
+                )
+            except ValueError:
+                logger.warning(" Unable to sort features keys")
+
         s = json.dumps(stim, indent=2, cls=tools.NumpyEncoder)
         s = tools.collapse_json(s, indent=indent)
         with open(directory + "protocols.json", "w") as f:
@@ -1792,7 +1794,7 @@ class Extractor(object):
         If no metadata file is present, default values are inserted
         """
 
-        logger.info("Filling metadataset")
+        logger.info(" Filling metadataset")
         path = self.path
 
         self.metadataset = OrderedDict()
@@ -1820,7 +1822,6 @@ class Extractor(object):
                             foldpath = os.path.dirname(dict_igor["v_file"])
                             fullpath = os.path.join(
                                 foldpath, cellname + '_' + 'metadata.json')
-                            print(fullpath)
                             metadataset_cell_exp[expname][cellname] = \
                                 common.manageMetadata.get_metadata(
                                 fullpath)

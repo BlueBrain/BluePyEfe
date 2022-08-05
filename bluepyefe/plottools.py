@@ -19,6 +19,7 @@ Copyright (c) 2020, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 
+
 import matplotlib
 import matplotlib.colors as mplcol
 import matplotlib.pyplot as plt
@@ -99,63 +100,79 @@ def light_palette(color, n_colors=6, reverse=False, lumlight=0.8, light=None):
 
 
 def tiled_figure(
-        figname='', frames=1, columns=2, figs=collections.OrderedDict(),
-        axs=None, orientation='page', width_ratios=None, height_ratios=None,
-        top=0.97, bottom=0.05, left=0.07, right=0.97, hspace=0.6, wspace=0.2,
-        dirname=''):
+    figname='', frames=1, columns=2, rows_per_page=4,
+    dirname='', figs=collections.OrderedDict(), orientation='page',
+    width_ratios=None, height_ratios=None, hspace=0.6, wspace=0.2,
+    top=0.97, bottom=0.05, left=0.07, right=0.97
+):
 
     if figname not in figs.keys():
-
-        if axs is None:
-            axs = []
 
         if orientation == 'landscape':
             figsize = (297 / 25.4, 210 / 25.4)
         elif orientation == 'page':
             figsize = (210 / 25.4, 297 / 25.4)
 
-        params = {'backend': 'ps',
-                  'axes.labelsize': 6,
-                  'axes.linewidth': 0.5,
-                  'font.size': 8,
-                  'axes.titlesize': 8,
-                  'legend.fontsize': 8,
-                  'xtick.labelsize': 6,
-                  'ytick.labelsize': 6,
-                  'legend.borderpad': 0.2,
-                  'legend.loc': 'best',
-                  'text.usetex': False,
-                  # 'pdf.fonttype': 42,
-                  'figure.figsize': figsize}
+        params = {
+            'backend': 'ps',
+            'axes.labelsize': 6,
+            'axes.linewidth': 0.5,
+            'font.size': 8,
+            'axes.titlesize': 8,
+            'legend.fontsize': 8,
+            'xtick.labelsize': 6,
+            'ytick.labelsize': 6,
+            'legend.borderpad': 0.2,
+            'legend.loc': 'best',
+            'text.usetex': False,
+            # 'pdf.fonttype': 42,
+            'figure.figsize': figsize
+        }
         matplotlib.rcParams.update(params)
 
-        fig = plt.figure(figname, facecolor='white')
+        axs = []
         figs[figname] = {}
-        figs[figname]['fig'] = fig
         figs[figname]['dirname'] = dirname
+        figs[figname]['fig'] = []
+
+        if frames < columns:
+            rows_per_page = 1
+            columns = frames
+        elif frames < (columns * rows_per_page):
+            rows_per_page = numpy.ceil(frames / float(columns)).astype(int)
 
         if width_ratios is None:
             width_ratios = [1] * columns
 
-        rows = int(numpy.ceil(frames / float(columns)))
         if height_ratios is None:
-            height_ratios = [1] * rows
+            height_ratios = [1] * rows_per_page
 
         gs = matplotlib.gridspec.GridSpec(
-            rows, columns, height_ratios=height_ratios,
-            width_ratios=width_ratios)
-        gs.update(
+            rows_per_page, columns,
+            width_ratios=width_ratios,
+            height_ratios=height_ratios,
             top=top,
             bottom=bottom,
             left=left,
             right=right,
             hspace=hspace,
-            wspace=wspace)
+            wspace=wspace
+        )
 
-        for fi in range(frames):
-            axs.append(fig.add_subplot(
-                gs[int(fi / columns), int(fi % columns)]))
-            adjust_spines(axs[-1], ['left', 'bottom'], d_out=0)
+        """
+        Compute the number of frames per page and the number of pages.
+        Then define the figures, one per page
+        """
+        frames_per_page = rows_per_page * columns
+        pages = numpy.ceil(frames / float(frames_per_page)).astype(int)
+        for page in range(pages):
+            fig = plt.figure(figname + "_" + str(page), facecolor='white')
+            figs[figname]['fig'].append(fig)
+            for i_frame in range(frames_per_page):
+                axs.append(fig.add_subplot(
+                    gs[int(i_frame / columns), int(i_frame % columns)]
+                ))
+                adjust_spines(axs[-1], ['left', 'bottom'], d_out=0)
 
         figs[figname]['axs'] = axs
 
