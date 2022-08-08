@@ -46,37 +46,40 @@ def _check_metadata(metadata, reader_name, required_entries=[]):
 
 def axon_reader(in_data):
     """Reader to read .abf
-
     Args:
         in_data (dict): of the format
         {
-            "filepath": "./XXX.ibw",
+            "filepath": "./XXX.abf",
             "i_unit": "pA",
             "t_unit": "s",
             "v_unit": "mV",
         }
     """
 
-    _check_metadata(
-        in_data,
-        axon_reader.__name__,
-        ["filepath", "i_unit", "v_unit", "t_unit"],
-    )
-
-    filepath = in_data["filepath"]
-
-    # Read file
-    r = io.AxonIO(filename=filepath)
+    r = io.AxonIO(filename=in_data["filepath"])
     bl = r.read_block(lazy=False)
 
-    # Extract data
     data = []
     for trace in bl.segments:
-        trace_data = {}
-        trace_data["voltage"] = numpy.array(trace.analogsignals[0]).flatten()
-        trace_data["current"] = numpy.array(trace.analogsignals[1]).flatten()
-        trace_data["dt"] = 1.0 / int(trace.analogsignals[0].sampling_rate)
-        data.append(trace_data)
+
+        dt = 1.0 / int(trace.analogsignals[0].sampling_rate)
+        np_trace = numpy.asarray(trace.analogsignals)
+
+        if np_trace.shape[0] == 2:
+            v = np_trace[0, :]
+            c = np_trace[1, :]
+        elif np_trace.shape[-1] == 2:
+            v = np_trace[:, :, 0]
+            c = np_trace[:, :, 1]
+        else:
+            raise Exception(f"Unknown .abf format for file {fp}. Maybe "
+                            "it does not have current data?")
+
+        data.append({
+            "voltage": numpy.asarray(v).flatten(),
+            "current": numpy.asarray(c).flatten(),
+            "dt": dt
+        })
 
     return data
 
