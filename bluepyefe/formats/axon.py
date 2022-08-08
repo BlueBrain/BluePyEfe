@@ -432,7 +432,7 @@ def sampling_rate_from_header(header):
         # read sampling rate
         sampling_rate = 1.e6 / header['protocol']['fADCSequenceInterval']
 
-    return(1, {"r": sampling_rate, "ru": "Hz"})
+    return (1, {"r": sampling_rate, "ru": "Hz"})
 
 
 def get_nbepisod(header):
