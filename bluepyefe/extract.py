@@ -1,4 +1,7 @@
 """Efeature extraction functions"""
+import os
+import pickle
+
 """
 Copyright (c) 2020, EPFL/Blue Brain Project
 
@@ -783,7 +786,8 @@ def extract_efeatures(
     extract_per_cell=False,
     rheobase_strategy="absolute",
     rheobase_settings=None,
-    auto_targets=None
+    auto_targets=None,
+    pickle_cells=False,
 ):
     """
     Extract efeatures.
@@ -855,6 +859,7 @@ def extract_efeatures(
             Keys have to match the arguments expected by the rheobase
             computation function.
         auto_targets (list of AutoTarget): targets with more flexible goals.
+        pickle_cells (bool): if True, the cells object will be saved as a pickle file.
     """
 
     if not files_metadata:
@@ -922,6 +927,9 @@ def extract_efeatures(
         threshold_nvalue_save=threshold_nvalue_save,
         write_files=write_files,
     )
+
+    if pickle_cells:
+        pickle.dump(cells, open(os.path.join(output_directory, 'cells.pkl'), 'wb'))
 
     if plot:
         plot_all_recordings_efeatures(
