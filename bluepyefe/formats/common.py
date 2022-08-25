@@ -7,7 +7,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-
 class manageFiles:
     @classmethod
     def md5(cls, filename):
@@ -551,7 +550,10 @@ class manageDicts():
         return data
 
     @classmethod
-    def fill_dict_single_trace(cls, data=None, voltage=0.0, current=0.0, dt=0.0, t=0.0, ton=0.0, toff=0.0, amp=0.0, hypamp=0.0, filename=""):
+    def fill_dict_single_trace(cls, data=None, voltage=0.0, current=0.0,
+                               dt=0.0, t=0.0, ton=0.0, toff=0.0, amp=0.0,
+                               hypamp=0.0, filename=""):
+
         if data is None:
             data = {}
         data['voltage'].append(voltage)

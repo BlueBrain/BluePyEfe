@@ -65,7 +65,6 @@ def process(config=None,
             "No metadata file found for file %s. Skipping file", filename)
         return data
 
-
     logger.info(" Adding spike2 file %s", filename)
 
     fullfilename = filename + '.smr'
