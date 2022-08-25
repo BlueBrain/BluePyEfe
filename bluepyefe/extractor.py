@@ -208,8 +208,7 @@ class Extractor(object):
         else:
             return numpy.std(a)
 
-    def boxcoxcell(self, a, nanopt="nanmean_cell",
-                   lm_vec=numpy.linspace(-3, 3, 41)):
+    def boxcoxcell(self, a, nanopt="nanmean_cell"):
         if ((self.options[nanopt] or
              (numpy.sum(numpy.isnan(a)) <= self.options["nangrace"])) and
                 (len(a) > 0)):
