@@ -53,7 +53,7 @@ class Extractor(object):
 
     """Extractor class"""
 
-    def __init__(self, mainname='PC', config=OrderedDict()):
+    def __init__(self, mainname='PC', config=None):
         """Constructor
 
         Args:
@@ -62,6 +62,8 @@ class Extractor(object):
             config (dict): metadata containing the protocols and cells for
             which to extract the efeatures.
         """
+        if config is None:
+            config = OrderedDict()
 
         self.config = config
         self.path = config['path']
