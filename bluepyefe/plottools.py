@@ -28,7 +28,9 @@ import numpy
 import collections
 
 
-def adjust_spines(ax, spines, color='k', d_out=10, d_down=[]):
+def adjust_spines(ax, spines, color='k', d_out=10, d_down=None):
+    if d_down is None:
+        d_down = []
 
     if d_down == []:
         d_down = d_out
