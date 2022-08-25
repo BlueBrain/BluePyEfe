@@ -234,7 +234,7 @@ class Extractor(object):
             return numpy.std(a)
 
     def create_dataset(self):
-        """Read the trace files and add them to the dictionnary self.dataset"""
+        """Read the trace files and add them to the dictionary self.dataset"""
         logger.info(" Filling dataset")
 
         for i_cell, cellname in enumerate(self.cells):
