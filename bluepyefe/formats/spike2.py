@@ -65,8 +65,6 @@ def process(config=None,
             "No metadata file found for file %s. Skipping file", filename)
         return data
 
-    # read stimulus features if present
-    stim_feats = []
 
     logger.info(" Adding spike2 file %s", filename)
 
