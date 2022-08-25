@@ -194,7 +194,6 @@ class manageMetadata:
         if not os.path.isfile(outfilepath):
             with open(outfilepath, 'w') as f:
                 json.dump(obj, f)
-        return
 
     @classmethod
     def generate_authorization_json(
