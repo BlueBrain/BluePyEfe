@@ -284,7 +284,7 @@ def process(config=None,
                 data=data, voltage=voltage, current=current, dt=dt, t=t,
                 ton=ton, toff=toff, amp=amp, hypamp=hypamp,
                 filename=filename)
-    resp_check = check_validity(data)
+    resp_check = check_validity(data, filename)
 
     return data
 
@@ -451,7 +451,7 @@ def get_nbepisod(header):
 
 
 #
-def check_validity(data):
+def check_validity(data, filename):
     # extract number of traces
     nb_traces = len(data["voltage"])
 
