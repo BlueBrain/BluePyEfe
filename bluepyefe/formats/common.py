@@ -1,14 +1,11 @@
-from neo import io
 from collections import OrderedDict
 import os
 import json
 import hashlib
-import calendar
 import re
-import six
 import logging
 logger = logging.getLogger(__name__)
-import quantities as pq
+
 
 
 class manageFiles:
