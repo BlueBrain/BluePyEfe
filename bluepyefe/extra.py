@@ -123,7 +123,6 @@ def spikerate_slope(peaktimes):
 
     peaktimes = numpy.array(peaktimes) * 1e-3
     isi = numpy.diff(peaktimes)
-    isi = isi
     x = numpy.arange(1, len(isi) + 1)
 
     times = peaktimes[:-1]
