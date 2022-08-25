@@ -130,7 +130,7 @@ def process(config=None,
         stim_info_flag = True
         try:
             sampling_rate = 1.e6 / header['protocol']['fADCSequenceInterval']
-        except Exception as e:
+        except Exception:
             logger.info(
                 "Unable to find recording frequency in file: %s." +
                 "The ABF file version is probably older than v2", filename)
@@ -247,9 +247,6 @@ def process(config=None,
 
             # estimate hyperpolarization current
             hypamp = numpy.mean(current[0:ion])
-
-            # 10% distance to measure step current
-            iborder = int((ioff - ion) * 0.1)
 
             # clean voltage from transients
             voltage[ion:ion + int(numpy.ceil(0.4 / dt))] = \
