@@ -62,6 +62,7 @@ class Extractor(object):
             which to extract the efeatures.
         """
 
+        self.plot_extra_features = True
         self.config = config
         self.path = config['path']
         self.cells = config['cells']
@@ -190,6 +191,9 @@ class Extractor(object):
         self.extra_features = ['spikerate_tau_jj', 'spikerate_drop',
                                'spikerate_tau_log', 'spikerate_tau_fit',
                                'spikerate_tau_slope']
+
+    def disable_extra_feature_plots(self):
+        self.plot_extra_features = False
 
     def newmeancell(self, a):
         if (self.options["nanmean_cell"] or
@@ -543,7 +547,8 @@ class Extractor(object):
 
                         elif feature == 'spikerate_tau_slope':
                             if len(peak_times) > 4:
-                                f = extra.spikerate_tau_slope(peak_times)
+                                f = extra.spikerate_tau_slope(
+                                    peak_times, plot=self.plot_extra_features)
                             else:
                                 f = None
                         elif fel_vals[0][feature] is not None and \
