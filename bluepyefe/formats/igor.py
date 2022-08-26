@@ -38,8 +38,6 @@ def process(config=None,
     """Read recordings from an igor file"""
 
     path = config['path']
-    cells = config['cells']
-    features = config['features']
     options = config['options']
 
     data = OrderedDict()
