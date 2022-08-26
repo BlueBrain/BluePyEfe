@@ -20,7 +20,6 @@ Copyright (c) 2020, EPFL/Blue Brain Project
 """
 
 from neo import io
-from collections import OrderedDict
 import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

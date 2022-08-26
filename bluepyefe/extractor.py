@@ -31,7 +31,6 @@ import os
 import logging
 import gzip
 import json
-import pprint
 
 from itertools import cycle
 from collections import OrderedDict

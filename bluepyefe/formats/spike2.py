@@ -19,18 +19,13 @@ Copyright (c) 2020, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 
-from neo import io
-from collections import OrderedDict
 import logging
 logger = logging.getLogger(__name__)
 import numpy as np
 import os
 import json
-import sys
 import quantities
-from quantities import ms, s, mV, nA
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+from quantities import ms, mV
 from neo import AnalogSignal
 from neo.io import Spike2IO
 from . import common
