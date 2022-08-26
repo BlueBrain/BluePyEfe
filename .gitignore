@@ -13,3 +13,4 @@ BluePyEfe.egg-info
 /examples/output
 *.ipynb_checkpoints
 /test_run
+build

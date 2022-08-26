@@ -118,12 +118,11 @@ def spikerate_tau_log(peaktimes):
     return tau
 
 
-def spikerate_slope(peaktimes):
+def spikerate_slope(peaktimes, plot=True):
     """Spike rate slope feature"""
 
     peaktimes = numpy.array(peaktimes) * 1e-3
     isi = numpy.diff(peaktimes)
-    isi = isi
     x = numpy.arange(1, len(isi) + 1)
 
     times = peaktimes[:-1]
@@ -133,17 +132,18 @@ def spikerate_slope(peaktimes):
     freq = 1. / isi
     freq = freq - freq[-1]
 
-    plt.subplot(5, 1, 1)
-    plt.plot(times, isi, '*')
-    plt.subplot(5, 1, 2)
-    plt.plot(times, log_isi, '*')
-    plt.subplot(5, 1, 3)
-    plt.plot(log_times, log_isi, '*')
-    plt.subplot(5, 1, 4)
-    plt.plot(x, log_isi, '*')
-    plt.subplot(5, 1, 5)
-    plt.plot(log_x, log_isi, '*')
-    plt.show()
+    if plot:
+        plt.subplot(5, 1, 1)
+        plt.plot(times, isi, '*')
+        plt.subplot(5, 1, 2)
+        plt.plot(times, log_isi, '*')
+        plt.subplot(5, 1, 3)
+        plt.plot(log_times, log_isi, '*')
+        plt.subplot(5, 1, 4)
+        plt.plot(x, log_isi, '*')
+        plt.subplot(5, 1, 5)
+        plt.plot(log_x, log_isi, '*')
+        plt.show()
 
     slope_log, _ = numpy.polyfit(log_x, log_isi, 1)
     slope_semilog, _ = numpy.polyfit(x, log_isi, 1)
@@ -153,7 +153,7 @@ def spikerate_slope(peaktimes):
     return slope_log
 
 
-def spikerate_tau_slope(peaktimes):
+def spikerate_tau_slope(peaktimes, plot=True):
     """Spike rate tau slope feature"""
 
     peaktimes = numpy.array(peaktimes) * 1e-3
@@ -190,13 +190,14 @@ def spikerate_tau_slope(peaktimes):
     # times = times[i_use]
     # log_freq = log_freq[i_use]
 
-    plt.subplot(3, 1, 1)
-    plt.plot(times, log_freq, '*')
-    plt.subplot(3, 1, 2)
-    plt.plot(times[1:], numpy.diff(log_freq), '*')
-    plt.subplot(3, 1, 3)
-    plt.plot(times[1:], numpy.diff(log_freq) / numpy.diff(times), '*')
-    plt.show()
+    if plot:
+        plt.subplot(3, 1, 1)
+        plt.plot(times, log_freq, '*')
+        plt.subplot(3, 1, 2)
+        plt.plot(times[1:], numpy.diff(log_freq), '*')
+        plt.subplot(3, 1, 3)
+        plt.plot(times[1:], numpy.diff(log_freq) / numpy.diff(times), '*')
+        plt.show()
 
     tau = -numpy.mean(numpy.diff(log_freq) / numpy.diff(times))
     if numpy.isnan(tau):
