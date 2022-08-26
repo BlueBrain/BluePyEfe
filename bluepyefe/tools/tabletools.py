@@ -12,7 +12,6 @@ class printFeatures:
             cls, all_feat_filename="all_features.txt", cellname="CELLNAME",
             trace_filename="", features_name=[], fel_vals=[], multvalnum=5,
             metadata={}, amp=0, stim_start=0, stim_end=0):
-        counter = 0
         param_file = os.path.join(
             os.path.dirname(__file__), cls.TT_CONFIG_PATH,
             cls.TT_CONFIG_FILE)
@@ -75,7 +74,6 @@ class printFeatures:
             else:
                 crr_feat_val = [numpy.nan] * multvalnum
                 if crr_feature is not None and len(crr_feature) > 0:
-                    crr_feat_len = len(crr_feature)
                     for y in range(multvalnum - 2):
                         if len(crr_feature) > y + 1:
                             crr_feat_val[y + 1] = crr_feature[y + 1]

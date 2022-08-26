@@ -20,7 +20,6 @@ Copyright (c) 2020, EPFL/Blue Brain Project
 """
 
 from neo import io
-from collections import OrderedDict
 import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -130,7 +129,7 @@ def process(config=None,
         stim_info_flag = True
         try:
             sampling_rate = 1.e6 / header['protocol']['fADCSequenceInterval']
-        except Exception as e:
+        except Exception:
             logger.info(
                 "Unable to find recording frequency in file: %s." +
                 "The ABF file version is probably older than v2", filename)
@@ -248,9 +247,6 @@ def process(config=None,
             # estimate hyperpolarization current
             hypamp = numpy.mean(current[0:ion])
 
-            # 10% distance to measure step current
-            iborder = int((ioff - ion) * 0.1)
-
             # clean voltage from transients
             voltage[ion:ion + int(numpy.ceil(0.4 / dt))] = \
                 voltage[ion + int(numpy.ceil(0.4 / dt))]
@@ -284,7 +280,7 @@ def process(config=None,
                 data=data, voltage=voltage, current=current, dt=dt, t=t,
                 ton=ton, toff=toff, amp=amp, hypamp=hypamp,
                 filename=filename)
-    resp_check = check_validity(data)
+    resp_check = check_validity(data, filename)
 
     return data
 
@@ -451,7 +447,7 @@ def get_nbepisod(header):
 
 
 #
-def check_validity(data):
+def check_validity(data, filename):
     # extract number of traces
     nb_traces = len(data["voltage"])
 

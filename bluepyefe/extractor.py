@@ -52,7 +52,7 @@ class Extractor(object):
 
     """Extractor class"""
 
-    def __init__(self, mainname='PC', config=OrderedDict()):
+    def __init__(self, mainname='PC', config=None):
         """Constructor
 
         Args:
@@ -61,6 +61,8 @@ class Extractor(object):
             config (dict): metadata containing the protocols and cells for
             which to extract the efeatures.
         """
+        if config is None:
+            config = OrderedDict()
 
         self.plot_extra_features = True
         self.config = config
@@ -209,8 +211,7 @@ class Extractor(object):
         else:
             return numpy.std(a)
 
-    def boxcoxcell(self, a, nanopt="nanmean_cell",
-                   lm_vec=numpy.linspace(-3, 3, 41)):
+    def boxcoxcell(self, a, nanopt="nanmean_cell"):
         if ((self.options[nanopt] or
              (numpy.sum(numpy.isnan(a)) <= self.options["nangrace"])) and
                 (len(a) > 0)):
@@ -710,7 +711,6 @@ class Extractor(object):
 
                 hypamp = dataset_cell_exp[expname]['hypamp']
                 amp = dataset_cell_exp[expname]['amp']
-                numspikes = dataset_cell_exp[expname]['features']['numspikes']
                 feature_array = dataset_cell_exp[expname]['features']
 
                 rawfiles_list = dataset_cell_exp[expname]['rawfiles']
@@ -1060,8 +1060,6 @@ class Extractor(object):
                         str(target)]
                     cell_std_feat = self.dataset_mean[expname][
                         'cell_std_features'][feature][str(target)]
-                    cell_n = self.dataset_mean[expname]['cell_n'][feature][
-                        str(target)]
 
                     # added by Luca Leonardo Bologna to handle the case in
                     # which only one feature value is present at this point
@@ -1304,7 +1302,6 @@ class Extractor(object):
 
                     mean_array = numpy.array(mean_list)
                     std_array = numpy.array(std_list)
-                    amp_rel_array = numpy.array(amp_rel_list)
 
                     figname = "features_" + expname
                     e = figs[figname]['axs'][fi].errorbar(

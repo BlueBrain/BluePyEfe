@@ -28,7 +28,9 @@ import numpy
 import collections
 
 
-def adjust_spines(ax, spines, color='k', d_out=10, d_down=[]):
+def adjust_spines(ax, spines, color='k', d_out=10, d_down=None):
+    if d_down is None:
+        d_down = []
 
     if d_down == []:
         d_down = d_out
@@ -101,11 +103,13 @@ def light_palette(color, n_colors=6, reverse=False, lumlight=0.8, light=None):
 
 def tiled_figure(
     figname='', frames=1, columns=2, rows_per_page=4,
-    dirname='', figs=collections.OrderedDict(), orientation='page',
+    dirname='', figs=None, orientation='page',
     width_ratios=None, height_ratios=None, hspace=0.6, wspace=0.2,
     top=0.97, bottom=0.05, left=0.07, right=0.97
 ):
 
+    if figs is None:
+        figs = collections.OrderedDict()
     if figname not in figs.keys():
 
         if orientation == 'landscape':

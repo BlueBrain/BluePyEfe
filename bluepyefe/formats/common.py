@@ -1,14 +1,10 @@
-from neo import io
 from collections import OrderedDict
 import os
 import json
 import hashlib
-import calendar
 import re
-import six
 import logging
 logger = logging.getLogger(__name__)
-import quantities as pq
 
 
 class manageFiles:
@@ -197,7 +193,6 @@ class manageMetadata:
         if not os.path.isfile(outfilepath):
             with open(outfilepath, 'w') as f:
                 json.dump(obj, f)
-        return
 
     @classmethod
     def generate_authorization_json(
@@ -555,14 +550,15 @@ class manageDicts():
         return data
 
     @classmethod
-    def fill_dict_single_trace(
-            cls, data={}, voltage=0.0, current=0.0, dt=0.0, t=0.0, ton=0.0,
-            toff=0.0, amp=0.0, hypamp=0.0, filename=""):
+    def fill_dict_single_trace(cls, data=None, voltage=0.0, current=0.0,
+                               dt=0.0, t=0.0, ton=0.0, toff=0.0, amp=0.0,
+                               hypamp=0.0, filename=""):
 
+        if data is None:
+            data = {}
         data['voltage'].append(voltage)
         data['current'].append(current)
         data['dt'].append(dt)
-
         data['t'].append(t)
         data['tend'].append(t[-1])
         data['ton'].append(ton)
@@ -570,5 +566,4 @@ class manageDicts():
         data['amp'].append(amp)
         data['hypamp'].append(hypamp)
         data['filename'].append(filename)
-
         return True
