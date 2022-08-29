@@ -59,5 +59,6 @@ setuptools.setup(
         'efel',
         'sh',
         'pandas',
-        'scipy'],
+        'scipy',
+        'tqdm'],
 )
