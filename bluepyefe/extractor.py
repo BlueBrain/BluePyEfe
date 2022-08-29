@@ -458,10 +458,10 @@ class Extractor(object):
         else:
             ZERO_TO_NAN = False
 
-        for i_cell, cellname in enumerate(self.dataset):
+        for cellname in self.dataset:
 
             dataset_cell_exp = self.dataset[cellname]['experiments']
-            for i_exp, expname in enumerate(dataset_cell_exp):
+            for expname in dataset_cell_exp:
 
                 if expname in self.options["strict_stiminterval"].keys():
                     strict_stiminterval = self.options["strict_stiminterval"][
