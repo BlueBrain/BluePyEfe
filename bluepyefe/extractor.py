@@ -32,6 +32,8 @@ import logging
 import gzip
 import json
 
+from tqdm import tqdm
+
 from itertools import cycle
 from collections import OrderedDict
 
@@ -458,7 +460,7 @@ class Extractor(object):
         else:
             ZERO_TO_NAN = False
 
-        for cellname in self.dataset:
+        for cellname in tqdm(self.dataset):
 
             dataset_cell_exp = self.dataset[cellname]['experiments']
             for expname in dataset_cell_exp:
