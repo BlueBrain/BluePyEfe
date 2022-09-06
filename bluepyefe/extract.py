@@ -186,10 +186,10 @@ def read_recordings(
 
 
 def extract_efeatures_at_targets(
-        cells,
-        targets,
-        map_function=map,
-        efel_settings=None
+    cells,
+    targets,
+    map_function=map,
+    efel_settings=None
 ):
     """
     Extract efeatures from recordings following the protocols, amplitudes and
@@ -809,7 +809,7 @@ def extract_efeatures(
             the path contains data coming from different stimuli (eg: for NWB).
         targets (list): define the efeatures to extract as well as which
             protocols and current amplitude they should be extracted for. If
-            targets are not probided, automatic targets will be used.
+            targets are not provided, automatic targets will be used.
             Of the form:
             [{
                 "efeature": "AP_amplitude",

@@ -269,9 +269,7 @@ def _nwb_reader_BBP(content, target_protocols, repetition):
         for cell_id in content["data_organization"].keys():
 
             if ecode not in content["data_organization"][cell_id]:
-                logger.info(
-                    f"No eCode {ecode} in nwb {in_data['filepath']}."
-                )
+                logger.debug(f"No eCode {ecode} in nwb.")
                 continue
 
             ecode_content = content["data_organization"][cell_id][ecode]
@@ -290,6 +288,15 @@ def _nwb_reader_BBP(content, target_protocols, repetition):
                         elif "ic_" in trace_name:
                             key_current = trace_name.replace("ic_", "ics_")
                         else:
+                            continue
+
+                        if key_current not in content["stimulus"]["presentation"]:
+                            logger.debug(f"Ignoring {key_current} not"
+                                         " present in the stimulus presentation")
+                            continue
+                        if trace_name not in content["acquisition"]:
+                            logger.debug(f"Ignoring {trace_name} not"
+                                         " present in the acquisition")
                             continue
 
                         data.append(_format_nwb_trace(
