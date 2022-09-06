@@ -1,0 +1,2 @@
+[run]
+omit = bluepyefe/_version.py
