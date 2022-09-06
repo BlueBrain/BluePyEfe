@@ -56,9 +56,8 @@ setuptools.setup(
         'igor',
         'neo',
         'matplotlib',
+        'numpy',
         'efel',
-        'sh',
-        'pandas',
         'scipy',
         'tqdm'],
 )

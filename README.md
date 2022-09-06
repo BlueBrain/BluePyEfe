@@ -58,7 +58,7 @@
 	<td>Gitter</td>
 	<td>
 		<a href="https://gitter.im/bluebrain/bluepyefe">
-		<img src="https://badges.gitter.im/Join%20Chat.svg"
+		<img src="https://badges.gitter.im/Join%20Chat.svg">
 	</a>
 	</td>
 </tr>
@@ -84,10 +84,8 @@ Requirements
 ============
 
 * [Python 3.6+](https://www.python.org/downloads/release/python-360/)
-* [Pip](https://pip.pypa.io) (installed by default in newer versions of Python)
 * [eFEL eFeature Extraction Library](https://github.com/BlueBrain/eFEL) (automatically installed by pip)
 * [Numpy](http://www.numpy.org) (automatically installed by pip)
-* [Pandas](http://pandas.pydata.org/) (automatically installed by pip)
 * [Scipy](https://www.scipy.org/) (automatically installed by pip)
 * [Neo](https://neo.readthedocs.io/en/stable/) (automatically installed by pip)
 * The instruction below are written assuming you have access to a command shell
