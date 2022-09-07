@@ -38,6 +38,14 @@
   </td>
 </tr>
 <tr>
+  <td>Coverage</td>
+  <td>
+    <a href="https://codecov.io/gh/BlueBrain/bluepyopt">
+    <img src="https://codecov.io/github/BlueBrain/BluePyEfe/coverage.svg?branch=master" alt="coverage" />
+    </a>
+  </td>
+</tr>
+<tr>
 <tr>
   <td>DOI</td>
   <td>
