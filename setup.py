@@ -57,10 +57,7 @@ setuptools.setup(
         'neo',
         'matplotlib',
         'efel',
-        'sh',
-        'pandas',
         'scipy',
-        'jsonschema',
         'h5py',
         'igor'],
 )
