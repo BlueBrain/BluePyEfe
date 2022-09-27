@@ -116,7 +116,7 @@ class Extractor(object):
         if "strict_stiminterval" not in self.options:
             self.options["strict_stiminterval"] = {'base': False}
 
-        if isinstance(self.options["tolerance"], list) is False:
+        if not isinstance(self.options["tolerance"], list):
             if conv_fact != 1:
                 tolerance = self.options["tolerance"]
                 self.options["tolerance"] = conv_fact * tolerance
@@ -242,7 +242,7 @@ class Extractor(object):
         """Read the trace files and add them to the dictionary self.dataset"""
         logger.info(" Filling dataset")
 
-        for i_cell, cellname in enumerate(self.cells):
+        for cellname in self.cells:
 
             self.dataset[cellname] = OrderedDict()
 
@@ -346,8 +346,7 @@ class Extractor(object):
         """Plot traces"""
         logger.info(" Plotting traces")
 
-        for i_cell, cellname in enumerate(self.dataset):
-
+        for cellname in self.dataset:
             dirname = self.maindirname + cellname
             tools.makedir(dirname)
             dataset_cell_exp = self.dataset[cellname]['experiments']

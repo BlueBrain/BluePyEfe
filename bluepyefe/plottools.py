@@ -72,7 +72,6 @@ def adjust_spines(ax, spines, color='k', d_out=10, d_down=None):
             ax.tick_params(axis='y', colors=color)
 
     if 'bottom' in spines:
-        pass
         ax.xaxis.set_ticks_position('bottom')
         # ax.axes.get_xaxis().set_visible(True)
 
