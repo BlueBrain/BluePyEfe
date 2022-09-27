@@ -38,16 +38,15 @@ setuptools.setup(
     include_package_data=True,
     author="BlueBrain Project, EPFL",
     license="LGPLv3",
-    keywords=(
+    keywords=[
         'neuroscience',
-        'BlueBrainProject'),
+        'BlueBrainProject'],
     url='https://github.com/BlueBrain/BluePyEfe',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'License :: OSI Approved :: GNU Lesser General Public '
         'License v3 (LGPLv3)',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Operating System :: POSIX',
         'Topic :: Scientific/Engineering',
