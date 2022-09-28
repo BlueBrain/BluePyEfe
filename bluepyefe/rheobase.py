@@ -1,7 +1,7 @@
 """Functions related to the computation of the rheobase"""
 
 """
-Copyright (c) 2020, EPFL/Blue Brain Project
+Copyright (c) 2022, EPFL/Blue Brain Project
 
  This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
 
