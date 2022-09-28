@@ -111,6 +111,10 @@ class Protocol():
             self.reduce_ecode(ecode, operator=numpy.nanmean)
         elif self.mode == "median":
             self.reduce_ecode(ecode, operator=numpy.nanmedian)
+        elif self.mode == "min":
+            self.reduce_ecode(ecode, operator=numpy.nanmmin)
+        elif self.mode == "max":
+            self.reduce_ecode(ecode, operator=numpy.nanmax)
         else:
             raise ValueError("'mode' should be mean or median")
 
