@@ -1,7 +1,7 @@
 """DeHyperPol eCode"""
 
 """
-Copyright (c) 2020, EPFL/Blue Brain Project
+Copyright (c) 2022, EPFL/Blue Brain Project
 
  This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
 
@@ -18,10 +18,7 @@ Copyright (c) 2020, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
-
-
 import logging
-
 import numpy
 
 from ..recording import Recording
@@ -31,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class DeHyperPol(Recording):
+
     def __init__(
         self,
         config_data,
@@ -122,7 +120,7 @@ class DeHyperPol(Recording):
             self.toff = int(round(config_data["toff"] / self.dt))
         else:
             raise AttributeError(
-                "For protocol {}, toff should be pecified "
+                "For protocol {}, toff should be specified "
                 "in the config (in ms)".format(self.protocol_name)
             )
 

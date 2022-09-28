@@ -1,7 +1,7 @@
 """Cell class"""
 
 """
-Copyright (c) 2020, EPFL/Blue Brain Project
+Copyright (c) 2022, EPFL/Blue Brain Project
 
  This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
 
@@ -32,8 +32,8 @@ logger = logging.getLogger(__name__)
 
 class Cell(object):
 
-    """Contains the metadata related to the cell as well as the recordings data
-    once these are read"""
+    """Contains the metadata related to a cell as well as the
+    electrophysiological recordings once they are read"""
 
     def __init__(self, name):
         """
@@ -41,8 +41,6 @@ class Cell(object):
 
         Args:
             name (str): name of the cell.
-            recording_reader (function): custom recording reader matching the
-                files metadata.
         """
 
         self.name = name
@@ -51,6 +49,16 @@ class Cell(object):
         self.rheobase = None
 
     def reader(self, config_data, recording_reader=None):
+        """Define the reader method used to read the ephys data for the
+        present recording and returns the data contained in the file.
+
+        Args:
+            config_data (dict): metadata for the recording considered.
+            recording_reader (callable or None): method that will be used to
+                read the files containing the recordings. If None, the function
+                used will be chosen automatically based on the extension
+                of the file.
+        """
 
         if "v_file" in config_data:
             filename = config_data["v_file"]
@@ -67,14 +75,24 @@ class Cell(object):
             return nwb_reader(config_data)
 
         raise Exception(
-            "The format of the files is unknown and no custom reader were"
-            " provided."
+            "The format of the ephys files is unknown and no custom reader"
+            "were provided."
         )
 
     def get_protocol_names(self):
+        """List of all the protocols available for the present cell."""
+
         return list(set([rec.protocol_name for rec in self.recordings]))
 
     def get_recordings_by_protocol_name(self, protocol_name):
+        """List of all the recordings available for the present cell for a
+        given protocol.
+
+        Args:
+            protocol_name (str): name of the protocol for which to get
+                the recordings.
+        """
+
         return [
             rec
             for rec in self.recordings
@@ -82,6 +100,14 @@ class Cell(object):
         ]
 
     def get_recordings_id_by_protocol_name(self, protocol_name):
+        """List of the indexes of the recordings available for the present
+        cell for a given protocol.
+
+        Args:
+            protocol_name (str): name of the protocol for which to get
+                the recordings.
+        """
+
         return [
             i
             for i, trace in enumerate(self.recordings)
@@ -96,8 +122,20 @@ class Cell(object):
         efel_settings=None
     ):
         """
-        For each recording's metadata, instance a recording object and
+        For each member of a list of recordings metadata, instantiate a Recording object and
         populate it by reading the matching data file.
+
+        Args:
+            protocol_data (list of dict): list of metadata for the
+                recordings considered.
+            protocol_name (str): name of the protocol for which to get
+                the recordings.
+            recording_reader (callable or None): method that will be used to
+                read the files containing the recordings. If None, the function
+                used will be chosen automatically based on the extension
+                of the file.
+            efel_settings (dict): eFEL settings in the form
+                {setting_name: setting_value}.
         """
 
         for config_data in protocol_data:
@@ -119,20 +157,30 @@ class Cell(object):
                         break
                 else:
                     raise KeyError(
-                        "There is no eCode linked to the stimulus name {}. "
-                        "See ecode/__init__.py for the available stimuli "
-                        "names".format(protocol_name.lower())
+                        f"There is no eCode linked to the stimulus name "
+                        f"{protocol_name.lower()}. See ecode/__init__.py for "
+                        f"the available stimuli names"
                     )
 
     def extract_efeatures(
-            self,
-            protocol_name,
-            efeatures,
-            efeature_names=None,
-            efel_settings=None
+        self,
+        protocol_name,
+        efeatures,
+        efeature_names=None,
+        efel_settings=None
     ):
         """
         Extract the efeatures for the recordings matching the protocol name.
+
+        Args:
+            protocol_name (str): name of the protocol for which to extract
+                the efeatures.
+            efeatures (list of str): name of the efeatures to extract from
+                the recordings.
+            efeature_names (list of str): Optional. Given name for the
+                features. Can and should be used if the same feature
+                is to be extracted several time on different sections
+                of the same recording.
         """
 
         for i in self.get_recordings_id_by_protocol_name(protocol_name):
@@ -140,10 +188,8 @@ class Cell(object):
                 efeatures, efeature_names, efel_settings)
 
     def compute_relative_amp(self):
-        """
-        Compute the relative current amplitude for all the recordings as a
-        percentage of the rheobase.
-        """
+        """Compute the relative current amplitude for all the recordings as a
+        percentage of the rheobase."""
 
         if self.rheobase not in (0.0, None, False, numpy.nan):
 
@@ -162,7 +208,16 @@ class Cell(object):
             self.rheobase = None
 
     def plot_recordings(self, protocol_name, output_dir=None, show=False):
-        """Plot all the recordings matching a protocol name"""
+        """Plot all the recordings matching a protocol name
+
+        Args:
+            protocol_name (str): name of the protocol for which to plot the
+                recordings.
+            output_dir (str): path to the output directory to which to save
+                the figures.
+            show (bool): should the figures be displayed in addition to
+                being saved.
+        """
 
         recordings = self.get_recordings_by_protocol_name(protocol_name)
 
@@ -218,7 +273,14 @@ class Cell(object):
         return fig, axs
 
     def plot_all_recordings(self, output_dir=None, show=False):
-        """Plot all the recordings of the cell"""
+        """Plot all the recordings of the cell.
+
+        Args:
+            output_dir (str): path to the output directory to which to save
+                the figures.
+            show (bool): should the figures be displayed in addition to
+                being saved.
+        """
 
         for protocol_name in self.get_protocol_names():
             self.plot_recordings(protocol_name, output_dir, show=show)

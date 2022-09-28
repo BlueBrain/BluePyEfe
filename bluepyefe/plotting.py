@@ -1,7 +1,7 @@
 """Plotting functions"""
 
 """
-Copyright (c) 2020, EPFL/Blue Brain Project
+Copyright (c) 2022, EPFL/Blue Brain Project
 
  This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
 
@@ -30,6 +30,13 @@ logger = logging.getLogger(__name__)
 
 
 def _save_fig(directory, filename):
+    """Save a matplotlib figure.
+
+    Args:
+        directory (str): path of the directory in which to save the figure.
+        filename (str): name of the file in which to save the figure.
+    """
+
     dir_path = pathlib.Path(directory)
     dir_path.mkdir(parents=True, exist_ok=True)
 
@@ -41,6 +48,12 @@ def _save_fig(directory, filename):
 
 
 def _get_colors_markers_wheels(cells):
+    """Generate a color and a marker dictionary unique to each cell.
+
+    Args:
+        cells (list of Cells): list of the cells
+    """
+
     colors = cycle(["C{}".format(i) for i in range(10)])
     markers = cycle(["o", "v", "^", "s", "*", "d", "x"])
 
@@ -103,15 +116,15 @@ def plot_all_recordings(cells, output_dir, show=False):
 
 
 def plot_efeature(
-        cells,
-        efeature,
-        protocol_name,
-        output_dir,
-        protocols=[],
-        key_amp="amp",
-        colors=None,
-        markers=None,
-        show=False
+    cells,
+    efeature,
+    protocol_name,
+    output_dir,
+    protocols=[],
+    key_amp="amp",
+    colors=None,
+    markers=None,
+    show=False
 ):
     """Plot one efeature for a protocol"""
 
@@ -246,6 +259,7 @@ def plot_individual_efeatures(
     key_amp="amp",
     show=False
 ):
+    """Generate efeatures plots for all each cell individually"""
 
     if not colors or not markers:
         colors, markers = _get_colors_markers_wheels(cells)
@@ -275,6 +289,7 @@ def plot_grouped_efeatures(
     key_amp="amp",
     show=False
 ):
+    """Generate plots for each efeature across all cells."""
 
     if not cells:
         logger.warning("In plot_grouped_efeatures, no cells object to plot.")
@@ -304,6 +319,8 @@ def plot_grouped_efeatures(
 def plot_all_recordings_efeatures(
     cells, protocols, output_dir=None, show=False
 ):
+    """Generate plots for all recordings and efeatures both for individual
+    cells and across all cells."""
 
     colors, markers = _get_colors_markers_wheels(cells)
 
