@@ -112,7 +112,7 @@ class Protocol():
         elif self.mode == "median":
             self.reduce_ecode(ecode, operator=numpy.nanmedian)
         elif self.mode == "min":
-            self.reduce_ecode(ecode, operator=numpy.nanmmin)
+            self.reduce_ecode(ecode, operator=numpy.nanmin)
         elif self.mode == "max":
             self.reduce_ecode(ecode, operator=numpy.nanmax)
         else:
