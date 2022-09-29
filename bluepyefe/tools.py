@@ -1,7 +1,7 @@
-"""Tool functions"""
+"""Tool and miscellaneous functions"""
 
 """
-Copyright (c) 2020, EPFL/Blue Brain Project
+Copyright (c) 2022, EPFL/Blue Brain Project
 
  This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
 
@@ -36,6 +36,14 @@ PRESET_PROTOCOLS_RHEOBASE = [
 
 
 def to_ms(t, t_unit):
+    """Converts a time series to ms.
+
+    Args:
+        t (array): time series.
+        t_unit (str): unit of the time series. Has to be "s", "sec",
+            "seconds", "ms" or "10th_ms".
+    """
+
     if t_unit.lower() in ["s", "sec", "seconds"]:
         return t * 1e3
     elif t_unit == "ms":
@@ -47,6 +55,14 @@ def to_ms(t, t_unit):
 
 
 def to_nA(current, i_unit):
+    """Converts a current series to nA.
+
+    Args:
+        current (array): current series.
+        i_unit (str): unit of the current series. Has to be "a", "amperes",
+            "amps", "mA", "uA", "pA" or "nA".
+    """
+
     if i_unit.lower() in ["a", "amperes", "amps"]:
         return current * 1e9
     elif i_unit == "mA":
@@ -62,6 +78,14 @@ def to_nA(current, i_unit):
 
 
 def to_mV(voltage, v_unit):
+    """Converts a voltage series to mV.
+
+    Args:
+        voltage (array): voltage series.
+        v_unit (str): unit of the voltage series. Has to be "v", "volts",
+            "uV" or "mV".
+    """
+
     if v_unit.lower() in ["v", "volts"]:
         return voltage * 1e3
     elif v_unit == "uV":
@@ -73,8 +97,12 @@ def to_mV(voltage, v_unit):
 
 
 def set_efel_settings(efeature_settings):
-    """ Reset the eFEl settings and set them as requested by the user (uses
+    """Reset the eFEl settings and set them as requested by the user (uses
         default value otherwise).
+
+    Args:
+         efeature_settings (dict): eFEL settings in the form
+            {setting_name: setting_value}.
     """
 
     efel.reset()
@@ -95,15 +123,17 @@ def set_efel_settings(efeature_settings):
 
 
 def dict_to_json(data, path):
-    """
-    Save some data in a json file.
-    """
+    """Save some data in a json file."""
+
     s = json.dumps(data, indent=2, cls=NumpyEncoder)
     with open(path, "w") as f:
         f.write(s)
 
 
 class NumpyEncoder(json.JSONEncoder):
+
+    """To make Numpy arrays JSON serializable"""
+
     def default(self, obj):
         if isinstance(
             obj,

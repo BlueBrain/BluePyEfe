@@ -1,7 +1,7 @@
 """Recording class"""
 
 """
-Copyright (c) 2020, EPFL/Blue Brain Project
+Copyright (c) 2022, EPFL/Blue Brain Project
 
  This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
 
@@ -30,7 +30,20 @@ logger = logging.getLogger(__name__)
 
 class Recording(object):
 
+    """Contains the data related to an electrophysiological recording."""
+
     def __init__(self, config_data, reader_data, protocol_name):
+        """
+        Constructor
+
+        Args:
+            config_data (dict): metadata for the recording considered informed
+                by the user.
+            reader_data (dict): metadata for the recording considered returned
+                by the recording reader.
+            protocol_name (str): name of the protocol of the present
+                recording.
+        """
 
         self.config_data = config_data
         self.reader_data = reader_data
@@ -62,10 +75,12 @@ class Recording(object):
 
     @property
     def time(self):
+        """Alias of the time attribute"""
         return self.t
 
     @time.setter
     def time(self, value):
+        """Setter for an alias of the time attribute"""
         self.t = value
 
     def get_params(self):
@@ -189,7 +204,18 @@ class Recording(object):
     def compute_efeatures(
         self, efeatures, efeature_names=None, efel_settings=None
     ):
-        """ Compute a set of efeatures """
+        """Compute a set of efeatures for the present recording.
+
+        Args:
+            efeatures (list of str): name of the efeatures to extract from
+                the recordings.
+            efeature_names (list of str): Optional. Given name for the
+                features. Can and should be used if the same feature
+                is to be extracted several time on different sections
+                of the same recording.
+            efel_settings (dict): eFEL settings in the form
+                {setting_name: setting_value}.
+        """
 
         if efeature_names is None:
             efeature_names = efeatures

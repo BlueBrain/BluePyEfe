@@ -1,7 +1,7 @@
 """Protocol class"""
 
 """
-Copyright (c) 2021, EPFL/Blue Brain Project
+Copyright (c) 2022, EPFL/Blue Brain Project
 
  This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
 
@@ -35,13 +35,13 @@ class Protocol():
      that can be used in BluePyOpt"""
 
     def __init__(
-            self,
-            name,
-            amplitude,
-            tolerance,
-            feature_targets=None,
-            global_rheobase=None,
-            mode="mean"
+        self,
+        name,
+        amplitude,
+        tolerance,
+        feature_targets=None,
+        global_rheobase=None,
+        mode="mean"
     ):
         """Constructor
 

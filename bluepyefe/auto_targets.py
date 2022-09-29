@@ -63,6 +63,8 @@ class AutoTarget():
         self.active_ecode = []
 
     def select_ecode_and_amplitude(self, recordings):
+        """Based on what ephys data is available, builds an effective (active)
+         set of targets."""
 
         for ecode in self.protocols:
 
@@ -89,9 +91,15 @@ class AutoTarget():
                 :self.preferred_number_protocols]
 
     def is_valid(self):
+        """Check if the present AutoTarget has active targets (if matching
+         ephys data were found)"""
+
         return bool(self.active_amplitudes) and bool(self.active_ecode)
 
     def generate_targets(self):
+        """Build a list of targets in the format expected by the main
+        extraction function of BluePyEfe using the targets presently
+        active."""
 
         targets = []
 
