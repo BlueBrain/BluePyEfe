@@ -68,6 +68,38 @@ class Recording(object):
     def time(self, value):
         self.t = value
 
+    def set_timing_ecode(self, name_timings, config_data):
+        """Used by some of the children classes to check that the timing of
+        the ecode is provided by the user and assign it to the correct
+        attribute."""
+
+        for timing in name_timings:
+            if timing in config_data and config_data[timing] is not None:
+                setattr(self, timing, int(round(config_data[timing] / self.dt)))
+            else:
+                raise AttributeError(
+                    f"For protocol {self.protocol_name}, {timing} should"
+                    "be specified in the config (in ms)."
+                )
+
+    def set_amplitudes_ecode(self, amp_name, config_data, reader_data, value):
+        """Check in the user-provided data or reader-provided data if a
+         given current amplitude is provided. If it isn't use the value
+         computed from the current series"""
+
+        if amp_name in config_data and config_data[amp_name] is not None:
+            setattr(self, amp_name, config_data[amp_name])
+        elif amp_name in reader_data and reader_data[amp_name] is not None:
+            setattr(self, amp_name, reader_data[amp_name])
+        else:
+            setattr(self, amp_name, value)
+
+    def timing_index_to_ms(self, name_timing, time_series):
+        """Used by some of the children classes to translate a timing attribute
+         from index to ms."""
+
+        setattr(self, name_timing, time_series[int(round(getattr(self, name_timing)))])
+
     def get_params(self):
         """Returns the eCode parameters"""
         params = {}

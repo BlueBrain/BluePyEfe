@@ -18,10 +18,7 @@ Copyright (c) 2020, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
-
-
 import logging
-
 import numpy
 
 from ..recording import Recording
@@ -151,22 +148,11 @@ class SpikeRec(Recording):
         # Smooth the current
         smooth_current = scipy_signal2d(current, 15)
 
-        # amp
-        if "amp" in config_data and config_data["amp"] is not None:
-            self.amp = config_data["amp"]
-        elif "amp" in reader_data and reader_data["amp"] is not None:
-            self.amp = reader_data["amp"]
-        else:
-            self.amp = numpy.max(smooth_current)
+        hypamp_value = base_current(current)
+        self.set_amplitudes_ecode("hypamp", config_data, reader_data, hypamp_value)
 
-        # hypamp
-        if "hypamp" in config_data and config_data["hypamp"] is not None:
-            self.hypamp = config_data["hypamp"]
-        elif "hypamp" in reader_data and reader_data["hypamp"] is not None:
-            self.hypamp = reader_data["hypamp"]
-        else:
-            # Infer the base current hypamp
-            self.hypamp = base_current(current)
+        amp_value = numpy.max(smooth_current)
+        self.set_amplitudes_ecode("amp", config_data, reader_data, amp_value)
 
         # Get the beginning and end of the spikes
         if (

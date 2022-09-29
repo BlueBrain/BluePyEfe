@@ -18,10 +18,7 @@ Copyright (c) 2020, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
-
-
 import logging
-
 import numpy
 
 from ..recording import Recording
@@ -111,26 +108,15 @@ class SineSpec(Recording):
                 "be set to 5100ms.".format(self.protocol_name)
             )
 
-        # hypamp
-        if "hypamp" in config_data and config_data["hypamp"] is not None:
-            self.hypamp = config_data["hypamp"]
-        elif "hypamp" in reader_data and reader_data["hypamp"] is not None:
-            self.hypamp = reader_data["hypamp"]
-        else:
-            # Infer the base current hypamp
-            self.hypamp = base_current(current)
+        hypamp_value = base_current(current)
+        self.set_amplitudes_ecode("hypamp", config_data, reader_data, hypamp_value)
 
-        # amp
-        if "amp" in config_data and config_data["amp"] is not None:
-            self.amp = config_data["amp"]
-        elif "amp" in reader_data and reader_data["amp"] is not None:
-            self.amp = reader_data["amp"]
-        else:
-            self.amp = numpy.max(smooth_current) - self.hypamp
+        amp_value = numpy.max(smooth_current) - self.hypamp
+        self.set_amplitudes_ecode("amp", config_data, reader_data, amp_value)
 
         # Converting back to ms
-        self.ton = t[int(round(self.ton))]
-        self.toff = t[int(round(self.toff))]
+        for name_timing in ["ton", "toff"]:
+            self.timing_index_to_ms(name_timing, t)
         self.tend = len(t) * self.dt
 
     def generate(self):
