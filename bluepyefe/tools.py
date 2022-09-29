@@ -109,6 +109,9 @@ def set_efel_settings(efeature_settings):
 
     for setting, value in efeature_settings.items():
 
+        if setting in ['stim_start', 'stim_end']:
+            value = float(value)
+
         if setting == 'Threshold':
             efel.setThreshold(value)
 
