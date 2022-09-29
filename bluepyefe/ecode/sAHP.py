@@ -60,23 +60,9 @@ class SAHP(Recording):
         if self.voltage is not None:
             self.compute_spikecount(efel_settings)
 
-    def get_params(self):
-        """Returns the eCode parameters"""
-        ecode_params = {
-            "ton": self.ton,
-            "tmid": self.tmid,
-            "tmid2": self.tmid2,
-            "toff": self.toff,
-            "tend": self.tend,
-            "amp": self.amp,
-            "amp2": self.amp2,
-            "hypamp": self.hypamp,
-            "dt": self.dt,
-            "amp_rel": self.amp_rel,
-            "amp2_rel": self.amp2_rel,
-            "hypamp_rel": self.hypamp_rel,
-        }
-        return ecode_params
+        self.export_attr = ["ton", "tmid", "tmid2", "toff", "tend", "amp",
+                            "amp2", "hypamp", "dt", "amp_rel", "amp2_rel",
+                            "hypamp_rel"]
 
     def get_stimulus_parameters(self):
         """Returns the eCode parameters"""
@@ -101,81 +87,31 @@ class SAHP(Recording):
         # Smooth the current
         smooth_current = scipy_signal2d(current, 85)
 
-        if "ton" in config_data and config_data["ton"] is not None:
-            self.ton = int(round(config_data["ton"] / self.dt))
-        else:
-            raise AttributeError(
-                "For protocol {}, ton should be specified "
-                "in the config (in ms)".format(self.protocol_name)
-            )
+        self.set_timing_ecode(["ton", "tmid", "tmid2", "toff"], config_data)
 
-        if "tmid" in config_data and config_data["tmid"] is not None:
-            self.tmid = int(round(config_data["tmid"] / self.dt))
-        else:
-            raise AttributeError(
-                "For protocol {}, tmid should be specified "
-                "in the config (in ms)".format(self.protocol_name)
+        hypamp_value = numpy.median(
+            numpy.concatenate(
+                (smooth_current[: self.ton], smooth_current[self.toff :])
             )
+        )
+        self.set_amplitudes_ecode("hypamp", config_data, reader_data, hypamp_value)
 
-        if "tmid2" in config_data and config_data["tmid2"] is not None:
-            self.tmid2 = int(round(config_data["tmid2"] / self.dt))
-        else:
-            raise AttributeError(
-                "For protocol {}, tmid2 should be specified "
-                "in the config (in ms)".format(self.protocol_name)
-            )
-
-        if "toff" in config_data and config_data["toff"] is not None:
-            self.toff = int(round(config_data["toff"] / self.dt))
-        else:
-            raise AttributeError(
-                "For protocol {}, toff should be specified "
-                "in the config (in ms)".format(self.protocol_name)
-            )
-
-        # hypamp
-        if "hypamp" in config_data and config_data["hypamp"] is not None:
-            self.hypamp = config_data["hypamp"]
-        elif "hypamp" in reader_data and reader_data["hypamp"] is not None:
-            self.hypamp = reader_data["hypamp"]
-        else:
-            # Infer the base current hypamp
-            self.hypamp = numpy.median(
-                numpy.concatenate(
-                    (smooth_current[: self.ton], smooth_current[self.toff :])
+        amp_value = numpy.median(
+            numpy.concatenate(
+                (
+                    smooth_current[self.ton : self.tmid],
+                    smooth_current[self.tmid2 : self.toff],
                 )
             )
+        ) - self.hypamp
+        self.set_amplitudes_ecode("amp", config_data, reader_data, amp_value)
 
-        # amp with respect to hypamp
-        if "amp" in config_data and config_data["amp"] is not None:
-            self.amp = config_data["amp"]
-        elif "amp" in reader_data and reader_data["amp"] is not None:
-            self.amp = reader_data["amp"]
-        else:
-            self.amp = numpy.median(
-                numpy.concatenate(
-                    (
-                        smooth_current[self.ton : self.tmid],
-                        smooth_current[self.tmid2 : self.toff],
-                    )
-                )
-            )
-            self.amp -= self.hypamp
-
-        # amp2 with respect to hypamp
-        if "amp2" in config_data and config_data["amp2"] is not None:
-            self.amp2 = config_data["amp2"]
-        elif "amp2" in reader_data and reader_data["amp2"] is not None:
-            self.amp2 = reader_data["amp2"]
-        else:
-            self.amp2 = numpy.median(smooth_current[self.tmid : self.tmid2])
-            self.amp2 -= self.hypamp
+        amp2_value = numpy.median(smooth_current[self.tmid : self.tmid2]) - self.hypamp
+        self.set_amplitudes_ecode("amp2", config_data, reader_data, amp2_value)
 
         # Converting back to ms
-        self.ton = t[int(round(self.ton))]
-        self.tmid = t[int(round(self.tmid))]
-        self.tmid2 = t[int(round(self.tmid2))]
-        self.toff = t[int(round(self.toff))]
+        for name_timing in ["ton", "tmid", "tmid2", "toff"]:
+            self.timing_index_to_ms(name_timing, t)
         self.tend = len(t) * self.dt
 
     def generate(self):

@@ -57,19 +57,8 @@ class Ramp(Recording):
         if self.voltage is not None:
             self.compute_spikecount(efel_settings)
 
-    def get_params(self):
-        """Returns the eCode parameters"""
-        ecode_params = {
-            "ton": self.ton,
-            "toff": self.toff,
-            "tend": self.tend,
-            "amp": self.amp,
-            "hypamp": self.hypamp,
-            "dt": self.dt,
-            "amp_rel": self.amp_rel,
-            "hypamp_rel": self.hypamp_rel,
-        }
-        return ecode_params
+        self.export_attr = ["ton", "toff", "tend", "amp", "hypamp", "dt",
+                            "amp_rel", "hypamp_rel"]
 
     def get_stimulus_parameters(self):
         """Returns the eCode parameters"""
@@ -90,47 +79,17 @@ class Ramp(Recording):
         # Smooth the current
         smooth_current = scipy_signal2d(current, 85)
 
-        # ton (index, not ms)
-        if "ton" in config_data and config_data["ton"] is not None:
-            self.ton = int(round(config_data["ton"] / self.dt))
-        else:
-            raise AttributeError(
-                "For protocol {}, ton should be specified "
-                "in the config (in ms)".format(self.protocol_name)
-            )
+        self.set_timing_ecode(["ton", "toff"], config_data)
 
-        # toff (index, not ms)
-        if "toff" in config_data and config_data["toff"] is not None:
-            self.toff = int(round(config_data["toff"] / self.dt))
-        else:
-            raise AttributeError(
-                "For protocol {}, toff should be specified "
-                "in the config (in ms)".format(self.protocol_name)
-            )
+        hypamp_value = base_current(current)
+        self.set_amplitudes_ecode("hypamp", config_data, reader_data, hypamp_value)
 
-        # hypamp
-        if "hypamp" in config_data and config_data["hypamp"] is not None:
-            self.hypamp = config_data["hypamp"]
-        elif "hypamp" in reader_data and reader_data["hypamp"] is not None:
-            self.hypamp = reader_data["hypamp"]
-        else:
-            # Infer the base current hypamp
-            self.hypamp = base_current(current)
+        amp_value = numpy.median(current[self.toff - 10 : self.toff]) - self.hypamp
+        self.set_amplitudes_ecode("amp", config_data, reader_data, amp_value)
 
-        # amp
-        if "amp" in config_data and config_data["amp"] is not None:
-            self.amp = config_data["amp"]
-        elif "amp" in reader_data and reader_data["amp"] is not None:
-            self.amp = reader_data["amp"]
-        else:
-            self.amp = (
-                numpy.median(current[self.toff - 10 : self.toff]) - self.hypamp
-            )
-
-        # Converting back ton and toff to ms
-        self.ton = t[int(round(self.ton))]
-        self.toff = t[int(round(self.toff))]
-
+        # Converting back to ms
+        for name_timing in ["ton", "toff"]:
+            self.timing_index_to_ms(name_timing, t)
         self.tend = len(t) * self.dt
 
     def generate(self):

@@ -61,23 +61,8 @@ class NegCheops(Recording):
         if self.voltage is not None:
             self.compute_spikecount(efel_settings)
 
-    def get_params(self):
-        """Returns the eCode parameters"""
-        ecode_params = {
-            "ton": self.ton,
-            "t1": self.t1,
-            "t2": self.t2,
-            "t3": self.t3,
-            "t4": self.t4,
-            "toff": self.toff,
-            "tend": self.tend,
-            "amp": self.amp,
-            "hypamp": self.hypamp,
-            "dt": self.dt,
-            "amp_rel": self.amp_rel,
-            "hypamp_rel": self.hypamp_rel,
-        }
-        return ecode_params
+        self.export_attr = ["ton", "t1", "t2", "t3", "t4", "toff", "tend",
+                            "amp", "hypamp", "dt", "amp_rel", "hypamp_rel"]
 
     def get_stimulus_parameters(self):
         """Returns the eCode parameters"""
@@ -98,79 +83,18 @@ class NegCheops(Recording):
         # Smooth the current
         smooth_current = scipy_signal2d(current, 85)
 
-        if "ton" in config_data and config_data["ton"] is not None:
-            self.ton = int(round(config_data["ton"] / self.dt))
-        else:
-            raise AttributeError(
-                "For protocol {}, ton should be specified in"
-                " the config (in ms)".format(self.protocol_name)
-            )
+        self.set_timing_ecode(
+            ["ton", "t1", "t2", "t3", "t4", "toff"], config_data)
 
-        if "t1" in config_data and config_data["t1"] is not None:
-            self.t1 = int(round(config_data["t1"] / self.dt))
-        else:
-            raise AttributeError(
-                "For protocol {}, t1 should be specified in"
-                " the config (in ms)".format(self.protocol_name)
-            )
+        hypamp_value = numpy.median(smooth_current[: self.ton])
+        self.set_amplitudes_ecode("hypamp", config_data, reader_data, hypamp_value)
 
-        if "t2" in config_data and config_data["t2"] is not None:
-            self.t2 = int(round(config_data["t2"] / self.dt))
-        else:
-            raise AttributeError(
-                "For protocol {}, t2 should be specified in"
-                " the config (in ms)".format(self.protocol_name)
-            )
-
-        if "t3" in config_data and config_data["t3"] is not None:
-            self.t3 = int(round(config_data["t3"] / self.dt))
-        else:
-            raise AttributeError(
-                "For protocol {}, t3 should be specified in"
-                " the config (in ms)".format(self.protocol_name)
-            )
-
-        if "t4" in config_data and config_data["t4"] is not None:
-            self.t4 = int(round(config_data["t4"] / self.dt))
-        else:
-            raise AttributeError(
-                "For protocol {}, t4 should be specified in"
-                " the config (in ms)".format(self.protocol_name)
-            )
-
-        if "toff" in config_data and config_data["toff"] is not None:
-            self.toff = int(round(config_data["toff"] / self.dt))
-        else:
-            raise AttributeError(
-                "For protocol {}, toff should be specified in"
-                " the config (in ms)".format(self.protocol_name)
-            )
-
-        # hypamp
-        if "hypamp" in config_data and config_data["hypamp"] is not None:
-            self.hypamp = config_data["hypamp"]
-        elif "hypamp" in reader_data and reader_data["hypamp"] is not None:
-            self.hypamp = reader_data["hypamp"]
-        else:
-            # Infer the base current hypamp
-            self.hypamp = numpy.median(smooth_current[: self.ton])
-
-        # amp with respect to hypamp
-        if "amp" in config_data and config_data["amp"] is not None:
-            self.amp = config_data["amp"]
-        elif "amp" in reader_data and reader_data["amp"] is not None:
-            self.amp = reader_data["amp"]
-        else:
-            self.amp = numpy.min(smooth_current[:])
-            self.amp -= self.hypamp
+        amp_value = numpy.min(smooth_current[:]) - self.hypamp
+        self.set_amplitudes_ecode("amp", config_data, reader_data, amp_value)
 
         # Converting back to ms
-        self.ton = t[int(round(self.ton))]
-        self.t1 = t[int(round(self.t1))]
-        self.t2 = t[int(round(self.t2))]
-        self.t3 = t[int(round(self.t3))]
-        self.t4 = t[int(round(self.t4))]
-        self.toff = t[int(round(self.toff))]
+        for name_timing in ["ton", "t1", "t2", "t3", "t4", "toff"]:
+            self.timing_index_to_ms(name_timing, t)
         self.tend = len(t) * self.dt
 
     def generate(self):
