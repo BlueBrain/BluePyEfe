@@ -1,9 +1,7 @@
 """Efeature extraction functions"""
-import os
-import pickle
 
 """
-Copyright (c) 2020, EPFL/Blue Brain Project
+Copyright (c) 2022, EPFL/Blue Brain Project
 
  This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
 
@@ -20,7 +18,8 @@ Copyright (c) 2020, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
-
+import os
+import pickle
 import functools
 import logging
 import pathlib
@@ -50,6 +49,16 @@ def _create_cell(cell_definition, recording_reader, efel_settings=None):
     recording files.
 
     The present function exist to be use by the map_function.
+
+    Args:
+        cell_definition (dict): subpart of files_metadata containing the
+            information for a single cell.
+        recording_reader (callable or None): method that will be used to
+            read the files containing the recordings. If None, the function
+            used will be chosen automatically based on the extension
+            of the file.
+        efel_settings (dict): eFEL settings in the form
+            {setting_name: setting_value}.
     """
 
     cell_name = cell_definition[0]
@@ -73,12 +82,19 @@ def _extract_efeatures_cell(cell, targets, efel_settings=None):
     Compute the efeatures on all the recordings of a Cell.
 
     The present function exists to be use by the map_function.
+
+    Args:
+        cell (Cell): cell for which to extract the efeatures.
+        targets (list of Target): targets to extract from the recordings of
+            the present cell.
+        efel_settings (dict): eFEL settings in the form
+            {setting_name: setting_value}.
     """
 
     if efel_settings is None:
         efel_settings = {}
 
-    # Group targets per same protocol and same efel settings for efficiency
+    # Group targets per same protocol and same eFEL settings for efficiency
     setting_groups = []
     for target in targets:
 
@@ -116,6 +132,14 @@ def _extract_efeatures_cell(cell, targets, efel_settings=None):
 def _saving_data(output_directory, feat, stim, currents):
     """
     Save the features, protocols and current to json files.
+
+    Args:
+        output_directory (str): path of the directory to which the efeatures
+            and protocols data will be saved.
+        feat (dict): contains the information related to the efeatures.
+        stim (dict): contains the information related to the protocols.
+        currents (dict): contains the information related to the holding
+            and threshold currents.
     """
 
     output_directory = pathlib.Path(output_directory)
@@ -137,10 +161,10 @@ def _saving_data(output_directory, feat, stim, currents):
 
 
 def read_recordings(
-        files_metadata,
-        recording_reader=None,
-        map_function=map,
-        efel_settings=None
+    files_metadata,
+    recording_reader=None,
+    map_function=map,
+    efel_settings=None
 ):
     """
     Read recordings from a group of files. The files are expected to be
@@ -165,7 +189,7 @@ def read_recordings(
         map_function (function): Function used to map (parallelize) the
             recording reading operations. Note: the parallelization is
             done across cells an not across files.
-        efel_settings (dict): efel settings in the form
+        efel_settings (dict): eFEL settings in the form
             {setting_name: setting_value}.
 
     Return:
@@ -215,7 +239,7 @@ def extract_efeatures_at_targets(
         map_function (function): Function used to map (parallelize) the
             feature extraction operations. Note: the parallelization is
             done across cells an not across efeatures.
-        efel_settings (dict): efel settings in the form
+        efel_settings (dict): eFEL settings in the form
             {setting_name: setting_value}. If settings are also informed
             in the targets per efeature, the latter will have priority.
     """
@@ -241,10 +265,10 @@ def extract_efeatures_at_targets(
 
 
 def compute_rheobase(
-        cells,
-        protocols_rheobase,
-        rheobase_strategy="absolute",
-        rheobase_settings=None
+    cells,
+    protocols_rheobase,
+    rheobase_strategy="absolute",
+    rheobase_settings=None
 ):
     """
     For each cell, finds the smallest current inducing a spike (rheobase).
@@ -285,7 +309,7 @@ def compute_rheobase(
 
 
 def _build_protocols(
-        targets, global_rheobase, protocol_mode, efel_settings=None
+    targets, global_rheobase, protocol_mode, efel_settings=None
 ):
     """Build a list of Protocols that matches the expected targets"""
 
@@ -329,11 +353,11 @@ def _build_protocols(
 
 
 def group_efeatures(
-        cells,
-        targets,
-        use_global_rheobase=True,
-        protocol_mode='mean',
-        efel_settings=None
+    cells,
+    targets,
+    use_global_rheobase=True,
+    protocol_mode='mean',
+    efel_settings=None
 ):
     """
     Group the recordings and their efeatures and associate them to the
@@ -366,7 +390,7 @@ def group_efeatures(
         protocol_mode (mean): if a protocol matches several recordings, the
             mode set the logic of how the output will be generating. Must be
             'mean', 'median' or 'lnmc'
-        efel_settings (dict): efel settings in the form
+        efel_settings (dict): eFEL settings in the form
             {setting_name: setting_value}. If settings are also informed
             in the targets per efeature, the latter will have priority.
     """
@@ -441,12 +465,12 @@ def _build_current_dict(cells):
 
 
 def create_feature_protocol_files(
-        cells,
-        protocols,
-        output_directory=None,
-        threshold_nvalue_save=1,
-        write_files=True,
-        save_files_used=False,
+    cells,
+    protocols,
+    output_directory=None,
+    threshold_nvalue_save=1,
+    write_files=True,
+    save_files_used=False,
 ):
     """
     Save the efeatures and protocols for each protocol/target combo
@@ -525,12 +549,14 @@ def create_feature_protocol_files(
 
 
 def _read_extract(
-        files_metadata,
-        recording_reader,
-        map_function,
-        targets,
-        efel_settings=None
+    files_metadata,
+    recording_reader,
+    map_function,
+    targets,
+    efel_settings=None
 ):
+    """Read recordings and create the matching Cell objects based on a files_metadata."""
+
     cells = read_recordings(
         files_metadata,
         recording_reader=recording_reader,
@@ -546,8 +572,12 @@ def _read_extract(
 
 
 def _read_extract_low_memory(
-        files_metadata, recording_reader, targets, efel_settings=None
+    files_metadata, recording_reader, targets, efel_settings=None
 ):
+    """Read recordings and create the matching Cell objects based on a
+    files_metadata. Does not us a map function and delete the recording's
+    data on the go to avoid using too much memory."""
+
     cells = []
     for cell_name in files_metadata:
 
@@ -840,7 +870,7 @@ def extract_efeatures(
         protocol_mode (str): protocol_mode (mean): if a protocol matches
             several recordings, the mode set the logic of how the output
             will be generating. Must be 'mean', 'median' or 'lnmc'
-        efel_settings (dict): efel settings in the form
+        efel_settings (dict): eFEL settings in the form
             {setting_name: setting_value}. If settings are also informed
             in the targets per efeature, the latter will have priority. If
             None, will be set to:
@@ -966,7 +996,6 @@ def plot_recordings(
     Plots recordings.
 
     Args:
-
         files_metadata (dict): define for which cell and protocol each file
             has to be used. Of the form:
             {

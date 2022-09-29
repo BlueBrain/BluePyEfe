@@ -28,17 +28,6 @@ class CellTest(unittest.TestCase):
             protocol_name="IDRest", efeatures=["Spikecount", "AP1_amp"]
         )
 
-    def test_step_ecode(self):
-        recording = self.cell.recordings[0]
-
-        self.assertTrue(isinstance(recording, bluepyefe.recording.Recording))
-        self.assertEqual(len(recording.voltage), len(recording.current))
-        self.assertEqual(len(recording.voltage), len(recording.t))
-        self.assertLess(abs(recording.ton - 700.0), 10.0)
-        self.assertLess(abs(recording.toff - 2700.0), 10.0)
-        self.assertLess(abs(recording.hypamp + 0.03), 0.005)
-        self.assertLess(abs(recording.amp - 0.033), 0.005)
-
     def test_efeature_extraction(self):
         recording = self.cell.recordings[0]
         self.assertEqual(2, len(recording.efeatures))

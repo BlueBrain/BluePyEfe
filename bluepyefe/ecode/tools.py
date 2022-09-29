@@ -1,7 +1,7 @@
-"""Tools"""
+"""Tools shared by all eCodes"""
 
 """
-Copyright (c) 2020, EPFL/Blue Brain Project
+Copyright (c) 2022, EPFL/Blue Brain Project
 
  This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
 
@@ -18,8 +18,6 @@ Copyright (c) 2020, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
-
-
 import numpy
 from scipy.signal import medfilt2d
 

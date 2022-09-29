@@ -1,7 +1,7 @@
 """sAHP eCode"""
 
 """
-Copyright (c) 2020, EPFL/Blue Brain Project
+Copyright (c) 2022, EPFL/Blue Brain Project
 
  This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
 
@@ -60,23 +60,9 @@ class SAHP(Recording):
         if self.voltage is not None:
             self.compute_spikecount(efel_settings)
 
-    def get_params(self):
-        """Returns the eCode parameters"""
-        ecode_params = {
-            "ton": self.ton,
-            "tmid": self.tmid,
-            "tmid2": self.tmid2,
-            "toff": self.toff,
-            "tend": self.tend,
-            "amp": self.amp,
-            "amp2": self.amp2,
-            "hypamp": self.hypamp,
-            "dt": self.dt,
-            "amp_rel": self.amp_rel,
-            "amp2_rel": self.amp2_rel,
-            "hypamp_rel": self.hypamp_rel,
-        }
-        return ecode_params
+        self.export_attr = ["ton", "tmid", "tmid2", "toff", "tend", "amp",
+                            "amp2", "hypamp", "dt", "amp_rel", "amp2_rel",
+                            "hypamp_rel"]
 
     def get_stimulus_parameters(self):
         """Returns the eCode parameters"""
@@ -121,7 +107,7 @@ class SAHP(Recording):
         self.set_amplitudes_ecode("amp", config_data, reader_data, amp_value)
 
         amp2_value = numpy.median(smooth_current[self.tmid : self.tmid2]) - self.hypamp
-        self.set_amplitudes_ecode("amp", config_data, reader_data, amp2_value)
+        self.set_amplitudes_ecode("amp2", config_data, reader_data, amp2_value)
 
         # Converting back to ms
         for name_timing in ["ton", "tmid", "tmid2", "toff"]:

@@ -1,7 +1,7 @@
 """Step eCode class"""
 
 """
-Copyright (c) 2020, EPFL/Blue Brain Project
+Copyright (c) 2022, EPFL/Blue Brain Project
 
  This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
 
@@ -102,6 +102,9 @@ class SpikeRec(Recording):
         if self.voltage is not None:
             self.compute_spikecount(efel_settings)
 
+        self.export_attr = ["tend", "tspike", "spike_duration", "delta",
+                            "amp", "hypamp", "dt", "amp_rel", "hypamp_rel"]
+
     @property
     def ton(self):
         return 0.0
@@ -109,21 +112,6 @@ class SpikeRec(Recording):
     @property
     def toff(self):
         return self.tend
-
-    def get_params(self):
-        """Returns the eCode parameters"""
-        ecode_params = {
-            "tend": self.tend,
-            "tspike": self.tspike,
-            "spike_duration": self.spike_duration,
-            "delta": self.delta,
-            "amp": self.amp,
-            "hypamp": self.hypamp,
-            "dt": self.dt,
-            "amp_rel": self.amp_rel,
-            "hypamp_rel": self.hypamp_rel,
-        }
-        return ecode_params
 
     def get_stimulus_parameters(self):
         """Returns the eCode parameters"""

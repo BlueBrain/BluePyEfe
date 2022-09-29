@@ -1,7 +1,7 @@
 """EFeatureTarget class"""
 
 """
-Copyright (c) 2021, EPFL/Blue Brain Project
+Copyright (c) 2022, EPFL/Blue Brain Project
 
  This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
 
@@ -38,7 +38,7 @@ class EFeatureTarget():
             tolerance,
             efel_settings=None,
     ):
-        """Constructor
+        """Constructor.
 
         Args:
             efeature_name (str): name of the feature (can be different than
@@ -56,6 +56,7 @@ class EFeatureTarget():
                 threshold amplitude (rheobase))
             efel_settings (dict): target specific efel settings.
         """
+
         self.efeature_name = efeature_name
         if self.efeature_name is None:
             self.efeature_name = efel_feature_name
