@@ -92,10 +92,31 @@ To install BluePyEfe run:
 pip install bluepyefe
 ```
 
-Quick Start
+Quick Start and Operating Principle
 ===========
 
 For a hands-on introduction to BluePyEfe, have a look at the notebook [examples/example.ipynb](examples/example.ipynb)
+
+The goal of the present package is to extract meaningful electrophysiological features (e-features) from voltage time series.
+The e-features considered in the present package are the one implemented in the [eFEL python library](https://github.com/BlueBrain/eFEL). See [this pdf](https://bluebrain.github.io/eFEL/efeature-documentation.pdf) for a list of available e-features.
+
+The present package makes one major assumptions: E-features are more meaningful if they are coming from a set of traces rather than a single trace. And they are even more meaningful if these traces come from different cells of the same cellular type.
+This assumption dictates the organisation of the package and has several consequences:
+
+The efeatures extracted through the package will always be average over the trace considered. For example, the AP_amplitude will be an average over all the action potentials present in a trace. If you wish to work on an AP by AP basis, please consider using the eFEL library directly. 
+
+A large part of the present software is therefore dedicated to averaging the features across set of "equivalent" recordings. To be able to average e-features across different cells in a meaningful way, an equivalence must be established between the traces coming from these different cells. It would not make sense to average the mean firing frequency obtain cell A on a 1s long step protocol with the one obtain for cell B on a ramp protocol that lasts for 500ms. We chose to define recordings as equivalent based on two criteria: (1) They have the same name and (2) they are of the same amplitude when the amplitude is expressed as a percentage of the rheobase of the cell.
+
+A pseudo-code for the main function of the package (bluepyefe.extract.extract_efeatures) could look as follows:
+```
+1. Load the data to memory by reading all the files containing the traces
+2. Extract the required e-features for all the traces
+3. Compute the rheobase of the cells based on one or several protocols
+4. Use these rheobases to associate to each protocol an amplitude expressed in % of the rheobase
+5. Compute the mean and standard deviations for the e-features across traces having the same amplitude
+6. Save the results and plot the traces and e-features
+```
+Each of these steps are parametrized by a number of settings, therefore we recommend that you read carefully the docstring of the function.
 
 Funding
 =======
