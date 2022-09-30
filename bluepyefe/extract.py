@@ -824,8 +824,9 @@ def extract_efeatures(
 
     Args:
         output_directory (str): path to the output directory
-        files_metadata (dict): define for which cell and protocol each file
-            has to be used. Of the form:
+        files_metadata (dict): define from files to read the data as well as
+            the name of the cells and protocols to which these data are
+            related. Of the form:
             {
                 cell_id: {
                     protocol_name: [{file_metadata1}, {file_metadata1}]
@@ -838,9 +839,9 @@ def extract_efeatures(
             need to be present in the file metadata of different protocols if
             the path contains data coming from different stimuli (eg: for NWB).
         targets (list): define the efeatures to extract as well as which
-            protocols and current amplitude they should be extracted for. If
-            targets are not provided, automatic targets will be used.
-            Of the form:
+            protocols and current amplitude (expressed in % of the rheobase)
+            they should be extracted. If targets are not provided, automatic
+            targets will be used. Of the form:
             [{
                 "efeature": "AP_amplitude",
                 "protocol": "IDRest",
