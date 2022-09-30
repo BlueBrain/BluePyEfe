@@ -133,5 +133,5 @@ class DeHyperPol(Recording):
         else:
             return False
 
-    def get_plot_amplitute_title(self):
+    def get_plot_amplitude_title(self):
         return " ({:.01f}%/{:.01f}%)".format(self.amp_rel, self.amp2_rel)

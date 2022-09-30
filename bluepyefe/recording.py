@@ -273,7 +273,7 @@ class Recording(object):
 
         self.spikecount = len(efel_vals[0]['peak_time'])
 
-    def get_plot_amplitute_title(self):
+    def get_plot_amplitude_title(self):
         return " ({:.01f}%)".format(self.amp_rel)
 
     def plot(
@@ -291,7 +291,7 @@ class Recording(object):
 
         title = "Amp = {:.03f} nA".format(self.amp)
         if self.amp_rel is not None:
-            title += self.get_plot_amplitute_title()
+            title += self.get_plot_amplitude_title()
         if self.id is not None:
             title += "\nid: {}".format(self.id)
         if self.repetition is not None:
