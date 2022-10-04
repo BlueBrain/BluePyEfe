@@ -960,7 +960,9 @@ def extract_efeatures(
     )
 
     if pickle_cells:
-        pickle.dump(cells, open(os.path.join(output_directory, 'cells.pkl'), 'wb'))
+        path_cells = pathlib.Path(output_directory)
+        path_cells.mkdir(parents=True, exist_ok=True)
+        pickle.dump(cells, open(path_cells / "cells.pkl", 'wb'))
 
     if plot:
         plot_all_recordings_efeatures(
