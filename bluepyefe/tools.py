@@ -25,7 +25,7 @@ import efel
 
 DEFAULT_EFEL_SETTINGS = {
     'strict_stiminterval': True,
-    'Threshold': -20.,
+    'Threshold': -30.,
     'interp_step': 0.025
 }
 
