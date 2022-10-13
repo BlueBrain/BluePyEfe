@@ -73,7 +73,7 @@ class SAHP(Recording):
             "toff": self.toff,
             "amp": self.amp2,
             "long_amp": self.amp,
-            "thresh_perc": self.amp_rel,
+            "thresh_perc": self.amp2_rel,
             "duration": self.tmid2 - self.tmid,
             "totduration": self.tend,
         }
