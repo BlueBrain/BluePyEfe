@@ -130,6 +130,9 @@ class Protocol():
                     recording.files
                 )
 
+        if recording.auto_threshold is not None:
+            self.feature_targets[i]._auto_thresholds.append(recording.auto_threshold)
+
         self.recordings.append(recording)
 
     def as_dict(self):
