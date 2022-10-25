@@ -28,16 +28,4 @@ it provides as an output ton, toff, tend, amp and hypamp.
 This automatic detection only works when the signal to noise ratio of the stimuli is good enough. 
 Therefore, before exploiting the efeatures, the user should check that the automatic step detection has indeed found the correct step. 
 This can be checked by plotting the real current data on top of the reconstruction of the current resulting from the step detection. 
-For example, if the Extractor instance is called extractor:
-
-
-```python
-for cell in extractor.cells:
-    for trace in cell.traces:
-        plt.plot(trace.t, trace.current, c='C0')
-        generated_time, generated_current = trace.ecode.generate()
-        plt.plot(generated_time, generated_current, c='C1', ls='--', alpha=0.9)
-        plt.title(cell.name)
-        plt.show()
-
-```
+For the non-step protocols, the timing information need to be provided by the user.
