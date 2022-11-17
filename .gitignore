@@ -9,6 +9,8 @@ load_module
 dist
 BluePyEfe.egg-info
 /testrun
+test_run
 .idea/
 MouseCells/
 .ipynb_checkpoints/
+coverage.xml
