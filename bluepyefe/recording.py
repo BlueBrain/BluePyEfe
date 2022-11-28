@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Recording class"""
 
 """
@@ -60,7 +62,6 @@ class Recording(object):
 
         self.location = None
         self.efeatures = {}
-        self.spikecount = None
 
         self.t = None
         self.current = None
@@ -88,7 +89,10 @@ class Recording(object):
         self.t = value
 
     @property
-    def spikecount(self):
+    def spikecount(self) -> int | None:
+        if self.peak_time is None:
+            return None
+        else:
         return len(self.peak_time)
 
     def set_timing_ecode(self, name_timings, config_data):
