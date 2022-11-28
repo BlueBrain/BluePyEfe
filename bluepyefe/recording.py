@@ -93,7 +93,7 @@ class Recording(object):
         if self.peak_time is None:
             return None
         else:
-        return len(self.peak_time)
+            return len(self.peak_time)
 
     def set_timing_ecode(self, name_timings, config_data):
         """Used by some of the children classes to check that the timing of
@@ -303,7 +303,7 @@ class Recording(object):
             self.auto_threshold = thresh
 
         else:
-            efel_vals = self.call_efel(['peak_time'], tmp_settings)[0]['peak_time']
+            efel_vals = self.call_efel(['peak_time'], tmp_settings)
             self.peak_time = efel_vals[0]['peak_time']
 
             if self.spikecount == 0 and numpy.max(self.voltage) > tmp_settings["Threshold"]:
