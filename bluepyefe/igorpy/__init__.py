@@ -23,11 +23,7 @@ import re
 import numpy as np
 from igor import binarywave
 
-# as we support Python 2.7/3, we have a special import for StringIO
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
 
 
 def _bytes_to_str(bytes_):

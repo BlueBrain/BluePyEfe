@@ -282,6 +282,8 @@ class Recording(object):
 
     def compute_spikecount(self, efel_settings=None, offset_voltage=20.):
         """Compute the number of spikes in the trace"""
+        if not efel_settings:
+            efel_settings = {}
 
         tmp_settings = {'strict_stiminterval': True}
         if efel_settings is not None:
