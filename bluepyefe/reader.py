@@ -55,7 +55,8 @@ def axon_reader(in_data):
         }
     """
 
-    r = io.AxonIO(filename=in_data["filepath"])
+    fp = in_data["filepath"]
+    r = io.AxonIO(filename=fp)
     bl = r.read_block(lazy=False)
 
     data = []
