@@ -111,7 +111,7 @@ class SAHP(Recording):
 
         # Converting back to ms
         for name_timing in ["ton", "tmid", "tmid2", "toff"]:
-            self.timing_index_to_ms(name_timing, t)
+            self.index_to_ms(name_timing, t)
         self.tend = len(t) * self.dt
 
     def generate(self):

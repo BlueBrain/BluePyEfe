@@ -72,6 +72,7 @@ class EFeatureTarget():
 
         self._values = []
         self._files = []
+        self._auto_thresholds = []
 
     @property
     def mean(self):
@@ -119,8 +120,17 @@ class EFeatureTarget():
         self._values = []
         self._files = []
 
+    def add_effective_threshold(self):
+        """If auto threshold detection was used during feature extraction,
+        update the efel settings with the Threshold that was actually used"""
+
+        if self._auto_thresholds:
+            self.efel_settings["Threshold"] = numpy.median(self._auto_thresholds)
+
     def as_dict(self):
         """Returns the target in the form of a dictionary"""
+
+        self.add_effective_threshold()
 
         return {
             "efeature_name": self.efeature_name,
@@ -136,6 +146,8 @@ class EFeatureTarget():
 
     def as_legacy_dict(self, save_files_used=False):
         """Returns the target in the form of a dictionary in a legacy format"""
+
+        self.add_effective_threshold()
 
         std = self.std
         if std == 0.0:

@@ -105,7 +105,7 @@ class SineSpec(Recording):
 
         # Converting back to ms
         for name_timing in ["ton", "toff"]:
-            self.timing_index_to_ms(name_timing, t)
+            self.index_to_ms(name_timing, t)
         self.tend = len(t) * self.dt
 
     def generate(self):

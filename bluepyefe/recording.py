@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Recording class"""
 
 """
@@ -60,7 +62,6 @@ class Recording(object):
 
         self.location = None
         self.efeatures = {}
-        self.spikecount = None
 
         self.t = None
         self.current = None
@@ -74,6 +75,8 @@ class Recording(object):
             )
 
         self.export_attr = None
+        self.auto_threshold = None
+        self.peak_time = None
 
     @property
     def time(self):
@@ -84,6 +87,13 @@ class Recording(object):
     def time(self, value):
         """Setter for an alias of the time attribute"""
         self.t = value
+
+    @property
+    def spikecount(self) -> int | None:
+        if self.peak_time is None:
+            return None
+        else:
+            return len(self.peak_time)
 
     def set_timing_ecode(self, name_timings, config_data):
         """Used by some of the children classes to check that the timing of
@@ -111,11 +121,14 @@ class Recording(object):
         else:
             setattr(self, amp_name, value)
 
-    def timing_index_to_ms(self, name_timing, time_series):
+    def index_to_ms(self, name_timing, time_series):
         """Used by some of the children classes to translate a timing attribute
          from index to ms."""
 
         setattr(self, name_timing, time_series[int(round(getattr(self, name_timing)))])
+
+    def ms_to_index(self, timing):
+        return int(round(timing / self.dt))
 
     def get_params(self):
         """Returns the eCode parameters"""
@@ -212,6 +225,12 @@ class Recording(object):
             efel_settings = {}
 
         settings = {"stimulus_current": self.amp}
+
+        if "Threshold" not in settings and self.auto_threshold is not None:
+            logger.warning(f"Threshold was not provided and was automatically"
+                           f" set to {self.auto_threshold}")
+            settings["Threshold"] = self.auto_threshold
+
         for setting in efel_settings:
             if setting not in ['stim_start', 'stim_end']:
                 settings[setting] = efel_settings[setting]
@@ -249,7 +268,6 @@ class Recording(object):
             efel_settings (dict): eFEL settings in the form
                 {setting_name: setting_value}.
         """
-
         if efeature_names is None:
             efeature_names = efeatures
 
@@ -266,16 +284,34 @@ class Recording(object):
 
             self.efeatures[efeature_name] = numpy.nanmean(value)
 
-    def compute_spikecount(self, efel_settings=None):
+    def compute_spikecount(self, efel_settings=None, offset_voltage=20.):
         """Compute the number of spikes in the trace"""
         if not efel_settings:
             efel_settings = {}
 
         tmp_settings = {'strict_stiminterval': True}
-        tmp_settings.update(efel_settings)
-        efel_vals = self.call_efel(['peak_time'], tmp_settings)
+        if efel_settings is not None:
+            tmp_settings.update(efel_settings)
 
-        self.spikecount = len(efel_vals[0]['peak_time'])
+        if tmp_settings.get("Threshold", None) is None:
+            idx_ton = self.ms_to_index(self.ton)
+            idx_toff = self.ms_to_index(self.toff)
+            step_voltage = numpy.median(self.voltage[idx_ton:idx_toff])
+            thresh = step_voltage + offset_voltage
+            tmp_settings["Threshold"] = thresh
+            efel_vals = self.call_efel(['peak_time'], tmp_settings)
+            self.peak_time = efel_vals[0]['peak_time']
+            self.auto_threshold = thresh
+
+        else:
+            efel_vals = self.call_efel(['peak_time'], tmp_settings)
+            self.peak_time = efel_vals[0]['peak_time']
+
+            if self.spikecount == 0 and numpy.max(self.voltage) > tmp_settings["Threshold"]:
+                logger.warning(
+                    f"No spikes were detected in recording {self.files} but the "
+                    "voltage goes higher than the spike detection threshold."
+                )
 
     def get_plot_amplitude_title(self):
         return " ({:.01f}%)".format(self.amp_rel)
@@ -306,6 +342,13 @@ class Recording(object):
         axis_current.plot(self.t, self.current, c="C0")
         axis_current.plot(gen_t, gen_i, c="C1", ls="--")
         axis_voltage.plot(self.t, self.voltage, c="C0")
+
+        if self.peak_time is not None:
+            max_v = numpy.max(self.voltage)
+            for pt in self.peak_time:
+                axis_voltage.plot(
+                    [pt, pt], [max_v - 30., max_v + 10.], c="C3", ls="--", lw=0.7
+                )
 
         if display_xlabel:
             axis_voltage.set_xlabel("Time (ms)")

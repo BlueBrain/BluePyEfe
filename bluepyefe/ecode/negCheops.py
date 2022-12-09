@@ -94,7 +94,7 @@ class NegCheops(Recording):
 
         # Converting back to ms
         for name_timing in ["ton", "t1", "t2", "t3", "t4", "toff"]:
-            self.timing_index_to_ms(name_timing, t)
+            self.index_to_ms(name_timing, t)
         self.tend = len(t) * self.dt
 
     def generate(self):

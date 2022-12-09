@@ -1,0 +1,7 @@
+Hippocampus Hub, (2021) a website and data portal developed and operated jointly by the Institute of Biophysics, National Research Council (Consiglio Nazionale delle Ricerche [CNR]), Italy
+ and the Blue Brain Project (BBP), École polytechnique fédérale de Lausanne (EPFL), Switzerland.
+https://www.hippocampushub.eu
+
+Applicable terms and conditions:
+Consiglio Nazionale delle Ricerche, Istituto di Biofisica — https://www.hippocampushub.eu/build/about#terms_and_conditions
+EPFL/ Blue Brain Project (BBP) —  https://www.hippocampushub.eu/model/terms-of-use/
