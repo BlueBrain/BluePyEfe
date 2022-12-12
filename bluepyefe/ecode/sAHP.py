@@ -135,13 +135,16 @@ class SAHP(Recording):
         self.amp2_rel = 100.0 * self.amp2 / amp_threshold
         self.hypamp_rel = 100.0 * self.hypamp / amp_threshold
 
-    def in_target(self, target, tolerance):
+    def in_target(self, target, tolerance, absolute_amplitude=False):
         """Returns a boolean. True if the amplitude of the eCode is close to
         target and False otherwise."""
-        if numpy.abs(target - self.amp2_rel) < tolerance:
+
+        effective_amp = self.amp2 if absolute_amplitude else self.amp2_rel
+
+        if numpy.abs(target - effective_amp) < tolerance:
             return True
-        else:
-            return False
+
+        return False
 
     def get_plot_amplitude_title(self):
         return " ({:.01f}%/{:.01f}%)".format(self.amp_rel, self.amp2_rel)

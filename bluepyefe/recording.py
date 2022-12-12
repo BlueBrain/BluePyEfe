@@ -313,6 +313,23 @@ class Recording(object):
                     "voltage goes higher than the spike detection threshold."
                 )
 
+    def in_target(self, target, tolerance, absolute_amplitude=False):
+        """Returns a boolean. True if the amplitude of the eCode is close to
+        target and False otherwise."""
+
+        effective_amp = self.amp if absolute_amplitude else self.amp_rel
+
+        if numpy.abs(target - effective_amp) < tolerance:
+            return True
+
+        return False
+
+    def compute_relative_amp(self, amp_threshold):
+        """Divide all the amplitude in the stimuli by the spiking amplitude"""
+
+        self.amp_rel = 100.0 * self.amp / amp_threshold
+        self.hypamp_rel = 100.0 * self.hypamp / amp_threshold
+
     def get_plot_amplitude_title(self):
         return " ({:.01f}%)".format(self.amp_rel)
 

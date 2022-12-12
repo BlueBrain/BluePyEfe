@@ -129,16 +129,3 @@ class SineSpec(Recording):
         current += self.hypamp
 
         return t, current
-
-    def compute_relative_amp(self, amp_threshold):
-        """Divide all the amplitude in the stimuli by the spiking amplitude"""
-        self.amp_rel = 100.0 * self.amp / amp_threshold
-        self.hypamp_rel = 100.0 * self.hypamp / amp_threshold
-
-    def in_target(self, target, tolerance):
-        """Returns a boolean. True if the amplitude of the eCode is close to
-        target and False otherwise."""
-        if numpy.abs(target - self.amp_rel) < tolerance:
-            return True
-        else:
-            return False
