@@ -309,7 +309,10 @@ def compute_rheobase(
 
 
 def _build_protocols(
-    targets, global_rheobase, protocol_mode, efel_settings=None
+    targets,
+    global_rheobase,
+    protocol_mode,
+    efel_settings=None
 ):
     """Build a list of Protocols that matches the expected targets"""
 
@@ -355,6 +358,7 @@ def _build_protocols(
 def group_efeatures(
     cells,
     targets,
+    absolute_amplitude=False,
     use_global_rheobase=True,
     protocol_mode='mean',
     efel_settings=None
@@ -380,6 +384,9 @@ def group_efeatures(
                     'Threshold': -10.
                 }
             }]
+        absolute_amplitude (bool): if True, will use the absolute amplitude
+            instead of the relative amplitudes of the recordings when checking
+            if a recording has to be used for a given target.
         use_global_rheobase (bool): As the final amplitude of a target is the
             mean of the amplitude of the cells, a global rheobase can be used
             to avoid issues when a cell matches a target but not another one.
@@ -399,7 +406,7 @@ def group_efeatures(
         efel_settings = {}
 
     global_rheobase = None
-    if use_global_rheobase:
+    if use_global_rheobase and not absolute_amplitude:
         global_rheobase = numpy.nanmean(
             [c.rheobase for c in cells if c.rheobase is not None]
         )
@@ -408,13 +415,13 @@ def group_efeatures(
         targets,
         global_rheobase=global_rheobase,
         protocol_mode=protocol_mode,
-        efel_settings=efel_settings
+        efel_settings=efel_settings,
     )
 
     for protocol in protocols:
         for cell in cells:
 
-            if cell.rheobase is None:
+            if cell.rheobase is None and not absolute_amplitude:
                 continue
 
             for recording in cell.get_recordings_by_protocol_name(
@@ -422,8 +429,9 @@ def group_efeatures(
             ):
 
                 if recording.in_target(
-                        protocol.amplitude,
-                        protocol.tolerance
+                    protocol.amplitude,
+                    protocol.tolerance,
+                    absolute_amplitude
                 ):
                     protocol.append(recording)
 
@@ -659,6 +667,7 @@ def _extract_with_targets(
     files_metadata,
     targets=None,
     protocols_rheobase=None,
+    absolute_amplitude=False,
     recording_reader=None,
     map_function=map,
     low_memory_mode=False,
@@ -683,16 +692,18 @@ def _extract_with_targets(
             files_metadata, recording_reader, targets, efel_settings
         )
 
-    compute_rheobase(
-        cells,
-        protocols_rheobase=protocols_rheobase,
-        rheobase_strategy=rheobase_strategy,
-        rheobase_settings=rheobase_settings
-    )
+    if not absolute_amplitude:
+        compute_rheobase(
+            cells,
+            protocols_rheobase=protocols_rheobase,
+            rheobase_strategy=rheobase_strategy,
+            rheobase_settings=rheobase_settings
+        )
 
     protocols = group_efeatures(
         cells,
         targets,
+        absolute_amplitude=absolute_amplitude,
         use_global_rheobase=True,
         protocol_mode=protocol_mode,
         efel_settings=efel_settings
@@ -806,6 +817,7 @@ def extract_efeatures(
     targets=None,
     threshold_nvalue_save=1,
     protocols_rheobase=None,
+    absolute_amplitude=False,
     recording_reader=None,
     map_function=map,
     write_files=False,
@@ -839,9 +851,11 @@ def extract_efeatures(
             need to be present in the file metadata of different protocols if
             the path contains data coming from different stimuli (eg: for NWB).
         targets (list): define the efeatures to extract as well as which
-            protocols and current amplitude (expressed in % of the rheobase)
-            they should be extracted. If targets are not provided, automatic
-            targets will be used. Of the form:
+            protocols and current amplitude (expressed either in % of the
+            rheobase if absolute_amplitude if False or in nA if
+            absolute_amplitude is True) they should be extracted.
+            If targets are not provided, automatic targets will be used.
+            Of the form:
             [{
                 "efeature": "AP_amplitude",
                 "protocol": "IDRest",
@@ -857,6 +871,9 @@ def extract_efeatures(
             an efeatures to be averaged and returned in the output.
         protocols_rheobase (list): names of the protocols that will be
             used to compute the rheobase of the cells. E.g: ['IDthresh'].
+        absolute_amplitude (bool): if True, will use the absolute amplitude
+            instead of the relative amplitudes of the recordings when checking
+            if a recording has to be used for a given target.
         recording_reader (function): custom recording reader function. It's
             inner working has to match the metadata entered in files_metadata.
         map_function (function): Function used to map (parallelize) the
@@ -902,7 +919,7 @@ def extract_efeatures(
         )
         efel_settings = DEFAULT_EFEL_SETTINGS.copy()
 
-    if protocols_rheobase is None:
+    if protocols_rheobase is None and not absolute_amplitude:
         logger.warning(
             "protocols_rheobase is None. Default protocol names will be used"
         )
@@ -925,7 +942,10 @@ def extract_efeatures(
     if targets is not None and auto_targets is not None:
         raise Exception("Cannot specify both targets and auto_targets.")
 
-    if targets is None or auto_targets is not None:
+    if (
+        not absolute_amplitude and
+        (targets is None or auto_targets is not None)
+    ):
         cells, protocols, targets = _extract_auto_targets(
             files_metadata,
             protocols_rheobase,
@@ -942,6 +962,7 @@ def extract_efeatures(
             files_metadata,
             targets,
             protocols_rheobase,
+            absolute_amplitude,
             recording_reader,
             map_function,
             low_memory_mode,

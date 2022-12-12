@@ -41,7 +41,7 @@ class Protocol():
         tolerance,
         feature_targets=None,
         global_rheobase=None,
-        mode="mean"
+        mode="mean",
     ):
         """Constructor
 
@@ -49,11 +49,13 @@ class Protocol():
             name (str): name of the protocol (ex: 'APWaveform')
             amplitude (float): amplitude of the current stimuli for the
                 present protocol (expressed as a percentage of the
-                threshold amplitude (rheobase))
+                threshold amplitude or in absolute current depending on the
+                setting absolute_amplitude)
             tolerance (float): tolerance around the target amplitude in which
                 an experimental recording will be seen as a hit during
                 efeatures extraction (expressed as a percentage of the
-                threshold amplitude (rheobase))
+                threshold amplitude or in absolute current depending on the
+                setting absolute_amplitude)
             feature_targets (list): list of EFeatureTarget associated to the
                 protocol
             global_rheobase (float): average rheobase across all cells
@@ -187,7 +189,7 @@ class Protocol():
                 amp_rel = operator([c["amp_rel"] for c in params])
                 mean_param = float(amp_rel) * self.global_rheobase / 100.
             else:
-                mean_param = operator([c[key] for c in params])
+                mean_param = operator([numpy.nan if c[key] is None else c[key] for c in params])
 
             setattr(ecode, key, mean_param)
 

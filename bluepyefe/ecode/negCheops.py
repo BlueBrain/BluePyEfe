@@ -126,15 +126,3 @@ class NegCheops(Recording):
         current[mid:toff] += numpy.linspace(self.amp, 0.0, toff - mid)
 
         return time, current
-
-    def compute_relative_amp(self, amp_threshold):
-        self.amp_rel = 100.0 * self.amp / amp_threshold
-        self.hypamp_rel = 100.0 * self.hypamp / amp_threshold
-
-    def in_target(self, target, tolerance):
-        """Returns a boolean. True if the amplitude of the eCode is close to
-        target and False otherwise."""
-        if numpy.abs(target - self.amp_rel) < tolerance:
-            return True
-        else:
-            return False

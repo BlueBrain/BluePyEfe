@@ -171,12 +171,7 @@ class SpikeRec(Recording):
 
         return t, current
 
-    def compute_relative_amp(self, amp_threshold):
-        """Divide all the amplitude in the stimuli by the spiking amplitude"""
-        self.amp_rel = 100.0 * self.amp / amp_threshold
-        self.hypamp_rel = 100.0 * self.hypamp / amp_threshold
-
-    def in_target(self, target, tolerance):
+    def in_target(self, target, tolerance, absolute_amplitude):
         """Returns a boolean. True if the delta of the eCode is close to
         target and False otherwise."""
         logger.warning(
