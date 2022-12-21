@@ -226,7 +226,7 @@ class Recording(object):
 
         settings = {"stimulus_current": self.amp}
 
-        if "Threshold" not in settings and self.auto_threshold is not None:
+        if "Threshold" not in efel_settings and self.auto_threshold is not None:
             logger.warning(f"Threshold was not provided and was automatically"
                            f" set to {self.auto_threshold}")
             settings["Threshold"] = self.auto_threshold
