@@ -37,6 +37,7 @@ class EFeatureTarget():
             amplitude,
             tolerance,
             efel_settings=None,
+
     ):
         """Constructor.
 
@@ -127,24 +128,7 @@ class EFeatureTarget():
         if self._auto_thresholds:
             self.efel_settings["Threshold"] = numpy.median(self._auto_thresholds)
 
-    def as_dict(self):
-        """Returns the target in the form of a dictionary"""
-
-        self.add_effective_threshold()
-
-        return {
-            "efeature_name": self.efeature_name,
-            "feature": self.efel_feature_name,
-            "mean": self.mean,
-            "std": self.std,
-            "values": self._values,
-            "protocol_name": self.protocol_name,
-            "amplitude": self.amplitude,
-            "tolerance": self.tolerance,
-            "efel_settings": self.efel_settings
-        }
-
-    def as_legacy_dict(self, save_files_used=False):
+    def as_dict(self, save_files_used=False, default_std_value=1e-3):
         """Returns the target in the form of a dictionary in a legacy format"""
 
         self.add_effective_threshold()
@@ -153,11 +137,11 @@ class EFeatureTarget():
         if std == 0.0:
             logger.warning(
                 "Standard deviation for efeatures {} stimulus {} is 0 and"
-                "will be set to 1e-3".format(
-                    self.efel_feature_name, self.protocol_name
+                "will be set to {}".format(
+                    self.efel_feature_name, self.protocol_name, default_std_value
                 )
             )
-            std = 1e-3
+            std = default_std_value
 
         feature_dict = {
             "feature": self.efel_feature_name,
