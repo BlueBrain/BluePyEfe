@@ -438,7 +438,7 @@ def group_efeatures(
     return protocols
 
 
-def _build_current_dict(cells):
+def _build_current_dict(cells, default_std_value):
     """
     Compute the mean and standard deviation of the holding and threshold
     currents.
@@ -456,14 +456,22 @@ def _build_current_dict(cells):
         if cell.rheobase is not None:
             threshold[cell.name] = cell.rheobase
 
+    std_holding = numpy.nanstd(list(holding.values()))
+    if std_holding == 0:
+        std_holding = default_std_value
+
+    std_threshold = numpy.nanstd(list(threshold.values()))
+    if std_threshold == 0:
+        std_threshold = default_std_value
+
     currents = {
         "holding_current": [
             numpy.nanmean(list(holding.values())),
-            numpy.nanstd(list(holding.values())),
+            std_holding,
         ],
         "threshold_current": [
             numpy.nanmean(list(threshold.values())),
-            numpy.nanstd(list(threshold.values())),
+            std_threshold,
         ],
         "all_holding_current": holding,
         "all_threshold_current": threshold,
@@ -539,7 +547,7 @@ def create_feature_protocol_files(
         out_stimuli[stimname] = protocol.as_dict()
 
     # Compute the mean and std of holding and threshold currents
-    currents = _build_current_dict(cells)
+    currents = _build_current_dict(cells, default_std_value)
 
     if write_files:
 
@@ -1007,7 +1015,7 @@ def extract_efeatures(
             targets,
             protocol_mode,
             threshold_nvalue_save,
-            write_files
+            write_files,
         )
 
     if not efeatures or not protocol_definitions:
