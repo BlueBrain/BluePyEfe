@@ -438,7 +438,7 @@ def group_efeatures(
     return protocols
 
 
-def _build_current_dict(cells):
+def _build_current_dict(cells, default_std_value):
     """
     Compute the mean and standard deviation of the holding and threshold
     currents.
@@ -456,14 +456,22 @@ def _build_current_dict(cells):
         if cell.rheobase is not None:
             threshold[cell.name] = cell.rheobase
 
+    std_holding = numpy.nanstd(list(holding.values()))
+    if std_holding == 0:
+        std_holding = default_std_value
+
+    std_threshold = numpy.nanstd(list(threshold.values()))
+    if std_threshold == 0:
+        std_threshold = default_std_value
+
     currents = {
         "holding_current": [
             numpy.nanmean(list(holding.values())),
-            numpy.nanstd(list(holding.values())),
+            std_holding,
         ],
         "threshold_current": [
             numpy.nanmean(list(threshold.values())),
-            numpy.nanstd(list(threshold.values())),
+            std_threshold,
         ],
         "all_holding_current": holding,
         "all_threshold_current": threshold,
@@ -479,6 +487,7 @@ def create_feature_protocol_files(
     threshold_nvalue_save=1,
     write_files=True,
     save_files_used=False,
+    default_std_value=1e-3
 ):
     """
     Save the efeatures and protocols for each protocol/target combo
@@ -496,6 +505,8 @@ def create_feature_protocol_files(
         save_files_used (bool): if True, the name of the recording files used
             in the computation of the features will be added to the
             efeatures.
+        default_std_value (float): default value used to replace the standard
+            deviation if the standard deviation is 0.
 
     Returns:
         feat (dict)
@@ -523,7 +534,7 @@ def create_feature_protocol_files(
                 )
                 continue
 
-            tmp_feat.append(target.as_legacy_dict(save_files_used))
+            tmp_feat.append(target.as_dict(save_files_used, default_std_value))
 
         if not tmp_feat:
             logger.warning(
@@ -536,7 +547,7 @@ def create_feature_protocol_files(
         out_stimuli[stimname] = protocol.as_dict()
 
     # Compute the mean and std of holding and threshold currents
-    currents = _build_current_dict(cells)
+    currents = _build_current_dict(cells, default_std_value)
 
     if write_files:
 
@@ -783,7 +794,8 @@ def extract_efeatures_per_cell(
     targets,
     protocol_mode,
     threshold_nvalue_save,
-    write_files
+    write_files,
+    default_std_value=1e-3
 ):
 
     for cell_name in files_metadata:
@@ -808,6 +820,7 @@ def extract_efeatures_per_cell(
                 output_directory=cell_directory,
                 threshold_nvalue_save=threshold_nvalue_save,
                 write_files=write_files,
+                default_std_value=default_std_value
             )
 
 
@@ -830,6 +843,7 @@ def extract_efeatures(
     rheobase_settings=None,
     auto_targets=None,
     pickle_cells=False,
+    default_std_value=1e-3
 ):
     """
     Extract efeatures.
@@ -908,6 +922,8 @@ def extract_efeatures(
             computation function.
         auto_targets (list of AutoTarget): targets with more flexible goals.
         pickle_cells (bool): if True, the cells object will be saved as a pickle file.
+        default_std_value (float): default value used to replace the standard
+            deviation if the standard deviation is 0.
     """
 
     if not files_metadata:
@@ -978,6 +994,7 @@ def extract_efeatures(
         output_directory=output_directory,
         threshold_nvalue_save=threshold_nvalue_save,
         write_files=write_files,
+        default_std_value=default_std_value
     )
 
     if pickle_cells:
@@ -998,7 +1015,7 @@ def extract_efeatures(
             targets,
             protocol_mode,
             threshold_nvalue_save,
-            write_files
+            write_files,
         )
 
     if not efeatures or not protocol_definitions:
