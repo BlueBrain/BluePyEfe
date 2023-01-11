@@ -53,7 +53,7 @@ setuptools.setup(
         'Topic :: Scientific/Engineering',
         'Topic :: Utilities'],
     install_requires=[
-        'numpy',
+        'numpy<1.24',
         'neo',
         'matplotlib',
         'efel',
