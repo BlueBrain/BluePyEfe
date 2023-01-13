@@ -54,23 +54,23 @@ class RecordingTest(unittest.TestCase):
         self.assertFalse(self.recording.in_target(-100, 50))
         self.assertFalse(self.recording.in_target(90, 2))
 
-
-def test_auto_threshold_detection():
-    """Test the auto_threshold detection in Recording.compute_spikecount."""
-    cell = bluepyefe.cell.Cell(name="MouseNeuron")
-    file_metadata = {
-                    "filepath": "./tests/exp_data/hippocampus-portal/99111002.nwb",
-                    "i_unit": "A",
-                    "v_unit": "V",
-                    "t_unit": "s",
-                    "ljp": 0.0,
-                    "protocol_name": "Step",
-                }
-
-    cell.read_recordings(protocol_data=[file_metadata], protocol_name="Step")
-    cell.recordings[1].compute_spikecount()
-    assert cell.recordings[1].spikecount == 2
-    assert_array_almost_equal(cell.recordings[1].peak_time, [85.4, 346.1])
+# Auto threshold disabled for now
+# def test_auto_threshold_detection():
+#     """Test the auto_threshold detection in Recording.compute_spikecount."""
+#     cell = bluepyefe.cell.Cell(name="MouseNeuron")
+#     file_metadata = {
+#                     "filepath": "./tests/exp_data/hippocampus-portal/99111002.nwb",
+#                     "i_unit": "A",
+#                     "v_unit": "V",
+#                     "t_unit": "s",
+#                     "ljp": 0.0,
+#                     "protocol_name": "Step",
+#                 }
+#
+#     cell.read_recordings(protocol_data=[file_metadata], protocol_name="Step")
+#     cell.recordings[1].compute_spikecount()
+#     assert cell.recordings[1].spikecount == 2
+#     assert_array_almost_equal(cell.recordings[1].peak_time, [85.4, 346.1])
 
 
 if __name__ == "__main__":
