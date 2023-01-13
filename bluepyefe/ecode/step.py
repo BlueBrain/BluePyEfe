@@ -80,7 +80,7 @@ class Step(Recording):
         smooth_current = None
 
         # Set the threshold to look for steps
-        epsilon = 0.01
+        epsilon = 0.005
 
         # The buffer prevent miss-detection of the step when artifacts are
         # present at the very start or very end of the current trace
