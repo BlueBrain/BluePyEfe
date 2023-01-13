@@ -293,25 +293,26 @@ class Recording(object):
         if efel_settings is not None:
             tmp_settings.update(efel_settings)
 
-        if tmp_settings.get("Threshold", None) is None:
-            idx_ton = self.ms_to_index(self.ton)
-            idx_toff = self.ms_to_index(self.toff)
-            step_voltage = numpy.median(self.voltage[idx_ton:idx_toff])
-            thresh = step_voltage + offset_voltage
-            tmp_settings["Threshold"] = thresh
-            efel_vals = self.call_efel(['peak_time'], tmp_settings)
-            self.peak_time = efel_vals[0]['peak_time']
-            self.auto_threshold = thresh
+        # TODO: find a solution that handles negative Traces
+        # if tmp_settings.get("Threshold", None) is None:
+        #     idx_ton = self.ms_to_index(self.ton)
+        #     idx_toff = self.ms_to_index(self.toff)
+        #     step_voltage = numpy.median(self.voltage[idx_ton:idx_toff])
+        #     thresh = step_voltage + offset_voltage
+        #     tmp_settings["Threshold"] = thresh
+        #     efel_vals = self.call_efel(['peak_time'], tmp_settings)
+        #     self.peak_time = efel_vals[0]['peak_time']
+        #     self.auto_threshold = thresh
+        #
+        # else:
+        efel_vals = self.call_efel(['peak_time'], tmp_settings)
+        self.peak_time = efel_vals[0]['peak_time']
 
-        else:
-            efel_vals = self.call_efel(['peak_time'], tmp_settings)
-            self.peak_time = efel_vals[0]['peak_time']
-
-            if self.spikecount == 0 and numpy.max(self.voltage) > tmp_settings["Threshold"]:
-                logger.warning(
-                    f"No spikes were detected in recording {self.files} but the "
-                    "voltage goes higher than the spike detection threshold."
-                )
+        # if self.spikecount == 0 and numpy.max(self.voltage) > tmp_settings["Threshold"]:
+        #     logger.warning(
+        #         f"No spikes were detected in recording {self.files} but the "
+        #         "voltage goes higher than the spike detection threshold."
+        #     )
 
     def in_target(self, target, tolerance, absolute_amplitude=False):
         """Returns a boolean. True if the amplitude of the eCode is close to
