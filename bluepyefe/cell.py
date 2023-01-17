@@ -232,7 +232,7 @@ class Cell(object):
 
         fig, axs = plt.subplots(
             n_rows, n_cols,
-            figsize=[3.0 + 1.9 * int(n_cols), 2.4 * n_rows],
+            figsize=[3.0 + 2.2 * int(n_cols), 2.5 * n_rows],
             squeeze=False
         )
 

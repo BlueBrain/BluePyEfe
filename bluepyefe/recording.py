@@ -359,15 +359,15 @@ class Recording(object):
         axis_current.set_title(title, size="x-small")
 
         gen_t, gen_i = self.generate()
-        axis_current.plot(self.t, self.current, c="C0")
-        axis_current.plot(gen_t, gen_i, c="C1", ls="--")
-        axis_voltage.plot(self.t, self.voltage, c="C0")
+        axis_current.plot(self.t, self.current, c="C0", lw=0.8)
+        axis_current.plot(gen_t, gen_i, c="C1", ls="--", lw=0.8)
+        axis_voltage.plot(self.t, self.voltage, c="C0", lw=0.8)
 
         if self.peak_time is not None:
             max_v = numpy.max(self.voltage)
             for pt in self.peak_time:
                 axis_voltage.plot(
-                    [pt, pt], [max_v - 30., max_v + 10.], c="C3", ls="--", lw=0.7
+                    [pt, pt], [max_v + 5, max_v + 15], c="C3", ls="-", lw=0.5
                 )
 
         if display_xlabel:
