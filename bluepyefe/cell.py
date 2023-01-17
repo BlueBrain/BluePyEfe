@@ -227,12 +227,12 @@ class Cell(object):
         recordings_amp = [rec.amp for rec in recordings]
         recordings = [recordings[k] for k in numpy.argsort(recordings_amp)]
 
-        n_cols = 10
+        n_cols = 6
         n_rows = int(2 * numpy.ceil(len(recordings) / n_cols))
 
         fig, axs = plt.subplots(
             n_rows, n_cols,
-            figsize=[3.0 + 2.2 * int(n_cols), 2.5 * n_rows],
+            figsize=[3.0 + 3.0 * int(n_cols), 2.5 * n_rows],
             squeeze=False
         )
 
