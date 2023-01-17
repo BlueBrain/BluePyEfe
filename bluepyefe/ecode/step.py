@@ -79,8 +79,9 @@ class Step(Recording):
         # Smooth the current
         smooth_current = None
 
-        # Set the threshold to look for steps
-        epsilon = 0.005
+        # Set the threshold to detect the step
+        noise_level = numpy.std(numpy.concatenate((self.current[:50], self.current[-50:])))
+        step_threshold = numpy.clip(2. * noise_level, 1e-5, numpy.max(self.current))
 
         # The buffer prevent miss-detection of the step when artifacts are
         # present at the very start or very end of the current trace
@@ -124,7 +125,7 @@ class Step(Recording):
             if smooth_current is None:
                 smooth_current = scipy_signal2d(current, 85)
             _ = numpy.abs(smooth_current[idx_buffer:] - self.hypamp)
-            self.ton = idx_buffer + numpy.argmax(_ > epsilon)
+            self.ton = idx_buffer + numpy.argmax(_ > step_threshold)
 
         else:
             # Infer the base current hypamp
@@ -137,7 +138,7 @@ class Step(Recording):
                 numpy.abs(smooth_current[:-idx_buffer] - self.hypamp)
             )
             self.toff = (
-                (len(current) - numpy.argmax(_ > epsilon)) - 1 - idx_buffer
+                (len(current) - numpy.argmax(_ > step_threshold)) - 1 - idx_buffer
             )
 
         # Get the amplitude of the step current (relative to hypamp)
