@@ -299,7 +299,10 @@ class Recording(object):
             idx_toff = self.ms_to_index(self.toff)
             step_voltage = numpy.median(self.voltage[idx_ton:idx_toff])
             base_voltage = numpy.median(self.voltage[:idx_ton])
-            thresh = step_voltage + offset_voltage
+            if base_voltage > step_voltage:
+                thresh = base_voltage + offset_voltage
+            else:
+                thresh = step_voltage + offset_voltage
             tmp_settings["Threshold"] = thresh
             efel_vals = self.call_efel(['peak_time'], tmp_settings)
             self.peak_time = efel_vals[0]['peak_time']
