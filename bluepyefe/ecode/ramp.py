@@ -79,7 +79,12 @@ class Ramp(Recording):
         # Smooth the current
         smooth_current = scipy_signal2d(current, 85)
 
-        self.set_timing_ecode(["ton", "toff"], config_data)
+        self.set_timing_ecode(["ton"], config_data)
+
+        if "toff" in config_data and config_data["toff"] is not None:
+            self.toff = int(round(config_data["toff"] / self.dt))
+        else:
+            self.toff = numpy.argmax(smooth_current[self.ton:]) + self.ton
 
         hypamp_value = base_current(current)
         self.set_amplitudes_ecode("hypamp", config_data, reader_data, hypamp_value)
