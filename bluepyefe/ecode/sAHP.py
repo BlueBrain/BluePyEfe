@@ -108,7 +108,7 @@ class SAHP(Recording):
 
         # Set the threshold to detect the step
         noise_level = numpy.std(numpy.concatenate((self.current[:50], self.current[-50:])))
-        step_threshold = numpy.clip(4.5 * noise_level, 1e-5, numpy.max(self.current))
+        step_threshold = numpy.max([4.5 * noise_level, 1e-5])
 
         # The buffer prevent miss-detection of the step when artifacts are
         # present at the very start or very end of the current trace
