@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 class SineSpec(Recording):
 
     """SineSpec current stimulus"""
-    
+
     def __init__(
         self,
         config_data,
