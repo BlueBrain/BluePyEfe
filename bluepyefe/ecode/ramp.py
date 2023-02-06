@@ -29,6 +29,29 @@ logger = logging.getLogger(__name__)
 
 
 class Ramp(Recording):
+
+    """Ramp current stimulus
+
+
+        hypamp        hypamp+amp      hypamp
+          :                :             :
+          :                :             :
+          :               /|             :
+          :              / |             :
+          :             /  |             :
+          :            /   |             :
+          :           /    |             :
+          :          /     |             :
+          :         /      |             :
+          :        /       |             :
+          :       /        |             :
+    |___________ /         |__________________________
+    ^           ^          ^                          ^
+    :           :          :                          :
+    :           :          :                          :
+    t=0         ton        toff                       tend
+    """
+
     def __init__(
         self,
         config_data,

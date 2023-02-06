@@ -73,6 +73,24 @@ def detect_spike(amp, hypamp, smooth_current, dt):
 
 
 class SpikeRec(Recording):
+
+    """SpikeRec current stimulus
+
+          hypamp        hypamp+amp      hypamp       hypamp+amp          .   .   .
+            :                :             :             :
+            :        _________________     :      _________________                      _________________
+            :       |                 |    :     |                 |                    |                 |
+            :       |                 |    :     |                 |   * len(tspike)    |                 |
+            :       |                 |    :     |                 |     .   .   .      |                 |
+            :       |                 |    :     |                 |                    |                 |
+    |_______________|                 |__________|                 |__                __|                 |___
+    :               :                 :          :                 :                                          ^
+    :               :                 :          :                 :                                          :
+    :               :                 :          :                 :                                          :
+     <--tspike[0]--><-spike_duration-><- delta -><-spike_duration->      .   .   .                          tend
+
+    """
+
     def __init__(
         self,
         config_data,

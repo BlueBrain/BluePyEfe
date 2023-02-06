@@ -24,7 +24,7 @@ class AutoTarget():
 
     """Fuzzy targets defined by lists of ecodes, amplitudes and efeatures.
     The AutoTarget will try to find the best combination of ecodes, amplitudes
-     and efeatures that match the data available in the recordings."""
+    and efeatures that match the data available in the recordings."""
 
     def __init__(
         self,

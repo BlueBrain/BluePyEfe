@@ -29,6 +29,24 @@ logger = logging.getLogger(__name__)
 
 class DeHyperPol(Recording):
 
+    """DeHyperpol current stimulus
+
+         hypamp        hypamp+amp      hypamp+amp2    hypamp
+           :                :               :            :
+           :         _________________      :            :
+           :        |                 |     :            :
+           :        |                 |     :            :
+    |_______________|                 |     :       ___________
+    ^               ^                 |     :      |           ^
+    :               :                 |     :      |           :
+    :               :                 |     :      |           :
+    :               :                 |____________|           :
+    :               :                 ^            ^           :
+    :               :                 :            :           :
+    :               :                 :            :           :
+    t=0             ton               tmid         toff        tend
+    """
+
     def __init__(
         self,
         config_data,

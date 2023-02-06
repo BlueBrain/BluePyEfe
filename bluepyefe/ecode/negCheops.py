@@ -28,6 +28,33 @@ logger = logging.getLogger(__name__)
 
 
 class NegCheops(Recording):
+
+    # pylint: disable=line-too-long,anomalous-backslash-in-string
+
+    """NegCheops current stimulus
+
+
+       hypamp          hypamp+amp           hypamp            hypamp+amp           hypamp            hypamp+amp           hypamp
+         :                  :                  :                   :                  :                   :                  :
+         :                  :                  :                   :                  :                   :                  :
+    |__________             :             ____________             :             ____________             :             ____________
+    :          :\           :           /:            :\           :           /:            :\           :           /:            ^
+    :          : \          :          / :            : \          :          / :            : \          :          / :            :
+    :          :  \         :         /  :            :  \         :         /  :            :  \         :         /  :            :
+    :          :   \        :        /   :            :   \        :        /   :            :   \        :        /   :            :
+    :          :    \       :       /    :            :    \       :       /    :            :    \       :       /    :            :
+    :          :     \      :      /     :            :     \      :      /     :            :     \      :      /     :            :
+    :          :      \     :     /      :            :      \     :     /      :            :      \     :     /      :            :
+    :          :       \    :    /       :            :       \    :    /       :            :       \    :    /       :            :
+    :          :        \   :   /        :            :        \   :   /        :            :        \   :   /        :            :
+    :          :         \  :  /         :            :         \  :  /         :            :         \  :  /         :            :
+    :          :          \ : /          :            :          \ : /          :            :          \ : /          :            :
+    :          :           \ /           :            :           \ /           :            :           \ /           :            :
+    :          :            '            :            :            '            :            :            '            :            :
+    :          :                         :            :                         :            :                         :            :
+    t=0        ton                       t1           t2                        t3           t4                        toff         tend
+    """
+
     def __init__(
         self,
         config_data,
