@@ -29,6 +29,24 @@ logger = logging.getLogger(__name__)
 
 
 class Step(Recording):
+
+    """Step current stimulus
+
+          hypamp             hypamp+amp               hypamp
+            :                     :                      :
+            :                     :                      :
+            :           ______________________           :
+            :          |                      |          :
+            :          |                      |          :
+            :          |                      |          :
+            :          |                      |          :
+    |__________________|                      |______________________
+    ^                  ^                      ^                      ^
+    :                  :                      :                      :
+    :                  :                      :                      :
+    t=0                ton                    toff                   tend
+    """
+
     def __init__(
         self,
         config_data,

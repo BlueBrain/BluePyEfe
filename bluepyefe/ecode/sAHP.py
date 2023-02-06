@@ -29,6 +29,25 @@ logger = logging.getLogger(__name__)
 
 
 class SAHP(Recording):
+
+    """sAHP current stimulus
+
+
+       hypamp        hypamp+amp       hypamp+amp2        hypamp+amp           hypamp
+         :                :                :                 :                   :
+         :                :          ______________          :                   :
+         :                :         |              |         :                   :
+         :      ____________________|              |____________________         :
+         :     |                    ^              ^                    |        :
+         :     |                    :              :                    |        :
+    |__________|                    :              :                    |__________________
+    ^          ^                    :              :                    ^                  ^
+    :          :                    :              :                    :                  :
+    :          :                    :              :                    :                  :
+    t=0        ton                  tmid           tmid2                toff               tend
+
+    """
+
     def __init__(
         self,
         config_data,
