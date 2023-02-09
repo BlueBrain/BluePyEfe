@@ -123,6 +123,16 @@ class SAHP(Recording):
         amp2_value = numpy.median(smooth_current[self.tmid : self.tmid2]) - self.hypamp
         self.set_amplitudes_ecode("amp2", config_data, reader_data, amp2_value)
 
+        if config_data.get("tend", None) is None:
+            self.tend = len(self.t) * self.dt
+        else:
+            self.tend = config_data["tend"]
+
+        self.ton = self.t[int(round(self.ton))]
+        self.toff = self.t[int(round(self.toff))]
+        self.tmid = self.t[int(round(self.tmid))]
+        self.tmid2 = self.t[int(round(self.tmid2))]
+
     def step_detection(self, current, config_data, reader_data):
 
         # Set the threshold to detect the step
@@ -209,9 +219,9 @@ class SAHP(Recording):
         needed to reconstruct the array"""
 
         self.dt = t[1]
-
-        if "ton" in config_data and "tmid" in config_data:
-            self.set_timing_ecode(["ton", "tmid", "tmid2", "toff"], config_data)
+        required = ["ton", "tmid", "tmid2", "toff"]
+        if all(r in config_data for r in required):
+            self.set_timing_ecode(required, config_data)
             self.compute_amp(current, config_data, reader_data)
         else:
             self.step_detection(current, config_data, reader_data)
