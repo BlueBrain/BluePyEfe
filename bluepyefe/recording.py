@@ -373,6 +373,12 @@ class Recording(object):
                     [pt, pt], [max_v + 5, max_v + 15], c="C3", ls="-", lw=0.5
                 )
 
+        if self.auto_threshold is not None:
+            axis_voltage.plot(
+                [self.t[0], self.t[-1]], [self.auto_threshold, self.auto_threshold],
+                c="black", ls="--", lw=0.5, alpha=0.8
+            )
+
         if display_xlabel:
             axis_voltage.set_xlabel("Time (ms)")
         if display_ylabel:
