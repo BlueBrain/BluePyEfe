@@ -53,11 +53,11 @@ setuptools.setup(
         'Topic :: Scientific/Engineering',
         'Topic :: Utilities'],
     install_requires=[
-        'numpy<1.24',
+        'numpy',
         'neo',
         'matplotlib',
         'efel',
         'scipy',
         'h5py',
-        'igor'],
+        'igor2'],
 )
