@@ -35,7 +35,7 @@ setuptools.setup(
     "format that can then be used by BluePyOpt for electrical model building "
     "purposes.",
     packages=setuptools.find_packages(),
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     include_package_data=True,
     author="BlueBrain Project, EPFL",
     license="LGPLv3",
@@ -53,11 +53,11 @@ setuptools.setup(
         'Topic :: Scientific/Engineering',
         'Topic :: Utilities'],
     install_requires=[
-        'numpy<1.24',
+        'numpy',
         'neo',
         'matplotlib',
         'efel',
         'scipy',
         'h5py',
-        'igor'],
+        'igor2'],
 )

@@ -21,7 +21,7 @@ Copyright (c) 2020, EPFL/Blue Brain Project
 import re
 
 import numpy as np
-from igor import binarywave
+from igor2 import binarywave
 
 from io import StringIO
 
