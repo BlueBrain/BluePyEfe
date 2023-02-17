@@ -200,7 +200,7 @@ class SAHP(Recording):
 
         # Check for some common step detection failures when the current
         # is constant.
-        if self.ton > self.toff or self.ton > self.tend or \
+        if self.ton >= self.toff or self.ton >= self.tend or \
                 self.toff > self.tend or self.tmid == self.ton \
                 or self.tmid2 == self.toff:
 
