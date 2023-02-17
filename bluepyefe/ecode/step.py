@@ -173,7 +173,7 @@ class Step(Recording):
 
         # Check for some common step detection failures when the current
         # is constant.
-        if self.ton > self.toff or self.ton > self.tend or \
+        if self.ton >= self.toff or self.ton >= self.tend or \
                 self.toff > self.tend:
 
             self.ton = 0.
