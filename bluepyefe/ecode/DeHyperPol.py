@@ -78,6 +78,7 @@ class DeHyperPol(Recording):
             )
 
         if self.voltage is not None:
+            self.set_autothreshold()
             self.compute_spikecount(efel_settings)
 
         self.export_attr = ["ton", "tmid", "toff", "tend", "amp", "amp2", "hypamp",

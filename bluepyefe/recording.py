@@ -20,6 +20,7 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
+from abc import ABC, abstractmethod
 import logging
 import numpy
 import efel
@@ -30,7 +31,7 @@ from .tools import to_ms, to_mV, to_nA, set_efel_settings
 logger = logging.getLogger(__name__)
 
 
-class Recording(object):
+class Recording(ABC):
 
     """Contains the data related to an electrophysiological recording."""
 
@@ -134,19 +135,23 @@ class Recording(object):
         """Returns the eCode parameters"""
         return {attr: getattr(self, attr) for attr in self.export_attr}
 
+    @abstractmethod
     def interpret(self):
         """Analyse a current array and extract from it the parameters needed to
         reconstruct the array"""
         pass
 
+    @abstractmethod
     def generate(self):
         """Generate the current array from the parameters of the ecode"""
         pass
 
+    @abstractmethod
     def compute_relative_amp(self, amp_threshold):
         """Divide all the amplitude in the stimuli by the spiking amplitude"""
         pass
 
+    @abstractmethod
     def in_target(self, target, tolerance):
         """Returns a boolean. True if the amplitude of the eCode is close to
         target and False otherwise."""
@@ -284,7 +289,7 @@ class Recording(object):
 
             self.efeatures[efeature_name] = numpy.nanmean(value)
 
-    def compute_spikecount(self, efel_settings=None, offset_voltage=20.):
+    def compute_spikecount(self, efel_settings=None):
         """Compute the number of spikes in the trace"""
         if not efel_settings:
             efel_settings = {}
@@ -295,20 +300,9 @@ class Recording(object):
 
         # If the setting Threshold is not provided, tries to find it
         if tmp_settings.get("Threshold", None) is None:
-            idx_ton = self.ms_to_index(self.ton)
-            idx_toff = self.ms_to_index(self.toff)
-            step_voltage = numpy.median(self.voltage[idx_ton:idx_toff])
-            base_voltage = numpy.median(self.voltage[:idx_ton])
-            if base_voltage > step_voltage:
-                thresh = base_voltage + offset_voltage
-            else:
-                thresh = step_voltage + offset_voltage
-            tmp_settings["Threshold"] = thresh
+            tmp_settings["Threshold"] = self.auto_threshold
             efel_vals = self.call_efel(['peak_time'], tmp_settings)
             self.peak_time = efel_vals[0]['peak_time']
-            # The threshold cannot be lower than the base voltage (handles the case
-            # where the step is hyperpolarizing)
-            self.auto_threshold = numpy.clip(thresh, base_voltage + offset_voltage, 50.)
 
         else:
             self.peak_time = self.call_efel(['peak_time'], tmp_settings)[0]['peak_time']
@@ -318,6 +312,20 @@ class Recording(object):
                 f"No spikes were detected in recording {self.files} but the "
                 "voltage goes higher than the spike detection threshold."
             )
+
+    def set_autothreshold(self, offset_voltage=20.) -> None:
+        """Computes the threshold based on the input voltage sets it as an attribute."""
+        idx_ton = self.ms_to_index(self.ton)
+        idx_toff = self.ms_to_index(self.toff)
+        step_voltage = numpy.median(self.voltage[idx_ton:idx_toff])
+        base_voltage = numpy.median(self.voltage[:idx_ton])
+        if base_voltage > step_voltage:
+            thresh = base_voltage + offset_voltage
+        else:
+            thresh = step_voltage + offset_voltage
+        # The threshold cannot be lower than the base voltage (handles the case
+        # where the step is hyperpolarizing)
+        self.auto_threshold = numpy.clip(thresh, base_voltage + offset_voltage, 50.)
 
     def in_target(self, target, tolerance, absolute_amplitude=False):
         """Returns a boolean. True if the amplitude of the eCode is close to

@@ -85,6 +85,7 @@ class PosCheops(Recording):
             )
 
         if self.voltage is not None:
+            self.set_autothreshold()
             self.compute_spikecount(efel_settings)
 
         self.export_attr = ["ton", "t1", "t2", "t3", "t4", "toff", "tend",

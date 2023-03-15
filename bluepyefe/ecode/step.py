@@ -73,6 +73,7 @@ class Step(Recording):
             )
 
         if self.voltage is not None:
+            self.set_autothreshold()
             self.compute_spikecount(efel_settings)
 
         self.export_attr = ["ton", "toff", "tend", "amp", "hypamp", "dt",

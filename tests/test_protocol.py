@@ -2,8 +2,8 @@
 
 import unittest
 
+from bluepyefe.ecode.step import Step
 from bluepyefe.protocol import Protocol
-from bluepyefe.recording import Recording
 from bluepyefe.target import EFeatureTarget
 
 
@@ -27,8 +27,7 @@ class TestProtocol(unittest.TestCase):
         )
 
     def test_append_clear(self):
-
-        rec = Recording("IDRest", {}, {})
+        rec = Step(config_data={}, reader_data={})
         rec.efeatures = {"test_spikecount": 10.}
 
         self.protocol.append(rec)
