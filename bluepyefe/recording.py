@@ -303,12 +303,12 @@ class Recording(object):
                 thresh = base_voltage + offset_voltage
             else:
                 thresh = step_voltage + offset_voltage
-            tmp_settings["Threshold"] = thresh
-            efel_vals = self.call_efel(['peak_time'], tmp_settings)
-            self.peak_time = efel_vals[0]['peak_time']
             # The threshold cannot be lower than the base voltage (handles the case
             # where the step is hyperpolarizing)
             self.auto_threshold = numpy.clip(thresh, base_voltage + offset_voltage, 50.)
+            tmp_settings["Threshold"] = self.auto_threshold
+            efel_vals = self.call_efel(['peak_time'], tmp_settings)
+            self.peak_time = efel_vals[0]['peak_time']
 
         else:
             self.peak_time = self.call_efel(['peak_time'], tmp_settings)[0]['peak_time']
