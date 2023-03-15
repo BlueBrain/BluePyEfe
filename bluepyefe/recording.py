@@ -20,6 +20,7 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
+from abc import ABC, abstractmethod
 import logging
 import numpy
 import efel
@@ -30,7 +31,7 @@ from .tools import to_ms, to_mV, to_nA, set_efel_settings
 logger = logging.getLogger(__name__)
 
 
-class Recording(object):
+class Recording(ABC):
 
     """Contains the data related to an electrophysiological recording."""
 
@@ -134,19 +135,23 @@ class Recording(object):
         """Returns the eCode parameters"""
         return {attr: getattr(self, attr) for attr in self.export_attr}
 
+    @abstractmethod
     def interpret(self):
         """Analyse a current array and extract from it the parameters needed to
         reconstruct the array"""
         pass
 
+    @abstractmethod
     def generate(self):
         """Generate the current array from the parameters of the ecode"""
         pass
 
+    @abstractmethod
     def compute_relative_amp(self, amp_threshold):
         """Divide all the amplitude in the stimuli by the spiking amplitude"""
         pass
 
+    @abstractmethod
     def in_target(self, target, tolerance):
         """Returns a boolean. True if the amplitude of the eCode is close to
         target and False otherwise."""
