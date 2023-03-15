@@ -289,7 +289,7 @@ class Recording(ABC):
 
             self.efeatures[efeature_name] = numpy.nanmean(value)
 
-    def compute_spikecount(self, efel_settings=None, offset_voltage=20.):
+    def compute_spikecount(self, efel_settings=None):
         """Compute the number of spikes in the trace"""
         if not efel_settings:
             efel_settings = {}
@@ -300,17 +300,6 @@ class Recording(ABC):
 
         # If the setting Threshold is not provided, tries to find it
         if tmp_settings.get("Threshold", None) is None:
-            idx_ton = self.ms_to_index(self.ton)
-            idx_toff = self.ms_to_index(self.toff)
-            step_voltage = numpy.median(self.voltage[idx_ton:idx_toff])
-            base_voltage = numpy.median(self.voltage[:idx_ton])
-            if base_voltage > step_voltage:
-                thresh = base_voltage + offset_voltage
-            else:
-                thresh = step_voltage + offset_voltage
-            # The threshold cannot be lower than the base voltage (handles the case
-            # where the step is hyperpolarizing)
-            self.auto_threshold = numpy.clip(thresh, base_voltage + offset_voltage, 50.)
             tmp_settings["Threshold"] = self.auto_threshold
             efel_vals = self.call_efel(['peak_time'], tmp_settings)
             self.peak_time = efel_vals[0]['peak_time']
@@ -323,6 +312,20 @@ class Recording(ABC):
                 f"No spikes were detected in recording {self.files} but the "
                 "voltage goes higher than the spike detection threshold."
             )
+
+    def set_autothreshold(self, offset_voltage=20.) -> None:
+        """Computes the threshold based on the input voltage sets it as an attribute."""
+        idx_ton = self.ms_to_index(self.ton)
+        idx_toff = self.ms_to_index(self.toff)
+        step_voltage = numpy.median(self.voltage[idx_ton:idx_toff])
+        base_voltage = numpy.median(self.voltage[:idx_ton])
+        if base_voltage > step_voltage:
+            thresh = base_voltage + offset_voltage
+        else:
+            thresh = step_voltage + offset_voltage
+        # The threshold cannot be lower than the base voltage (handles the case
+        # where the step is hyperpolarizing)
+        self.auto_threshold = numpy.clip(thresh, base_voltage + offset_voltage, 50.)
 
     def in_target(self, target, tolerance, absolute_amplitude=False):
         """Returns a boolean. True if the amplitude of the eCode is close to

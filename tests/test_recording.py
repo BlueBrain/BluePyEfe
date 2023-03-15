@@ -3,6 +3,7 @@
 import unittest
 
 from numpy.testing import assert_array_almost_equal
+from pytest import approx
 
 import bluepyefe.cell
 import bluepyefe.recording
@@ -55,22 +56,30 @@ class RecordingTest(unittest.TestCase):
         self.assertFalse(self.recording.in_target(90, 2))
 
 
-def test_auto_threshold_detection():
-    """Test the auto_threshold detection in Recording.compute_spikecount."""
-    cell = bluepyefe.cell.Cell(name="MouseNeuron")
-    file_metadata = {
-                    "filepath": "./tests/exp_data/hippocampus-portal/99111002.nwb",
-                    "i_unit": "A",
-                    "v_unit": "V",
-                    "t_unit": "s",
-                    "ljp": 0.0,
-                    "protocol_name": "Step",
-                }
+class RecordingTestNWB(unittest.TestCase):
 
-    cell.read_recordings(protocol_data=[file_metadata], protocol_name="Step")
-    cell.recordings[1].compute_spikecount()
-    assert cell.recordings[1].spikecount == 2
-    assert_array_almost_equal(cell.recordings[1].peak_time, [85.4, 346.1])
+    def setUp(self):
+        cell = bluepyefe.cell.Cell(name="MouseNeuron")
+        file_metadata = {
+                        "filepath": "./tests/exp_data/hippocampus-portal/99111002.nwb",
+                        "i_unit": "A",
+                        "v_unit": "V",
+                        "t_unit": "s",
+                        "ljp": 0.0,
+                        "protocol_name": "Step",
+                    }
+        cell.read_recordings(protocol_data=[file_metadata], protocol_name="Step")
+        self.cell = cell
+
+    def test_set_autothreshold(self):
+        """Test the auto_threshold detection in Recording."""
+        assert self.cell.recordings[0].auto_threshold == approx(4.999999)
+        assert self.cell.recordings[15].auto_threshold == approx(26.5)
+
+    def test_compute_spikecount(self):
+        """Test Recording.compute_spikecount()."""
+        assert self.cell.recordings[1].spikecount == 2
+        assert_array_almost_equal(self.cell.recordings[1].peak_time, [85.4, 346.1])
 
 
 if __name__ == "__main__":

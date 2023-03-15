@@ -118,6 +118,7 @@ class SpikeRec(Recording):
             )
 
         if self.voltage is not None:
+            self.set_autothreshold()
             self.compute_spikecount(efel_settings)
 
         self.export_attr = ["tend", "tspike", "spike_duration", "delta",
