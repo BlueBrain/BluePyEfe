@@ -284,10 +284,10 @@ class Recording(ABC):
         for efeature_name, efeature in zip(efeature_names, efeatures):
 
             value = efel_vals[0][efeature]
-            if value is None or numpy.isinf(numpy.nanmean(value)):
-                value = numpy.nan
-
-            self.efeatures[efeature_name] = numpy.nanmean(value)
+            if value is None or len(value) == 0 or numpy.isinf(numpy.nanmean(value)):
+                self.efeatures[efeature_name] = numpy.nan
+            else:
+                self.efeatures[efeature_name] = numpy.nanmean(value)
 
     def compute_spikecount(self, efel_settings=None):
         """Compute the number of spikes in the trace"""
