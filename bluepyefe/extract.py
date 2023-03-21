@@ -987,7 +987,6 @@ def extract_efeatures(
             rheobase_strategy,
             rheobase_settings
         )
-
     efeatures, protocol_definitions, current = create_feature_protocol_files(
         cells,
         protocols,
@@ -996,7 +995,6 @@ def extract_efeatures(
         write_files=write_files,
         default_std_value=default_std_value
     )
-
     if pickle_cells:
         path_cells = pathlib.Path(output_directory)
         path_cells.mkdir(parents=True, exist_ok=True)
@@ -1004,7 +1002,7 @@ def extract_efeatures(
 
     if plot:
         plot_all_recordings_efeatures(
-            cells, protocols, output_dir=output_directory
+            cells, protocols, output_dir=output_directory, mapper=map_function
         )
 
     if extract_per_cell and write_files:
