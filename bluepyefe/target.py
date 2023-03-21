@@ -18,26 +18,26 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
-import numpy
 import logging
+
+import numpy
 
 logger = logging.getLogger(__name__)
 
 
-class EFeatureTarget():
+class EFeatureTarget:
 
     """E-feature target defined by an efeature to compute for a given protocol
     and amplitude. Contains the resulting values"""
 
     def __init__(
-            self,
-            efeature_name,
-            efel_feature_name,
-            protocol_name,
-            amplitude,
-            tolerance,
-            efel_settings=None,
-
+        self,
+        efeature_name,
+        efel_feature_name,
+        protocol_name,
+        amplitude,
+        tolerance,
+        efel_settings=None,
     ):
         """Constructor.
 
@@ -103,10 +103,7 @@ class EFeatureTarget():
             logger.warning(
                 "Trying to append {} to efeature {} for protocol {} {}. Value "
                 "will be ignored".format(
-                    value,
-                    self.efel_feature_name,
-                    self.protocol_name,
-                    self.amplitude
+                    value, self.efel_feature_name, self.protocol_name, self.amplitude
                 )
             )
             return
@@ -147,13 +144,13 @@ class EFeatureTarget():
             "feature": self.efel_feature_name,
             "val": [self.mean, std],
             "n": self.sample_size,
-            "efel_settings": self.efel_settings
+            "efel_settings": self.efel_settings,
         }
 
         if self.efeature_name:
-            feature_dict['efeature_name'] = self.efeature_name
+            feature_dict["efeature_name"] = self.efeature_name
         if save_files_used:
-            feature_dict['files'] = self.files
+            feature_dict["files"] = self.files
 
         return feature_dict
 
@@ -167,8 +164,6 @@ class EFeatureTarget():
         str_form += "Sample size (n): {}".format(self.sample_size)
 
         if self.sample_size:
-            str_form += "\nMean: {:.5f}\nStandard deviation: {:.5f}".format(
-                self.mean, self.std
-            )
+            str_form += "\nMean: {:.5f}\nStandard deviation: {:.5f}".format(self.mean, self.std)
 
         return str_form

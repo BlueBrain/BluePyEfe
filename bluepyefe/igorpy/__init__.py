@@ -19,11 +19,10 @@ Copyright (c) 2020, EPFL/Blue Brain Project
 
 
 import re
+from io import StringIO
 
 import numpy as np
 from igor2 import binarywave
-
-from io import StringIO
 
 
 def _bytes_to_str(bytes_):
@@ -126,9 +125,7 @@ def read_from_handle(f):
 
     data = binarywave.load(f)
     version = data["version"]
-    assert version in (2, 3, 5), (
-        "Fileversion is '" + str(version) + "', not supported"
-    )
+    assert version in (2, 3, 5), "Fileversion is '" + str(version) + "', not supported"
 
     content = data["wave"]
     wdata = np.copy(content["wData"])

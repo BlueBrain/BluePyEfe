@@ -19,6 +19,7 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 import logging
+
 import numpy
 
 from ..recording import Recording
@@ -47,14 +48,7 @@ class Step(Recording):
     t=0                ton                    toff                   tend
     """
 
-    def __init__(
-        self,
-        config_data,
-        reader_data,
-        protocol_name="step",
-        efel_settings=None
-    ):
-
+    def __init__(self, config_data, reader_data, protocol_name="step", efel_settings=None):
         super(Step, self).__init__(config_data, reader_data, protocol_name)
 
         self.ton = None
@@ -68,16 +62,13 @@ class Step(Recording):
         self.hypamp_rel = None
 
         if self.t is not None and self.current is not None:
-            self.interpret(
-                self.t, self.current, self.config_data, self.reader_data
-            )
+            self.interpret(self.t, self.current, self.config_data, self.reader_data)
 
         if self.voltage is not None:
             self.set_autothreshold()
             self.compute_spikecount(efel_settings)
 
-        self.export_attr = ["ton", "toff", "tend", "amp", "hypamp", "dt",
-                            "amp_rel", "hypamp_rel"]
+        self.export_attr = ["ton", "toff", "tend", "amp", "hypamp", "dt", "amp_rel", "hypamp_rel"]
 
     def get_stimulus_parameters(self):
         """Returns the eCode parameters"""
@@ -153,18 +144,12 @@ class Step(Recording):
         if self.toff is None:
             if smooth_current is None:
                 smooth_current = scipy_signal2d(current, 85)
-            _ = numpy.flip(
-                numpy.abs(smooth_current[:-idx_buffer] - self.hypamp)
-            )
-            self.toff = (
-                (len(current) - numpy.argmax(_ > step_threshold)) - 1 - idx_buffer
-            )
+            _ = numpy.flip(numpy.abs(smooth_current[:-idx_buffer] - self.hypamp))
+            self.toff = (len(current) - numpy.argmax(_ > step_threshold)) - 1 - idx_buffer
 
         # Get the amplitude of the step current (relative to hypamp)
         if self.amp is None:
-            self.amp = (
-                numpy.median(current[self.ton : self.toff]) - self.hypamp
-            )
+            self.amp = numpy.median(current[self.ton : self.toff]) - self.hypamp
 
         # Converting back ton and toff to ms
         self.ton = t[int(round(self.ton))]
@@ -174,10 +159,8 @@ class Step(Recording):
 
         # Check for some common step detection failures when the current
         # is constant.
-        if self.ton >= self.toff or self.ton >= self.tend or \
-                self.toff > self.tend:
-
-            self.ton = 0.
+        if self.ton >= self.toff or self.ton >= self.tend or self.toff > self.tend:
+            self.ton = 0.0
             self.toff = self.tend
 
             logger.warning(

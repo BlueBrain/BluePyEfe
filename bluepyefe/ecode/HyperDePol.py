@@ -19,6 +19,7 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 import logging
+
 import numpy
 
 from ..recording import Recording
@@ -49,17 +50,8 @@ class HyperDePol(Recording):
     t=0             ton                 tmid                  toff        tend
     """
 
-    def __init__(
-        self,
-        config_data,
-        reader_data,
-        protocol_name="HyperDePol",
-        efel_settings=None
-    ):
-
-        super(HyperDePol, self).__init__(
-            config_data, reader_data, protocol_name
-        )
+    def __init__(self, config_data, reader_data, protocol_name="HyperDePol", efel_settings=None):
+        super(HyperDePol, self).__init__(config_data, reader_data, protocol_name)
 
         self.ton = None
         self.tmid = None
@@ -75,17 +67,25 @@ class HyperDePol(Recording):
         self.hypamp_rel = None
 
         if self.t is not None and self.current is not None:
-            self.interpret(
-                self.t, self.current, self.config_data, self.reader_data
-            )
+            self.interpret(self.t, self.current, self.config_data, self.reader_data)
 
         if self.voltage is not None:
             self.set_autothreshold()
             self.compute_spikecount(efel_settings)
 
-        self.export_attr = ["ton", "tmid", "toff", "tend", "amp", "amp2",
-                            "hypamp", "dt", "amp_rel", "amp2_rel",
-                            "hypamp_rel"]
+        self.export_attr = [
+            "ton",
+            "tmid",
+            "toff",
+            "tend",
+            "amp",
+            "amp2",
+            "hypamp",
+            "dt",
+            "amp_rel",
+            "amp2_rel",
+            "hypamp_rel",
+        ]
 
     def get_stimulus_parameters(self):
         """Returns the eCode parameters"""
@@ -112,9 +112,7 @@ class HyperDePol(Recording):
         self.set_timing_ecode(["ton", "tmid", "toff"], config_data)
 
         hypamp_value = numpy.median(
-            numpy.concatenate(
-                (smooth_current[: self.ton], smooth_current[self.toff :])
-            )
+            numpy.concatenate((smooth_current[: self.ton], smooth_current[self.toff :]))
         )
         self.set_amplitudes_ecode("hypamp", config_data, reader_data, hypamp_value)
 

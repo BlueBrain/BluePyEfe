@@ -19,11 +19,12 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 import logging
+
 import numpy
 
 from ..recording import Recording
-from .tools import scipy_signal2d
 from .tools import base_current
+from .tools import scipy_signal2d
 
 logger = logging.getLogger(__name__)
 
@@ -48,14 +49,7 @@ class SAHP(Recording):
 
     """
 
-    def __init__(
-        self,
-        config_data,
-        reader_data,
-        protocol_name="sAHP",
-        efel_settings=None
-    ):
-
+    def __init__(self, config_data, reader_data, protocol_name="sAHP", efel_settings=None):
         super(SAHP, self).__init__(config_data, reader_data, protocol_name)
 
         self.ton = None
@@ -73,17 +67,26 @@ class SAHP(Recording):
         self.hypamp_rel = None
 
         if self.t is not None and self.current is not None:
-            self.interpret(
-                self.t, self.current, self.config_data, self.reader_data
-            )
+            self.interpret(self.t, self.current, self.config_data, self.reader_data)
 
         if self.voltage is not None:
             self.set_autothreshold()
             self.compute_spikecount(efel_settings)
 
-        self.export_attr = ["ton", "tmid", "tmid2", "toff", "tend", "amp",
-                            "amp2", "hypamp", "dt", "amp_rel", "amp2_rel",
-                            "hypamp_rel"]
+        self.export_attr = [
+            "ton",
+            "tmid",
+            "tmid2",
+            "toff",
+            "tend",
+            "amp",
+            "amp2",
+            "hypamp",
+            "dt",
+            "amp_rel",
+            "amp2_rel",
+            "hypamp_rel",
+        ]
 
     def get_stimulus_parameters(self):
         """Returns the eCode parameters"""
@@ -101,24 +104,24 @@ class SAHP(Recording):
         return ecode_params
 
     def compute_amp(self, current, config_data, reader_data):
-
         smooth_current = scipy_signal2d(current, 85)
 
         hypamp_value = numpy.median(
-            numpy.concatenate(
-                (smooth_current[: self.ton], smooth_current[self.toff :])
-            )
+            numpy.concatenate((smooth_current[: self.ton], smooth_current[self.toff :]))
         )
         self.set_amplitudes_ecode("hypamp", config_data, reader_data, hypamp_value)
 
-        amp_value = numpy.median(
-            numpy.concatenate(
-                (
-                    smooth_current[self.ton: self.tmid],
-                    smooth_current[self.tmid2: self.toff],
+        amp_value = (
+            numpy.median(
+                numpy.concatenate(
+                    (
+                        smooth_current[self.ton : self.tmid],
+                        smooth_current[self.tmid2 : self.toff],
+                    )
                 )
             )
-        ) - self.hypamp
+            - self.hypamp
+        )
         self.set_amplitudes_ecode("amp", config_data, reader_data, amp_value)
 
         amp2_value = numpy.median(smooth_current[self.tmid : self.tmid2]) - self.hypamp
@@ -135,7 +138,6 @@ class SAHP(Recording):
         self.tmid2 = self.t[int(round(self.tmid2))]
 
     def step_detection(self, current, config_data, reader_data):
-
         # Set the threshold to detect the step
         noise_level = numpy.std(numpy.concatenate((self.current[:50], self.current[-50:])))
         step_threshold = numpy.max([4.5 * noise_level, 1e-5])
@@ -159,38 +161,39 @@ class SAHP(Recording):
             self.ton = idx_buffer + numpy.argmax(tmp_current > step_threshold)
 
         # Infer the end of the long step
-        tmp_current = numpy.flip(
-            numpy.abs(smooth_current[self.ton:-idx_buffer] - self.hypamp)
-        )
-        self.toff = (
-            (len(current) - numpy.argmax(tmp_current > step_threshold)) - 1 - idx_buffer
-        )
+        tmp_current = numpy.flip(numpy.abs(smooth_current[self.ton : -idx_buffer] - self.hypamp))
+        self.toff = (len(current) - numpy.argmax(tmp_current > step_threshold)) - 1 - idx_buffer
 
         # Get the amplitude of the step current (relative to hypamp)
-        self.amp = numpy.median(
-            numpy.concatenate((smooth_current[self.ton:self.ton + 50],
-                               smooth_current[self.toff - 50:self.toff]))
-        ) - self.hypamp
+        self.amp = (
+            numpy.median(
+                numpy.concatenate(
+                    (
+                        smooth_current[self.ton : self.ton + 50],
+                        smooth_current[self.toff - 50 : self.toff],
+                    )
+                )
+            )
+            - self.hypamp
+        )
 
         # Infer the beginning of the short step
         tmp_current = numpy.abs(
-            smooth_current[self.ton + buffer_step:self.toff - buffer_step] -
-            self.amp - self.hypamp
+            smooth_current[self.ton + buffer_step : self.toff - buffer_step]
+            - self.amp
+            - self.hypamp
         )
         self.tmid = self.ton + buffer_step + numpy.argmax(tmp_current > step_threshold)
 
         # Infer the end of the long step
         tmp_current = numpy.flip(
             numpy.abs(
-                smooth_current[self.ton + buffer_step:self.toff - 50] -
-                self.amp - self.hypamp
+                smooth_current[self.ton + buffer_step : self.toff - 50] - self.amp - self.hypamp
             )
         )
-        self.tmid2 = (
-            (self.toff - numpy.argmax(tmp_current > step_threshold)) - 1 - buffer_step
-        )
+        self.tmid2 = (self.toff - numpy.argmax(tmp_current > step_threshold)) - 1 - buffer_step
 
-        self.amp2 = numpy.median(smooth_current[self.tmid:self.tmid2]) - self.hypamp
+        self.amp2 = numpy.median(smooth_current[self.tmid : self.tmid2]) - self.hypamp
 
         # Converting back ton and toff to ms
         self.ton = self.t[int(round(self.ton))]
@@ -201,11 +204,14 @@ class SAHP(Recording):
 
         # Check for some common step detection failures when the current
         # is constant.
-        if self.ton >= self.toff or self.ton >= self.tend or \
-                self.toff > self.tend or self.tmid == self.ton \
-                or self.tmid2 == self.toff:
-
-            self.ton = 0.
+        if (
+            self.ton >= self.toff
+            or self.ton >= self.tend
+            or self.toff > self.tend
+            or self.tmid == self.ton
+            or self.tmid2 == self.toff
+        ):
+            self.ton = 0.0
             self.toff = self.tend
 
             logger.warning(

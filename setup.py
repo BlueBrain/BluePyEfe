@@ -20,13 +20,28 @@ Copyright (c) 2020, EPFL/Blue Brain Project
 """
 
 import setuptools
+
 import versioneer
 
+doc_reqs = [
+    "m2r2",
+    "sphinx",
+    "sphinx-bluebrain-theme",
+    "sphinx-gallery",
+    "sphinx-jsonschema",
+]
+test_reqs = [
+    "pytest>=6",
+    "pytest-cov>=3",
+    "pytest-html>=2",
+]
+
+
 setuptools.setup(
-    name='bluepyefe',
+    name="bluepyefe",
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    description='Blue Brain Python E-feature extraction',
+    description="Blue Brain Python E-feature extraction",
     long_description="The Blue Brain Python E-feature extraction Library ("
     "BluePyEfe) aims at easing the process of reading experimental recordings "
     "and extracting batches of electrical features from them. To do so, it "
@@ -39,25 +54,20 @@ setuptools.setup(
     include_package_data=True,
     author="BlueBrain Project, EPFL",
     license="LGPLv3",
-    keywords=[
-        'neuroscience',
-        'BlueBrainProject'],
-    url='https://github.com/BlueBrain/BluePyEfe',
+    keywords=["neuroscience", "BlueBrainProject"],
+    url="https://github.com/BlueBrain/BluePyEfe",
     classifiers=[
-        'Development Status :: 4 - Beta',
-        'Environment :: Console',
-        'License :: OSI Approved :: GNU Lesser General Public '
-        'License v3 (LGPLv3)',
-        'Programming Language :: Python :: 3',
-        'Operating System :: POSIX',
-        'Topic :: Scientific/Engineering',
-        'Topic :: Utilities'],
-    install_requires=[
-        'numpy',
-        'neo',
-        'matplotlib',
-        'efel',
-        'scipy',
-        'h5py',
-        'igor2'],
+        "Development Status :: 4 - Beta",
+        "Environment :: Console",
+        "License :: OSI Approved :: GNU Lesser General Public " "License v3 (LGPLv3)",
+        "Programming Language :: Python :: 3",
+        "Operating System :: POSIX",
+        "Topic :: Scientific/Engineering",
+        "Topic :: Utilities",
+    ],
+    install_requires=["numpy", "neo", "matplotlib", "efel", "scipy", "h5py", "igor2"],
+    extras_require={
+        "docs": doc_reqs,
+        "test": test_reqs,
+    },
 )

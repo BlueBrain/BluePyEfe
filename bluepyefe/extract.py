@@ -18,27 +18,28 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
-import os
-import pickle
 import functools
-import logging
-import pathlib
 import gc
+import logging
+import os
+import pathlib
+import pickle
 
 import numpy
 
 from bluepyefe import tools
+from bluepyefe.auto_targets import default_auto_targets
 from bluepyefe.cell import Cell
 from bluepyefe.plotting import plot_all_recordings
 from bluepyefe.plotting import plot_all_recordings_efeatures
 from bluepyefe.protocol import Protocol
-from bluepyefe.target import EFeatureTarget
 from bluepyefe.rheobase import compute_rheobase_absolute
 from bluepyefe.rheobase import compute_rheobase_flush
-from bluepyefe.rheobase import compute_rheobase_majority_bin
 from bluepyefe.rheobase import compute_rheobase_interpolation
-from bluepyefe.tools import DEFAULT_EFEL_SETTINGS, PRESET_PROTOCOLS_RHEOBASE
-from bluepyefe.auto_targets import default_auto_targets
+from bluepyefe.rheobase import compute_rheobase_majority_bin
+from bluepyefe.target import EFeatureTarget
+from bluepyefe.tools import DEFAULT_EFEL_SETTINGS
+from bluepyefe.tools import PRESET_PROTOCOLS_RHEOBASE
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +72,7 @@ def _create_cell(cell_definition, recording_reader, efel_settings=None):
             protocol_data=cell[prot_name],
             protocol_name=prot_name,
             recording_reader=recording_reader,
-            efel_settings=efel_settings
+            efel_settings=efel_settings,
         )
 
     return out_cell
@@ -97,33 +98,32 @@ def _extract_efeatures_cell(cell, targets, efel_settings=None):
     # Group targets per same protocol and same eFEL settings for efficiency
     setting_groups = []
     for target in targets:
-
         efeature_name = target.get("efeature_name", target["efeature"])
 
         for i, group in enumerate(setting_groups):
-
-            if target["efel_settings"] == group['efel_settings'] and \
-                    target["protocol"] == group['protocol']:
+            if (
+                target["efel_settings"] == group["efel_settings"]
+                and target["protocol"] == group["protocol"]
+            ):
                 setting_groups[i]["efeatures"].append(target["efeature"])
-                setting_groups[i]['efeature_names'].append(efeature_name)
+                setting_groups[i]["efeature_names"].append(efeature_name)
                 break
 
         else:
-
             setting_group = {
-                'efel_settings': target["efel_settings"],
-                'protocol': target["protocol"],
-                'efeatures': [target["efeature"]],
-                'efeature_names': [efeature_name]
+                "efel_settings": target["efel_settings"],
+                "protocol": target["protocol"],
+                "efeatures": [target["efeature"]],
+                "efeature_names": [efeature_name],
             }
             setting_groups.append(setting_group)
 
     for group in setting_groups:
         cell.extract_efeatures(
-            group['protocol'],
+            group["protocol"],
             group["efeatures"],
             group["efeature_names"],
-            efel_settings={**efel_settings, **group["efel_settings"]}
+            efel_settings={**efel_settings, **group["efel_settings"]},
         )
 
     return cell
@@ -155,17 +155,10 @@ def _saving_data(output_directory, feat, stim, currents):
 
     currents_path = output_directory / "holding_threshold_currents.json"
     tools.dict_to_json(currents, currents_path)
-    logger.info(
-        "Saving threshold and holding currents to {}" "".format(currents_path)
-    )
+    logger.info("Saving threshold and holding currents to {}" "".format(currents_path))
 
 
-def read_recordings(
-    files_metadata,
-    recording_reader=None,
-    map_function=map,
-    efel_settings=None
-):
+def read_recordings(files_metadata, recording_reader=None, map_function=map, efel_settings=None):
     """
     Read recordings from a group of files. The files are expected to be
     identified by both a cell id and a protocol name (see files_metadata).
@@ -199,9 +192,7 @@ def read_recordings(
 
     cells = map_function(
         functools.partial(
-            _create_cell,
-            recording_reader=recording_reader,
-            efel_settings=efel_settings
+            _create_cell, recording_reader=recording_reader, efel_settings=efel_settings
         ),
         list(files_metadata.items()),
     )
@@ -209,12 +200,7 @@ def read_recordings(
     return list(cells)
 
 
-def extract_efeatures_at_targets(
-    cells,
-    targets,
-    map_function=map,
-    efel_settings=None
-):
+def extract_efeatures_at_targets(cells, targets, map_function=map, efel_settings=None):
     """
     Extract efeatures from recordings following the protocols, amplitudes and
     efeature names specified in the targets.
@@ -245,19 +231,14 @@ def extract_efeatures_at_targets(
     """
 
     for target in targets:
-
-        if 'location' not in target:
+        if "location" not in target:
             target["location"] = "soma"
 
-        if 'efel_settings' not in target:
-            target['efel_settings'] = {}
+        if "efel_settings" not in target:
+            target["efel_settings"] = {}
 
     cells = map_function(
-        functools.partial(
-            _extract_efeatures_cell,
-            targets=targets,
-            efel_settings=efel_settings
-        ),
+        functools.partial(_extract_efeatures_cell, targets=targets, efel_settings=efel_settings),
         cells,
     )
 
@@ -265,10 +246,7 @@ def extract_efeatures_at_targets(
 
 
 def compute_rheobase(
-    cells,
-    protocols_rheobase,
-    rheobase_strategy="absolute",
-    rheobase_settings=None
+    cells, protocols_rheobase, rheobase_strategy="absolute", rheobase_settings=None
 ):
     """
     For each cell, finds the smallest current inducing a spike (rheobase).
@@ -308,12 +286,7 @@ def compute_rheobase(
         cell.compute_relative_amp()
 
 
-def _build_protocols(
-    targets,
-    global_rheobase,
-    protocol_mode,
-    efel_settings=None
-):
+def _build_protocols(targets, global_rheobase, protocol_mode, efel_settings=None):
     """Build a list of Protocols that matches the expected targets"""
 
     if efel_settings is None:
@@ -322,33 +295,31 @@ def _build_protocols(
     protocols = []
 
     for target in targets:
-
-        settings = {**efel_settings, **target.get('efel_settings', {})}
+        settings = {**efel_settings, **target.get("efel_settings", {})}
         efeature_name = target.get("efeature_name", target["efeature"])
 
         efeature_target = EFeatureTarget(
             efeature_name=efeature_name,
-            efel_feature_name=target['efeature'],
-            protocol_name=target['protocol'],
-            amplitude=target['amplitude'],
-            tolerance=target['tolerance'],
+            efel_feature_name=target["efeature"],
+            protocol_name=target["protocol"],
+            amplitude=target["amplitude"],
+            tolerance=target["tolerance"],
             efel_settings=settings,
         )
 
         for i, p in enumerate(protocols):
-            if p.name == target['protocol'] and \
-                    p.amplitude == target['amplitude']:
+            if p.name == target["protocol"] and p.amplitude == target["amplitude"]:
                 protocols[i].feature_targets.append(efeature_target)
                 break
         else:
             protocols.append(
                 Protocol(
-                    name=target['protocol'],
-                    amplitude=target['amplitude'],
-                    tolerance=target['tolerance'],
+                    name=target["protocol"],
+                    amplitude=target["amplitude"],
+                    tolerance=target["tolerance"],
                     feature_targets=[efeature_target],
                     global_rheobase=global_rheobase,
-                    mode=protocol_mode
+                    mode=protocol_mode,
                 )
             )
 
@@ -360,8 +331,8 @@ def group_efeatures(
     targets,
     absolute_amplitude=False,
     use_global_rheobase=True,
-    protocol_mode='mean',
-    efel_settings=None
+    protocol_mode="mean",
+    efel_settings=None,
 ):
     """
     Group the recordings and their efeatures and associate them to the
@@ -407,9 +378,7 @@ def group_efeatures(
 
     global_rheobase = None
     if use_global_rheobase and not absolute_amplitude:
-        global_rheobase = numpy.nanmean(
-            [c.rheobase for c in cells if c.rheobase is not None]
-        )
+        global_rheobase = numpy.nanmean([c.rheobase for c in cells if c.rheobase is not None])
 
     protocols = _build_protocols(
         targets,
@@ -420,19 +389,11 @@ def group_efeatures(
 
     for protocol in protocols:
         for cell in cells:
-
             if cell.rheobase is None and not absolute_amplitude:
                 continue
 
-            for recording in cell.get_recordings_by_protocol_name(
-                    protocol.name
-            ):
-
-                if recording.in_target(
-                    protocol.amplitude,
-                    protocol.tolerance,
-                    absolute_amplitude
-                ):
+            for recording in cell.get_recordings_by_protocol_name(protocol.name):
+                if recording.in_target(protocol.amplitude, protocol.tolerance, absolute_amplitude):
                     protocol.append(recording)
 
     return protocols
@@ -448,10 +409,7 @@ def _build_current_dict(cells, default_std_value):
     threshold = {}
 
     for cell in cells:
-
-        holding[cell.name] = numpy.nanmean(
-            [t.hypamp for t in cell.recordings]
-        )
+        holding[cell.name] = numpy.nanmean([t.hypamp for t in cell.recordings])
 
         if cell.rheobase is not None:
             threshold[cell.name] = cell.rheobase
@@ -487,7 +445,7 @@ def create_feature_protocol_files(
     threshold_nvalue_save=1,
     write_files=True,
     save_files_used=False,
-    default_std_value=1e-3
+    default_std_value=1e-3,
 ):
     """
     Save the efeatures and protocols for each protocol/target combo
@@ -519,13 +477,11 @@ def create_feature_protocol_files(
     out_stimuli = {}
 
     for protocol in protocols:
-
         stimname = protocol.stimulus_name
 
         tmp_feat = []
 
         for target in protocol.feature_targets:
-
             if target.sample_size < threshold_nvalue_save:
                 logger.warning(
                     "Number of values < threshold_nvalue_save for efeature "
@@ -543,44 +499,31 @@ def create_feature_protocol_files(
             )
             continue
 
-        out_features[stimname] = {'soma': tmp_feat}
+        out_features[stimname] = {"soma": tmp_feat}
         out_stimuli[stimname] = protocol.as_dict()
 
     # Compute the mean and std of holding and threshold currents
     currents = _build_current_dict(cells, default_std_value)
 
     if write_files:
-
         if not output_directory:
             raise Exception(
-                f"output_directory cannot be {output_directory}"
-                f" if write_files is True."
+                f"output_directory cannot be {output_directory}" f" if write_files is True."
             )
 
-        _saving_data(
-            output_directory,
-            out_features,
-            out_stimuli,
-            currents
-        )
+        _saving_data(output_directory, out_features, out_stimuli, currents)
 
     return out_features, out_stimuli, currents
 
 
-def _read_extract(
-    files_metadata,
-    recording_reader,
-    map_function,
-    targets,
-    efel_settings=None
-):
+def _read_extract(files_metadata, recording_reader, map_function, targets, efel_settings=None):
     """Read recordings and create the matching Cell objects based on a files_metadata."""
 
     cells = read_recordings(
         files_metadata,
         recording_reader=recording_reader,
         map_function=map_function,
-        efel_settings=efel_settings
+        efel_settings=efel_settings,
     )
 
     cells = extract_efeatures_at_targets(
@@ -590,25 +533,20 @@ def _read_extract(
     return cells
 
 
-def _read_extract_low_memory(
-    files_metadata, recording_reader, targets, efel_settings=None
-):
+def _read_extract_low_memory(files_metadata, recording_reader, targets, efel_settings=None):
     """Read recordings and create the matching Cell objects based on a
     files_metadata. Does not us a map function and delete the recording's
     data on the go to avoid using too much memory."""
 
     cells = []
     for cell_name in files_metadata:
-
         cell = read_recordings(
             {cell_name: files_metadata[cell_name]},
             recording_reader=recording_reader,
-            efel_settings=efel_settings
+            efel_settings=efel_settings,
         )[0]
 
-        extract_efeatures_at_targets(
-            [cell], targets, map, efel_settings
-        )
+        extract_efeatures_at_targets([cell], targets, map, efel_settings)
 
         # clean traces voltage and time
         for i in range(len(cell.recordings)):
@@ -650,24 +588,21 @@ def convert_legacy_targets(targets):
 
     for protocol_name, target in targets.items():
         for i, amplitude in enumerate(target["amplitudes"]):
-
             tolerances = target["tolerances"]
             if len(tolerances) == 1:
                 tolerances = tolerances * len(target["amplitudes"])
 
             for efeature in target["efeatures"]:
-
                 formatted_target = {
                     "efeature": efeature,
                     "protocol": protocol_name,
                     "amplitude": amplitude,
                     "tolerance": tolerances[i],
-                    "efel_settings": {}
+                    "efel_settings": {},
                 }
 
                 if isinstance(target["efeatures"], dict):
-                    formatted_target["efel_settings"] = target[
-                        "efeatures"][efeature]
+                    formatted_target["efel_settings"] = target["efeatures"][efeature]
 
                 formatted_targets.append(formatted_target)
 
@@ -685,30 +620,24 @@ def _extract_with_targets(
     protocol_mode="mean",
     efel_settings=None,
     rheobase_strategy="absolute",
-    rheobase_settings=None
+    rheobase_settings=None,
 ):
     """Read the recordings and extract the efeatures at the requested
     targets"""
 
     if not low_memory_mode:
         cells = _read_extract(
-            files_metadata,
-            recording_reader,
-            map_function,
-            targets,
-            efel_settings
+            files_metadata, recording_reader, map_function, targets, efel_settings
         )
     else:
-        cells = _read_extract_low_memory(
-            files_metadata, recording_reader, targets, efel_settings
-        )
+        cells = _read_extract_low_memory(files_metadata, recording_reader, targets, efel_settings)
 
     if not absolute_amplitude:
         compute_rheobase(
             cells,
             protocols_rheobase=protocols_rheobase,
             rheobase_strategy=rheobase_strategy,
-            rheobase_settings=rheobase_settings
+            rheobase_settings=rheobase_settings,
         )
 
     protocols = group_efeatures(
@@ -717,7 +646,7 @@ def _extract_with_targets(
         absolute_amplitude=absolute_amplitude,
         use_global_rheobase=True,
         protocol_mode=protocol_mode,
-        efel_settings=efel_settings
+        efel_settings=efel_settings,
     )
 
     return cells, protocols
@@ -732,7 +661,7 @@ def _extract_auto_targets(
     efel_settings,
     auto_targets=None,
     rheobase_strategy="flush",
-    rheobase_settings=None
+    rheobase_settings=None,
 ):
     """Read the recordings and extract the efeatures using AutoTargets"""
 
@@ -746,14 +675,14 @@ def _extract_auto_targets(
         files_metadata,
         recording_reader=recording_reader,
         map_function=map_function,
-        efel_settings=efel_settings
+        efel_settings=efel_settings,
     )
 
     compute_rheobase(
         cells,
         protocols_rheobase=protocols_rheobase,
         rheobase_strategy=rheobase_strategy,
-        rheobase_settings=rheobase_settings
+        rheobase_settings=rheobase_settings,
     )
 
     if not sum(bool(c.rheobase) for c in cells):
@@ -781,7 +710,7 @@ def _extract_auto_targets(
         targets,
         use_global_rheobase=True,
         protocol_mode=protocol_mode,
-        efel_settings=efel_settings
+        efel_settings=efel_settings,
     )
 
     return cells, protocols, targets
@@ -795,23 +724,17 @@ def extract_efeatures_per_cell(
     protocol_mode,
     threshold_nvalue_save,
     write_files,
-    default_std_value=1e-3
+    default_std_value=1e-3,
 ):
-
     for cell_name in files_metadata:
-
         cell_directory = str(pathlib.Path(output_directory) / cell_name)
 
         for cell in cells:
-
             if cell.name != cell_name:
                 continue
 
             cell_protocols = group_efeatures(
-                [cell],
-                targets,
-                use_global_rheobase=True,
-                protocol_mode=protocol_mode
+                [cell], targets, use_global_rheobase=True, protocol_mode=protocol_mode
             )
 
             _ = create_feature_protocol_files(
@@ -820,7 +743,7 @@ def extract_efeatures_per_cell(
                 output_directory=cell_directory,
                 threshold_nvalue_save=threshold_nvalue_save,
                 write_files=write_files,
-                default_std_value=default_std_value
+                default_std_value=default_std_value,
             )
 
 
@@ -843,7 +766,7 @@ def extract_efeatures(
     rheobase_settings=None,
     auto_targets=None,
     pickle_cells=False,
-    default_std_value=1e-3
+    default_std_value=1e-3,
 ):
     """
     Extract efeatures.
@@ -930,38 +853,26 @@ def extract_efeatures(
         raise ValueError("Argument 'files_metadata' is empty")
 
     if efel_settings is None:
-        logger.warning(
-            "efel_settings is None. Default settings will be used"
-        )
+        logger.warning("efel_settings is None. Default settings will be used")
         efel_settings = DEFAULT_EFEL_SETTINGS.copy()
 
     if protocols_rheobase is None and not absolute_amplitude:
-        logger.warning(
-            "protocols_rheobase is None. Default protocol names will be used"
-        )
+        logger.warning("protocols_rheobase is None. Default protocol names will be used")
         protocols_rheobase = PRESET_PROTOCOLS_RHEOBASE.copy()
 
     if low_memory_mode and map_function not in [map, None]:
-        logger.warning(
-            "low_memory_mode is not compatible with the use of map_function"
-        )
+        logger.warning("low_memory_mode is not compatible with the use of map_function")
     if low_memory_mode and plot:
-        raise Exception('plot cannot be used in low_memory_mode mode.')
+        raise Exception("plot cannot be used in low_memory_mode mode.")
 
     if targets is not None and isinstance(targets, dict):
-        logger.warning(
-            "targets seems to be in a legacy format. A conversion will"
-            " be performed."
-        )
+        logger.warning("targets seems to be in a legacy format. A conversion will" " be performed.")
         targets = convert_legacy_targets(targets)
 
     if targets is not None and auto_targets is not None:
         raise Exception("Cannot specify both targets and auto_targets.")
 
-    if (
-        not absolute_amplitude and
-        (targets is None or auto_targets is not None)
-    ):
+    if not absolute_amplitude and (targets is None or auto_targets is not None):
         cells, protocols, targets = _extract_auto_targets(
             files_metadata,
             protocols_rheobase,
@@ -971,7 +882,7 @@ def extract_efeatures(
             efel_settings,
             auto_targets,
             rheobase_strategy,
-            rheobase_settings
+            rheobase_settings,
         )
     else:
         cells, protocols = _extract_with_targets(
@@ -985,7 +896,7 @@ def extract_efeatures(
             protocol_mode,
             efel_settings,
             rheobase_strategy,
-            rheobase_settings
+            rheobase_settings,
         )
     efeatures, protocol_definitions, current = create_feature_protocol_files(
         cells,
@@ -993,12 +904,12 @@ def extract_efeatures(
         output_directory=output_directory,
         threshold_nvalue_save=threshold_nvalue_save,
         write_files=write_files,
-        default_std_value=default_std_value
+        default_std_value=default_std_value,
     )
     if pickle_cells:
         path_cells = pathlib.Path(output_directory)
         path_cells.mkdir(parents=True, exist_ok=True)
-        pickle.dump(cells, open(path_cells / "cells.pkl", 'wb'))
+        pickle.dump(cells, open(path_cells / "cells.pkl", "wb"))
 
     if plot:
         plot_all_recordings_efeatures(
@@ -1017,10 +928,12 @@ def extract_efeatures(
         )
 
     if not efeatures or not protocol_definitions:
-        logger.warning("The output of the extraction is empty. Something went "
-                       "wrong. Please check that your targets, files_metadata "
-                       "and protocols_rheobase match the data you have "
-                       "available.")
+        logger.warning(
+            "The output of the extraction is empty. Something went "
+            "wrong. Please check that your targets, files_metadata "
+            "and protocols_rheobase match the data you have "
+            "available."
+        )
 
     return efeatures, protocol_definitions, current
 

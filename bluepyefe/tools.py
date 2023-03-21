@@ -19,19 +19,23 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 import json
-import numpy
+
 import efel
+import numpy
 
-
-DEFAULT_EFEL_SETTINGS = {
-    'strict_stiminterval': True,
-    'Threshold': -20.,
-    'interp_step': 0.025
-}
+DEFAULT_EFEL_SETTINGS = {"strict_stiminterval": True, "Threshold": -20.0, "interp_step": 0.025}
 
 
 PRESET_PROTOCOLS_RHEOBASE = [
-    "IV", "Step", "FirePattern", "IDrest", "IDRest", "IDthresh", "IDThresh", "IDThres", "IDthres"
+    "IV",
+    "Step",
+    "FirePattern",
+    "IDrest",
+    "IDRest",
+    "IDthresh",
+    "IDThresh",
+    "IDThres",
+    "IDthres",
 ]
 
 
@@ -108,11 +112,10 @@ def set_efel_settings(efeature_settings):
     efel.reset()
 
     for setting, value in efeature_settings.items():
-
-        if setting in ['stim_start', 'stim_end']:
+        if setting in ["stim_start", "stim_end"]:
             value = float(value)
 
-        if setting == 'Threshold':
+        if setting == "Threshold":
             efel.setThreshold(value)
 
         elif isinstance(value, bool) or isinstance(value, int):
@@ -155,9 +158,7 @@ class NumpyEncoder(json.JSONEncoder):
             ),
         ):
             return int(obj)
-        elif isinstance(
-            obj, (numpy.float_, numpy.float16, numpy.float32, numpy.float64)
-        ):
+        elif isinstance(obj, (numpy.float_, numpy.float16, numpy.float32, numpy.float64)):
             return float(obj)
         elif isinstance(obj, numpy.ndarray):
             return obj.tolist()

@@ -19,6 +19,7 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 import logging
+
 import numpy
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,6 @@ def _get_list_spiking_amplitude(cell, protocols_rheobase):
     for i, rec in enumerate(cell.recordings):
         if rec.protocol_name in protocols_rheobase:
             if rec.spikecount is not None:
-
                 amps.append(rec.amp)
                 spike_counts.append(rec.spikecount)
 
@@ -54,7 +54,7 @@ def _get_list_spiking_amplitude(cell, protocols_rheobase):
 
 
 def compute_rheobase_absolute(cell, protocols_rheobase, spike_threshold=1):
-    """ Compute the rheobase by finding the smallest current amplitude
+    """Compute the rheobase by finding the smallest current amplitude
     triggering at least one spike.
 
     Args:
@@ -74,7 +74,7 @@ def compute_rheobase_absolute(cell, protocols_rheobase, spike_threshold=1):
 
 
 def compute_rheobase_flush(cell, protocols_rheobase, flush_length=1, upper_bound_spikecount=None):
-    """ Compute the rheobase by finding the smallest current amplitude that:
+    """Compute the rheobase by finding the smallest current amplitude that:
         1. Triggered at least one spike
         2. Is followed by flush_length other traces that also trigger spikes.
     The advantage of this strategy is that it ignores traces showing spurious
@@ -92,27 +92,21 @@ def compute_rheobase_flush(cell, protocols_rheobase, flush_length=1, upper_bound
     amps, spike_counts = _get_list_spiking_amplitude(cell, protocols_rheobase)
 
     for i, amp in enumerate(amps):
-
         # We missed the threshold
         if upper_bound_spikecount is not None:
             if spike_counts[i] > upper_bound_spikecount:
                 break
 
         if spike_counts[i]:
-
             end_flush = min(i + 1 + flush_length, len(amps))
 
-            if (
-                    numpy.count_nonzero(spike_counts[i + 1:end_flush]) == flush_length
-            ):
+            if numpy.count_nonzero(spike_counts[i + 1 : end_flush]) == flush_length:
                 cell.rheobase = amp
                 break
 
 
-def compute_rheobase_majority_bin(
-    cell, protocols_rheobase, min_step=0.01, majority=0.5
-):
-    """ Compute the rheobase by finding the smallest current amplitude
+def compute_rheobase_majority_bin(cell, protocols_rheobase, min_step=0.01, majority=0.5):
+    """Compute the rheobase by finding the smallest current amplitude
     triggering at least 1 spikes in the majority (default 50%) of the
     recordings.
 
@@ -132,19 +126,16 @@ def compute_rheobase_majority_bin(
     bins_of_amps = numpy.digitize(amps, bins, right=False)
 
     for i, bin in enumerate(bins):
-
-        spikes = [
-            spike_counts[j] for j, idx in enumerate(bins_of_amps) if idx == i
-        ]
+        spikes = [spike_counts[j] for j, idx in enumerate(bins_of_amps) if idx == i]
         perc_spiking = numpy.mean([bool(s) for s in spikes])
 
         if perc_spiking >= majority:
-            cell.rheobase = bin + (min_step / 2.)
+            cell.rheobase = bin + (min_step / 2.0)
             break
 
 
 def compute_rheobase_interpolation(cell, protocols_rheobase):
-    """ Compute the rheobase by fitting the reverse IF curve and finding the
+    """Compute the rheobase by fitting the reverse IF curve and finding the
     intersection with the line x = 1.
 
     Args:
@@ -157,8 +148,7 @@ def compute_rheobase_interpolation(cell, protocols_rheobase):
 
     # Remove the excess zeros
     idx = next(
-        (i for i in range(len(amps) - 1) if not spike_counts[i] and spike_counts[i + 1]),
-        None
+        (i for i in range(len(amps) - 1) if not spike_counts[i] and spike_counts[i + 1]), None
     )
     if idx is None:
         return
@@ -166,13 +156,10 @@ def compute_rheobase_interpolation(cell, protocols_rheobase):
     spike_counts = spike_counts[idx:]
 
     if amps:
-
         try:
             fit = numpy.poly1d(numpy.polyfit(spike_counts, amps, deg=1))
         except:
-            logger.error(
-                f"Rheobase interpolation did not converge on cell {cell.name}"
-            )
+            logger.error(f"Rheobase interpolation did not converge on cell {cell.name}")
             return
 
         cell.rheobase = fit(1)

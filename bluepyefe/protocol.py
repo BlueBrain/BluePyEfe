@@ -19,20 +19,21 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 
-import numpy
 import logging
+
+import numpy
 
 from bluepyefe.ecode import eCodes
 
 logger = logging.getLogger(__name__)
 
 
-class Protocol():
+class Protocol:
 
     """Protocol informs about the current stimulus that was used to obtain
-     efeatures at a given amplitude for a given protocol name. This class
-     is mainly used to produce a description of the experimental protocol
-     that can be used in BluePyOpt"""
+    efeatures at a given amplitude for a given protocol name. This class
+    is mainly used to produce a description of the experimental protocol
+    that can be used in BluePyOpt"""
 
     def __init__(
         self,
@@ -128,8 +129,7 @@ class Protocol():
         for i, target in enumerate(self.feature_targets):
             if target.efeature_name in recording.efeatures:
                 self.feature_targets[i].append(
-                    recording.efeatures[target.efeature_name],
-                    recording.files
+                    recording.efeatures[target.efeature_name], recording.files
                 )
 
         if recording.auto_threshold is not None:
@@ -160,9 +160,7 @@ class Protocol():
         if not self.recordings:
             logger.warning(
                 "Could not compute average ecode for protocol {} target {} "
-                "because it didn't match any recordings".format(
-                    self.name, self.amplitude
-                )
+                "because it didn't match any recordings".format(self.name, self.amplitude)
             )
             return None
 
@@ -176,7 +174,6 @@ class Protocol():
             )
 
         for key in params[0]:
-
             if isinstance(params[0][key], (list, numpy.ndarray)):
                 logger.warning(
                     "Parameter {} for protocol {} is a list and cannot be "
@@ -187,7 +184,7 @@ class Protocol():
 
             if key == "amp" and self.global_rheobase:
                 amp_rel = operator([c["amp_rel"] for c in params])
-                mean_param = float(amp_rel) * self.global_rheobase / 100.
+                mean_param = float(amp_rel) * self.global_rheobase / 100.0
             else:
                 mean_param = operator([numpy.nan if c[key] is None else c[key] for c in params])
 
@@ -198,9 +195,7 @@ class Protocol():
     def __str__(self):
         """String representation"""
 
-        str_form = "Protocol {} {:.1f}%:\n".format(
-            self.name, self.amplitude
-        )
+        str_form = "Protocol {} {:.1f}%:\n".format(self.name, self.amplitude)
 
         str_form += "Number of matching recordings: {}".format(self.n_match)
 

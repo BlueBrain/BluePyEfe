@@ -19,6 +19,7 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 import logging
+
 import numpy
 
 from ..recording import Recording
@@ -46,7 +47,6 @@ def group_indexes(values, gap=10):
 
 
 def detect_spike(amp, hypamp, smooth_current, dt):
-
     tspike = []
     duration = []
     delta = []
@@ -91,14 +91,7 @@ class SpikeRec(Recording):
 
     """
 
-    def __init__(
-        self,
-        config_data,
-        reader_data,
-        protocol_name="SpikeRec",
-        efel_settings=None
-    ):
-
+    def __init__(self, config_data, reader_data, protocol_name="SpikeRec", efel_settings=None):
         super(SpikeRec, self).__init__(config_data, reader_data, protocol_name)
 
         self.tend = None
@@ -113,16 +106,23 @@ class SpikeRec(Recording):
         self.hypamp_rel = None
 
         if self.t is not None and self.current is not None:
-            self.interpret(
-                self.t, self.current, self.config_data, self.reader_data
-            )
+            self.interpret(self.t, self.current, self.config_data, self.reader_data)
 
         if self.voltage is not None:
             self.set_autothreshold()
             self.compute_spikecount(efel_settings)
 
-        self.export_attr = ["tend", "tspike", "spike_duration", "delta",
-                            "amp", "hypamp", "dt", "amp_rel", "hypamp_rel"]
+        self.export_attr = [
+            "tend",
+            "tspike",
+            "spike_duration",
+            "delta",
+            "amp",
+            "hypamp",
+            "dt",
+            "amp_rel",
+            "hypamp_rel",
+        ]
 
     @property
     def ton(self):
@@ -162,11 +162,7 @@ class SpikeRec(Recording):
         self.set_amplitudes_ecode("amp", config_data, reader_data, amp_value)
 
         # Get the beginning and end of the spikes
-        if (
-            not len(self.tspike)
-            or self.spike_duration is None
-            or self.delta is None
-        ):
+        if not len(self.tspike) or self.spike_duration is None or self.delta is None:
             self.tspike, self.spike_duration, self.delta = detect_spike(
                 self.amp, self.hypamp, smooth_current, self.dt
             )
@@ -194,8 +190,7 @@ class SpikeRec(Recording):
         """Returns a boolean. True if the delta of the eCode is close to
         target and False otherwise."""
         logger.warning(
-            "The eCode SpikeRec uses delta between current spikes "
-            "in ms as target, not amplitude"
+            "The eCode SpikeRec uses delta between current spikes " "in ms as target, not amplitude"
         )
         if numpy.abs(target - self.delta) < tolerance:
             return True

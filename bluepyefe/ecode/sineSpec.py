@@ -19,6 +19,7 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 import logging
+
 import numpy
 
 from ..recording import Recording
@@ -32,14 +33,7 @@ class SineSpec(Recording):
 
     """SineSpec current stimulus"""
 
-    def __init__(
-        self,
-        config_data,
-        reader_data,
-        protocol_name="SineSpec",
-        efel_settings=None
-    ):
-
+    def __init__(self, config_data, reader_data, protocol_name="SineSpec", efel_settings=None):
         super(SineSpec, self).__init__(config_data, reader_data, protocol_name)
 
         self.ton = None
@@ -53,16 +47,13 @@ class SineSpec(Recording):
         self.hypamp_rel = None
 
         if self.t is not None and self.current is not None:
-            self.interpret(
-                self.t, self.current, self.config_data, self.reader_data
-            )
+            self.interpret(self.t, self.current, self.config_data, self.reader_data)
 
         if self.voltage is not None:
             self.set_autothreshold()
             self.compute_spikecount(efel_settings)
 
-        self.export_attr = ["ton", "toff", "tend", "amp", "hypamp", "dt",
-                            "amp_rel", "hypamp_rel"]
+        self.export_attr = ["ton", "toff", "tend", "amp", "hypamp", "dt", "amp_rel", "hypamp_rel"]
 
     def get_stimulus_parameters(self):
         """Returns the eCode parameters"""
@@ -122,10 +113,7 @@ class SineSpec(Recording):
         t_sine = numpy.arange(0.0, self.tend / 1e3, self.dt / 1e3)
 
         current = self.amp * numpy.sin(
-            2.0
-            * numpy.pi
-            * (1.0 + (1.0 / (5.15 - (t_sine - 0.1))))
-            * (t_sine - 0.1)
+            2.0 * numpy.pi * (1.0 + (1.0 / (5.15 - (t_sine - 0.1)))) * (t_sine - 0.1)
         )
 
         current[:ton_idx] = 0.0

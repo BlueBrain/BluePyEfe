@@ -34,7 +34,6 @@ def translate_legacy_files_metadata(config):
     for cell_name in config["cells"]:
         for protocol_name in config["cells"][cell_name]["experiments"]:
             for file_metadata in config["cells"][cell_name]["experiments"][protocol_name]["files"]:
-
                 if cell_name not in files_metadata:
                     files_metadata[cell_name] = {}
                 if protocol_name not in files_metadata[cell_name]:
@@ -52,10 +51,12 @@ def translate_legacy_files_metadata(config):
                 files_metadata[cell_name][protocol_name][-1].update(filepaths)
 
                 if protocol_name in config["options"]["onoff"]:
-                    files_metadata[cell_name][protocol_name][-1]["ton"] = config[
-                        "options"]["onoff"][protocol_name][0]
-                    files_metadata[cell_name][protocol_name][-1]["toff"] = config[
-                        "options"]["onoff"][protocol_name][1]
+                    files_metadata[cell_name][protocol_name][-1]["ton"] = config["options"][
+                        "onoff"
+                    ][protocol_name][0]
+                    files_metadata[cell_name][protocol_name][-1]["toff"] = config["options"][
+                        "onoff"
+                    ][protocol_name][1]
 
     return files_metadata
 
@@ -70,7 +71,6 @@ def translate_legacy_targets(config):
             if "spikerate" in feature:
                 continue
             for amp, tol in zip(config["options"]["target"], config["options"]["tolerance"]):
-
                 if amp == "all":
                     continue
                 if amp == "noinput":
@@ -84,10 +84,12 @@ def translate_legacy_targets(config):
                 if "strict_stiminterval" in config["options"]:
                     if protocol in config["options"]["strict_stiminterval"]:
                         efel_settings["strict_stiminterval"] = config["options"][
-                            "strict_stiminterval"][protocol]
+                            "strict_stiminterval"
+                        ][protocol]
                     elif "base" in config["options"]["strict_stiminterval"]:
                         efel_settings["strict_stiminterval"] = config["options"][
-                            "strict_stiminterval"]["base"]
+                            "strict_stiminterval"
+                        ]["base"]
 
                 targets.append(
                     {
@@ -95,7 +97,7 @@ def translate_legacy_targets(config):
                         "protocol": protocol,
                         "amplitude": effective_amp,
                         "tolerance": effective_tolerance,
-                        "efel_settings": efel_settings
+                        "efel_settings": efel_settings,
                     }
                 )
 
@@ -119,5 +121,5 @@ def translate_legacy_config(config):
         "targets": targets,
         "protocols_rheobase": protocols_rheobase,
         "rheobase_strategy": rheobase_strategy,
-        "rheobase_settings": rheobase_settings
+        "rheobase_settings": rheobase_settings,
     }

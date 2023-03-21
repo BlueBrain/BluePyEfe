@@ -20,13 +20,18 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
-from abc import ABC, abstractmethod
 import logging
-import numpy
+from abc import ABC
+from abc import abstractmethod
+
 import efel
 import matplotlib.pyplot as plt
+import numpy
 
-from .tools import to_ms, to_mV, to_nA, set_efel_settings
+from .tools import set_efel_settings
+from .tools import to_ms
+from .tools import to_mV
+from .tools import to_nA
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +76,7 @@ class Recording(ABC):
         self.repetition = None
 
         if len(reader_data):
-            self.t, self.current, self.voltage = self.standardize_trace(
-                config_data, reader_data
-            )
+            self.t, self.current, self.voltage = self.standardize_trace(config_data, reader_data)
 
         self.export_attr = None
         self.auto_threshold = None
@@ -112,8 +115,8 @@ class Recording(ABC):
 
     def set_amplitudes_ecode(self, amp_name, config_data, reader_data, value):
         """Check in the user-provided data or reader-provided data if a
-         given current amplitude is provided. If it isn't use the value
-         computed from the current series"""
+        given current amplitude is provided. If it isn't use the value
+        computed from the current series"""
 
         if amp_name in config_data and config_data[amp_name] is not None:
             setattr(self, amp_name, config_data[amp_name])
@@ -124,7 +127,7 @@ class Recording(ABC):
 
     def index_to_ms(self, name_timing, time_series):
         """Used by some of the children classes to translate a timing attribute
-         from index to ms."""
+        from index to ms."""
 
         setattr(self, name_timing, time_series[int(round(getattr(self, name_timing)))])
 
@@ -171,10 +174,7 @@ class Recording(ABC):
         elif "dt" in reader_data and reader_data["dt"] is not None:
             t = t * reader_data["dt"]
         else:
-            raise Exception(
-                "Sampling rate not configured for "
-                "file {}".format(self.files)
-            )
+            raise Exception("Sampling rate not configured for " "file {}".format(self.files))
 
         # Convert it to ms
         if "t_unit" in config_data and config_data["t_unit"] is not None:
@@ -182,9 +182,7 @@ class Recording(ABC):
         elif "t_unit" in reader_data and reader_data["t_unit"] is not None:
             t = to_ms(t, reader_data["t_unit"])
         else:
-            raise Exception(
-                "Time unit not configured for " "file {}".format(self.files)
-            )
+            raise Exception("Time unit not configured for " "file {}".format(self.files))
 
         # Convert current to nA
         if "i_unit" in config_data and config_data["i_unit"] is not None:
@@ -192,9 +190,7 @@ class Recording(ABC):
         elif "i_unit" in reader_data and reader_data["i_unit"] is not None:
             current = to_nA(reader_data["current"], reader_data["i_unit"])
         else:
-            raise Exception(
-                "Current unit not configured for " "file {}".format(self.files)
-            )
+            raise Exception("Current unit not configured for " "file {}".format(self.files))
 
         # Convert voltage to mV
         if "v_unit" in config_data and config_data["v_unit"] is not None:
@@ -202,15 +198,11 @@ class Recording(ABC):
         elif "v_unit" in reader_data and reader_data["v_unit"] is not None:
             voltage = to_mV(reader_data["voltage"], reader_data["v_unit"])
         else:
-            raise Exception(
-                "Voltage unit not configured for " "file {}".format(self.files)
-            )
+            raise Exception("Voltage unit not configured for " "file {}".format(self.files))
 
         # Offset membrane potential to known value
         if "v_corr" in config_data and config_data["v_corr"] is not None:
-            voltage = (
-                voltage - numpy.median(voltage[:100]) + config_data["v_corr"]
-            )
+            voltage = voltage - numpy.median(voltage[:100]) + config_data["v_corr"]
 
         # Correct for the liquid junction potential
         # WARNING: the ljp is informed as a positive float but we substract it
@@ -224,7 +216,7 @@ class Recording(ABC):
         return t, current, voltage
 
     def call_efel(self, efeatures, efel_settings=None):
-        """ Calls efel to computed the wanted efeature """
+        """Calls efel to computed the wanted efeature"""
 
         if efel_settings is None:
             efel_settings = {}
@@ -232,35 +224,33 @@ class Recording(ABC):
         settings = {"stimulus_current": self.amp}
 
         if "Threshold" not in efel_settings and self.auto_threshold is not None:
-            logger.warning(f"Threshold was not provided and was automatically"
-                           f" set to {self.auto_threshold}")
+            logger.warning(
+                f"Threshold was not provided and was automatically" f" set to {self.auto_threshold}"
+            )
             settings["Threshold"] = self.auto_threshold
 
         for setting in efel_settings:
-            if setting not in ['stim_start', 'stim_end']:
+            if setting not in ["stim_start", "stim_end"]:
                 settings[setting] = efel_settings[setting]
         set_efel_settings(settings)
 
         efel_trace = {
             "T": self.t,
             "V": self.voltage,
-            'stim_start': [efel_settings.get('stim_start', self.ton)],
-            'stim_end': [efel_settings.get('stim_end', self.toff)]
+            "stim_start": [efel_settings.get("stim_start", self.ton)],
+            "stim_end": [efel_settings.get("stim_end", self.toff)],
         }
 
         try:
-            return efel.getFeatureValues(
-                [efel_trace], efeatures, raise_warnings=False
-            )
+            return efel.getFeatureValues([efel_trace], efeatures, raise_warnings=False)
         except TypeError as e:
             if "Unknown feature name" in str(e):
                 str_f = " ".join(efeatures)
-                raise Exception("One of the following feature name does not "
-                                f"exist in eFEL: {str_f}")
+                raise Exception(
+                    "One of the following feature name does not " f"exist in eFEL: {str_f}"
+                )
 
-    def compute_efeatures(
-        self, efeatures, efeature_names=None, efel_settings=None
-    ):
+    def compute_efeatures(self, efeatures, efeature_names=None, efel_settings=None):
         """Compute a set of efeatures for the present recording.
 
         Args:
@@ -282,7 +272,6 @@ class Recording(ABC):
 
         efel_vals = self.call_efel(efeatures, efel_settings)
         for efeature_name, efeature in zip(efeature_names, efeatures):
-
             value = efel_vals[0][efeature]
             if value is None or len(value) == 0 or numpy.isinf(numpy.nanmean(value)):
                 self.efeatures[efeature_name] = numpy.nan
@@ -294,18 +283,18 @@ class Recording(ABC):
         if not efel_settings:
             efel_settings = {}
 
-        tmp_settings = {'strict_stiminterval': True}
+        tmp_settings = {"strict_stiminterval": True}
         if efel_settings is not None:
             tmp_settings.update(efel_settings)
 
         # If the setting Threshold is not provided, tries to find it
         if tmp_settings.get("Threshold", None) is None:
             tmp_settings["Threshold"] = self.auto_threshold
-            efel_vals = self.call_efel(['peak_time'], tmp_settings)
-            self.peak_time = efel_vals[0]['peak_time']
+            efel_vals = self.call_efel(["peak_time"], tmp_settings)
+            self.peak_time = efel_vals[0]["peak_time"]
 
         else:
-            self.peak_time = self.call_efel(['peak_time'], tmp_settings)[0]['peak_time']
+            self.peak_time = self.call_efel(["peak_time"], tmp_settings)[0]["peak_time"]
 
         if self.spikecount == 0 and numpy.max(self.voltage) > tmp_settings["Threshold"]:
             logger.warning(
@@ -313,7 +302,7 @@ class Recording(ABC):
                 "voltage goes higher than the spike detection threshold."
             )
 
-    def set_autothreshold(self, offset_voltage=20.) -> None:
+    def set_autothreshold(self, offset_voltage=20.0) -> None:
         """Computes the threshold based on the input voltage sets it as an attribute."""
         idx_ton = self.ms_to_index(self.ton)
         idx_toff = self.ms_to_index(self.toff)
@@ -325,7 +314,7 @@ class Recording(ABC):
             thresh = step_voltage + offset_voltage
         # The threshold cannot be lower than the base voltage (handles the case
         # where the step is hyperpolarizing)
-        self.auto_threshold = numpy.clip(thresh, base_voltage + offset_voltage, 50.)
+        self.auto_threshold = numpy.clip(thresh, base_voltage + offset_voltage, 50.0)
 
     def in_target(self, target, tolerance, absolute_amplitude=False):
         """Returns a boolean. True if the amplitude of the eCode is close to
@@ -347,13 +336,7 @@ class Recording(ABC):
     def get_plot_amplitude_title(self):
         return " ({:.01f}%)".format(self.amp_rel)
 
-    def plot(
-        self,
-        axis_current=None,
-        axis_voltage=None,
-        display_xlabel=True,
-        display_ylabel=True
-    ):
+    def plot(self, axis_current=None, axis_voltage=None, display_xlabel=True, display_ylabel=True):
         """Plot the recording"""
 
         if axis_current is None or axis_voltage is None:
@@ -377,14 +360,16 @@ class Recording(ABC):
         if self.peak_time is not None:
             max_v = numpy.max(self.voltage)
             for pt in self.peak_time:
-                axis_voltage.plot(
-                    [pt, pt], [max_v + 5, max_v + 15], c="C3", ls="-", lw=0.5
-                )
+                axis_voltage.plot([pt, pt], [max_v + 5, max_v + 15], c="C3", ls="-", lw=0.5)
 
         if self.auto_threshold is not None:
             axis_voltage.plot(
-                [self.t[0], self.t[-1]], [self.auto_threshold, self.auto_threshold],
-                c="black", ls="--", lw=0.5, alpha=0.8
+                [self.t[0], self.t[-1]],
+                [self.auto_threshold, self.auto_threshold],
+                c="black",
+                ls="--",
+                lw=0.5,
+                alpha=0.8,
             )
 
         if display_xlabel:

@@ -19,6 +19,7 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 import logging
+
 import numpy
 
 from ..recording import Recording
@@ -28,7 +29,6 @@ logger = logging.getLogger(__name__)
 
 
 class PosCheops(Recording):
-
     # pylint: disable=line-too-long,anomalous-backslash-in-string
 
     """PosCheops current stimulus
@@ -54,17 +54,8 @@ class PosCheops(Recording):
     t=0        ton                       t1         t2                        t3         t4                        toff       tend
     """
 
-    def __init__(
-        self,
-        config_data,
-        reader_data,
-        protocol_name="PosCheops",
-        efel_settings=None
-    ):
-
-        super(PosCheops, self).__init__(
-            config_data, reader_data, protocol_name
-        )
+    def __init__(self, config_data, reader_data, protocol_name="PosCheops", efel_settings=None):
+        super(PosCheops, self).__init__(config_data, reader_data, protocol_name)
 
         self.ton = None
         self.t1 = None
@@ -80,16 +71,26 @@ class PosCheops(Recording):
         self.hypamp_rel = None
 
         if self.t is not None and self.current is not None:
-            self.interpret(
-                self.t, self.current, self.config_data, self.reader_data
-            )
+            self.interpret(self.t, self.current, self.config_data, self.reader_data)
 
         if self.voltage is not None:
             self.set_autothreshold()
             self.compute_spikecount(efel_settings)
 
-        self.export_attr = ["ton", "t1", "t2", "t3", "t4", "toff", "tend",
-                            "amp", "hypamp", "dt", "amp_rel", "hypamp_rel"]
+        self.export_attr = [
+            "ton",
+            "t1",
+            "t2",
+            "t3",
+            "t4",
+            "toff",
+            "tend",
+            "amp",
+            "hypamp",
+            "dt",
+            "amp_rel",
+            "hypamp_rel",
+        ]
 
     def get_stimulus_parameters(self):
         """Returns the eCode parameters"""
@@ -103,7 +104,7 @@ class PosCheops(Recording):
             "amp": self.amp,
             "thresh_perc": self.amp_rel,
             "duration": self.toff - self.ton,
-            "totduration": self.tend
+            "totduration": self.tend,
         }
         return ecode_params
 
@@ -115,8 +116,7 @@ class PosCheops(Recording):
         # Smooth the current
         smooth_current = scipy_signal2d(current, 85)
 
-        self.set_timing_ecode(
-            ["ton", "t1", "t2", "t3", "t4", "toff"], config_data)
+        self.set_timing_ecode(["ton", "t1", "t2", "t3", "t4", "toff"], config_data)
 
         hypamp_value = numpy.median(smooth_current[: self.ton])
         self.set_amplitudes_ecode("hypamp", config_data, reader_data, hypamp_value)

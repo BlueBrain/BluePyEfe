@@ -21,8 +21,8 @@ Copyright (c) 2022, EPFL/Blue Brain Project
 
 import logging
 import pathlib
-from itertools import cycle
 from functools import partial
+from itertools import cycle
 
 import matplotlib.pyplot as plt
 import numpy
@@ -78,12 +78,8 @@ def _plot_legend(colors, markers, output_dir, show=False):
 
     fig, axs = plt.subplots(1, figsize=(6, 6), squeeze=False)
 
-    for i, (cellname, c, m) in enumerate(
-        zip(colors.keys(), colors.values(), markers.values())
-    ):
-        axs[0, 0].scatter(
-            x=2.5 * int(i / ncols), y=0.5 * (i % ncols), c=c, marker=m, s=8.0
-        )
+    for i, (cellname, c, m) in enumerate(zip(colors.keys(), colors.values(), markers.values())):
+        axs[0, 0].scatter(x=2.5 * int(i / ncols), y=0.5 * (i % ncols), c=c, marker=m, s=8.0)
 
         axs[0, 0].text(
             x=2.5 * int(i / ncols) + 0.1,
@@ -127,7 +123,7 @@ def plot_efeature(
     key_amp="amp",
     colors=None,
     markers=None,
-    show=False
+    show=False,
 ):
     """Plot one efeature for a protocol"""
 
@@ -144,7 +140,6 @@ def plot_efeature(
     has_data = False
 
     for cell in cells:
-
         x, y = [], []
         for rec in cell.get_recordings_by_protocol_name(protocol_name):
             if hasattr(rec, key_amp) and getattr(rec, key_amp):
@@ -155,22 +150,17 @@ def plot_efeature(
         if y:
             has_data = True
 
-        ax.scatter(
-            x, y, c=colors[cell.name], marker=markers[cell.name], s=5.0
-        )
+        ax.scatter(x, y, c=colors[cell.name], marker=markers[cell.name], s=5.0)
 
         for protocol in protocols:
             if protocol.name == protocol_name:
-
                 if key_amp == "amp_rel":
                     x_key = protocol.amplitude
                 elif key_amp == "amp":
                     x_key = numpy.mean([t.amp for t in protocol.recordings])
 
                 target = next(
-                    (t for t in protocol.feature_targets if
-                     t.efel_feature_name == efeature),
-                    None
+                    (t for t in protocol.feature_targets if t.efel_feature_name == efeature), None
                 )
 
                 ax.errorbar(
@@ -189,24 +179,18 @@ def plot_efeature(
         return
 
     if key_amp == "amp_rel":
-        ax.set_xlabel(
-            "Relative step amplitude" " ($I/I_{thresh}$)", size="x-large"
-        )
+        ax.set_xlabel("Relative step amplitude" " ($I/I_{thresh}$)", size="x-large")
     elif key_amp == "amp":
         ax.set_xlabel("Step amplitude (nA)", size="x-large")
     ax.set_ylabel(efeature, size="x-large")
-    ax.set_title(
-        f"Protocol: {protocol_name}, EFeature: {efeature}", size="xx-large"
-    )
+    ax.set_title(f"Protocol: {protocol_name}, EFeature: {efeature}", size="xx-large")
 
     if show:
         fig.show()
 
     if output_dir:
         if len(cells) == 1:
-            filename = "{}_{}_{}_{}.pdf".format(
-                cells[0].name, protocol_name, efeature, key_amp
-            )
+            filename = "{}_{}_{}_{}.pdf".format(cells[0].name, protocol_name, efeature, key_amp)
             dirname = pathlib.Path(output_dir) / cells[0].name
         else:
             filename = "{}_{}_{}.pdf".format(protocol_name, efeature, key_amp)
@@ -223,7 +207,7 @@ def plot_efeatures(
     key_amp="amp",
     colors=None,
     markers=None,
-    show=False
+    show=False,
 ):
     """
     Plot the efeatures of a cell or a group of cells versus current amplitude
@@ -249,7 +233,7 @@ def plot_efeatures(
             key_amp=key_amp,
             colors=colors,
             markers=markers,
-            show=show
+            show=show,
         )
 
 
@@ -263,7 +247,7 @@ def _plot_ind(cell, output_dir, protocols, key_amp, colors, markers, show):
             key_amp=key_amp,
             colors=colors,
             markers=markers,
-            show=show
+            show=show,
         )
 
 
@@ -297,13 +281,7 @@ def plot_individual_efeatures(
 
 
 def plot_grouped_efeatures(
-    cells,
-    protocols,
-    output_dir=None,
-    colors=None,
-    markers=None,
-    key_amp="amp",
-    show=False
+    cells, protocols, output_dir=None, colors=None, markers=None, key_amp="amp", show=False
 ):
     """Generate plots for each efeature across all cells."""
 
@@ -317,7 +295,6 @@ def plot_grouped_efeatures(
     protocol_names = set([p.name for p in protocols])
 
     for protocol_name in protocol_names:
-
         _ = plot_efeatures(
             cells=cells,
             protocol_name=protocol_name,
@@ -326,15 +303,13 @@ def plot_grouped_efeatures(
             key_amp=key_amp,
             colors=colors,
             markers=markers,
-            show=show
+            show=show,
         )
 
     _ = _plot_legend(colors, markers, output_dir, show=show)
 
 
-def plot_all_recordings_efeatures(
-    cells, protocols, output_dir=None, show=False, mapper=map
-):
+def plot_all_recordings_efeatures(cells, protocols, output_dir=None, show=False, mapper=map):
     """Generate plots for all recordings and efeatures both for individual
     cells and across all cells."""
 
@@ -354,11 +329,5 @@ def plot_all_recordings_efeatures(
             mapper=mapper,
         )
         plot_grouped_efeatures(
-            cells,
-            protocols,
-            output_dir,
-            colors=colors,
-            markers=markers,
-            key_amp=key_amp,
-            show=show
+            cells, protocols, output_dir, colors=colors, markers=markers, key_amp=key_amp, show=show
         )

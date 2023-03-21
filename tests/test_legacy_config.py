@@ -1,21 +1,18 @@
 """bluepyefe.protocol tests"""
 
-import unittest
 import glob
+import unittest
 
-from bluepyefe.translate_legacy_config import translate_legacy_config
 import bluepyefe.extract
 import bluepyefe.tools
+from bluepyefe.translate_legacy_config import translate_legacy_config
 
 
 class TestTranslateLegacyConfig(unittest.TestCase):
-
     def setUp(self):
-
         files_metadata = {}
         for cell_name in ["B6", "B8"]:
             for path in glob.glob(f"./tests/exp_data/{cell_name}/{cell_name}_Ch0_IDRest_*.ibw"):
-
                 if cell_name not in files_metadata:
                     files_metadata[cell_name] = {"experiments": {"IDRest": {"files": []}}}
 
@@ -38,7 +35,7 @@ class TestTranslateLegacyConfig(unittest.TestCase):
                 "target": [150, 200, 250],
                 "tolerance": [20, 20, 20],
                 "onoff": {"IDRest": [700, 2700]},
-                "expthreshold": ["IDRest"]
+                "expthreshold": ["IDRest"],
             },
             "path": "./",
         }
@@ -47,7 +44,8 @@ class TestTranslateLegacyConfig(unittest.TestCase):
         translated_config = translate_legacy_config(self.config)
 
         cells = bluepyefe.extract.read_recordings(
-            files_metadata=translated_config["files_metadata"])
+            files_metadata=translated_config["files_metadata"]
+        )
 
         cells = bluepyefe.extract.extract_efeatures_at_targets(
             cells=cells, targets=translated_config["targets"]

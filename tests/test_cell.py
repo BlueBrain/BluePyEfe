@@ -9,7 +9,6 @@ from bluepyefe.rheobase import compute_rheobase_absolute
 
 class CellTest(unittest.TestCase):
     def setUp(self):
-
         self.cell = bluepyefe.cell.Cell(name="MouseNeuron")
 
         file_metadata = {
@@ -24,9 +23,7 @@ class CellTest(unittest.TestCase):
 
         self.cell.read_recordings(protocol_data=[file_metadata], protocol_name="IDRest")
 
-        self.cell.extract_efeatures(
-            protocol_name="IDRest", efeatures=["Spikecount", "AP1_amp"]
-        )
+        self.cell.extract_efeatures(protocol_name="IDRest", efeatures=["Spikecount", "AP1_amp"])
 
     def test_efeature_extraction(self):
         recording = self.cell.recordings[0]

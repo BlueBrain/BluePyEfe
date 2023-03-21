@@ -8,27 +8,22 @@ from bluepyefe.target import EFeatureTarget
 
 
 class TestProtocol(unittest.TestCase):
-
     def setUp(self):
         target = EFeatureTarget(
-            efeature_name='test_spikecount',
-            efel_feature_name='Spikecount',
-            protocol_name='IDRest',
-            amplitude=150.,
-            tolerance=10.
+            efeature_name="test_spikecount",
+            efel_feature_name="Spikecount",
+            protocol_name="IDRest",
+            amplitude=150.0,
+            tolerance=10.0,
         )
 
         self.protocol = Protocol(
-            name='IDRest',
-            feature_targets=[target],
-            amplitude=150.,
-            tolerance=10.,
-            mode="mean"
+            name="IDRest", feature_targets=[target], amplitude=150.0, tolerance=10.0, mode="mean"
         )
 
     def test_append_clear(self):
         rec = Step(config_data={}, reader_data={})
-        rec.efeatures = {"test_spikecount": 10.}
+        rec.efeatures = {"test_spikecount": 10.0}
 
         self.protocol.append(rec)
         self.protocol.append(rec)

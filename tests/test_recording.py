@@ -7,13 +7,12 @@ from pytest import approx
 
 import bluepyefe.cell
 import bluepyefe.recording
-from bluepyefe.reader import igor_reader
 from bluepyefe.ecode.step import Step
+from bluepyefe.reader import igor_reader
 
 
 class RecordingTest(unittest.TestCase):
     def setUp(self):
-
         config_data = {
             "i_file": "./tests/exp_data/B95_Ch0_IDRest_107.ibw",
             "v_file": "./tests/exp_data/B95_Ch3_IDRest_107.ibw",
@@ -25,10 +24,7 @@ class RecordingTest(unittest.TestCase):
         }
 
         self.recording = Step(
-            config_data,
-            igor_reader(config_data)[0],
-            protocol_name="Step",
-            efel_settings={}
+            config_data, igor_reader(config_data)[0], protocol_name="Step", efel_settings={}
         )
 
     def test_step_ecode(self):
@@ -43,31 +39,30 @@ class RecordingTest(unittest.TestCase):
     def test_get_params(self):
         params = self.recording.get_params()
         self.assertEqual(len(params), len(self.recording.export_attr))
-    
+
     def test_generate(self):
         t, c = self.recording.generate()
         self.assertEqual(len(t), len(c))
         self.assertEqual(max(c), self.recording.amp + self.recording.hypamp)
 
     def test_in_target(self):
-        self.recording.amp_rel = 100.
+        self.recording.amp_rel = 100.0
         self.assertTrue(self.recording.in_target(101, 2))
         self.assertFalse(self.recording.in_target(-100, 50))
         self.assertFalse(self.recording.in_target(90, 2))
 
 
 class RecordingTestNWB(unittest.TestCase):
-
     def setUp(self):
         cell = bluepyefe.cell.Cell(name="MouseNeuron")
         file_metadata = {
-                        "filepath": "./tests/exp_data/hippocampus-portal/99111002.nwb",
-                        "i_unit": "A",
-                        "v_unit": "V",
-                        "t_unit": "s",
-                        "ljp": 0.0,
-                        "protocol_name": "Step",
-                    }
+            "filepath": "./tests/exp_data/hippocampus-portal/99111002.nwb",
+            "i_unit": "A",
+            "v_unit": "V",
+            "t_unit": "s",
+            "ljp": 0.0,
+            "protocol_name": "Step",
+        }
         cell.read_recordings(protocol_data=[file_metadata], protocol_name="Step")
         self.cell = cell
 

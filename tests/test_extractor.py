@@ -1,15 +1,14 @@
 """bluepyefe.extractor tests"""
 
-import unittest
 import glob
 import json
+import unittest
 
 import bluepyefe.extract
 import bluepyefe.tools
 
 
 def get_config(absolute_amplitude=False):
-
     interesting_efeatures = {
         "Spikecount": {},
         "mean_frequency": {},
@@ -77,14 +76,11 @@ def get_config(absolute_amplitude=False):
 
 class ExtractorTest(unittest.TestCase):
     def test_extract(self):
-
         files_metadata, targets = get_config()
 
         cells = bluepyefe.extract.read_recordings(files_metadata=files_metadata)
 
-        cells = bluepyefe.extract.extract_efeatures_at_targets(
-            cells=cells, targets=targets
-        )
+        cells = bluepyefe.extract.extract_efeatures_at_targets(cells=cells, targets=targets)
 
         bluepyefe.extract.compute_rheobase(cells, protocols_rheobase=["IDRest"])
 
@@ -96,10 +92,7 @@ class ExtractorTest(unittest.TestCase):
         self.assertLess(abs(cells[1].rheobase - 0.0923), 0.01)
 
         protocols = bluepyefe.extract.group_efeatures(
-            cells,
-            targets,
-            use_global_rheobase=True,
-            protocol_mode="mean"
+            cells, targets, use_global_rheobase=True, protocol_mode="mean"
         )
 
         _ = bluepyefe.extract.create_feature_protocol_files(
@@ -107,16 +100,14 @@ class ExtractorTest(unittest.TestCase):
         )
 
         for protocol in protocols:
-            if protocol.name == "IDRest" and protocol.amplitude == 250.:
+            if protocol.name == "IDRest" and protocol.amplitude == 250.0:
                 for target in protocol.feature_targets:
                     if target.efel_feature_name == "Spikecount":
                         self.assertEqual(target.mean, 78.5)
                         self.assertEqual(target.std, 3.5)
                         break
 
-        bluepyefe.extract.plot_all_recordings_efeatures(
-            cells, protocols, output_dir="MouseCells/"
-        )
+        bluepyefe.extract.plot_all_recordings_efeatures(cells, protocols, output_dir="MouseCells/")
 
         with open("MouseCells/features.json") as fp:
             features = json.load(fp)
@@ -126,20 +117,18 @@ class ExtractorTest(unittest.TestCase):
         self.assertEqual(len(features), len(protocols))
 
     def test_extract_auto_fail_rheobase(self):
-
         files_metadata, _ = get_config()
 
         efeatures, protocol_definitions, current = bluepyefe.extract.extract_efeatures(
             output_directory="./",
             files_metadata=files_metadata,
             rheobase_strategy="flush",
-            rheobase_settings={"upper_bound_spikecount": 4}
+            rheobase_settings={"upper_bound_spikecount": 4},
         )
 
         self.assertEqual(len(efeatures), 0)
 
     def test_extract_auto(self):
-
         files_metadata, _ = get_config()
 
         auto_targets = bluepyefe.auto_targets.default_auto_targets()
@@ -148,7 +137,7 @@ class ExtractorTest(unittest.TestCase):
             files_metadata,
             recording_reader=None,
             map_function=map,
-            efel_settings=bluepyefe.tools.DEFAULT_EFEL_SETTINGS
+            efel_settings=bluepyefe.tools.DEFAULT_EFEL_SETTINGS,
         )
 
         for cell in cells:
@@ -170,14 +159,11 @@ class ExtractorTest(unittest.TestCase):
         self.assertEqual(len(targets), 48)
 
     def test_extract_absolute(self):
-
         files_metadata, targets = get_config(True)
 
         cells = bluepyefe.extract.read_recordings(files_metadata=files_metadata)
 
-        cells = bluepyefe.extract.extract_efeatures_at_targets(
-            cells=cells, targets=targets
-        )
+        cells = bluepyefe.extract.extract_efeatures_at_targets(cells=cells, targets=targets)
 
         self.assertEqual(len(cells), 2)
         self.assertEqual(len(cells[0].recordings), 5)
@@ -187,10 +173,7 @@ class ExtractorTest(unittest.TestCase):
         self.assertEqual(cells[1].rheobase, None)
 
         protocols = bluepyefe.extract.group_efeatures(
-            cells,
-            targets,
-            absolute_amplitude=True,
-            protocol_mode="mean"
+            cells, targets, absolute_amplitude=True, protocol_mode="mean"
         )
 
         _ = bluepyefe.extract.create_feature_protocol_files(
@@ -209,9 +192,7 @@ class ExtractorTest(unittest.TestCase):
                         self.assertAlmostEqual(target.std, 5.590169, 4)
                         break
 
-        bluepyefe.extract.plot_all_recordings_efeatures(
-            cells, protocols, output_dir="MouseCells/"
-        )
+        bluepyefe.extract.plot_all_recordings_efeatures(cells, protocols, output_dir="MouseCells/")
 
         with open("MouseCells/features.json") as fp:
             features = json.load(fp)

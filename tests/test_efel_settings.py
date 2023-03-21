@@ -8,7 +8,6 @@ import bluepyefe.recording
 
 class EfelSettingTest(unittest.TestCase):
     def setUp(self):
-
         self.cell = bluepyefe.cell.Cell(name="MouseNeuron")
 
         file_metadata = {
@@ -21,53 +20,41 @@ class EfelSettingTest(unittest.TestCase):
             "ljp": 14.0,
         }
 
-        self.cell.read_recordings(
-            protocol_data=[file_metadata],
-            protocol_name="IDRest"
-        )
+        self.cell.read_recordings(protocol_data=[file_metadata], protocol_name="IDRest")
 
     def test_efel_threshold(self):
-        
         self.cell.recordings[0].efeatures = {}
 
         self.cell.extract_efeatures(
             protocol_name="IDRest",
             efeatures=["Spikecount", "AP1_amp"],
-            efel_settings={'Threshold': 40.}
+            efel_settings={"Threshold": 40.0},
         )
 
         recording = self.cell.recordings[0]
-        self.assertEqual(recording.efeatures["Spikecount"], 0.)
+        self.assertEqual(recording.efeatures["Spikecount"], 0.0)
         self.assertLess(abs(recording.efeatures["AP1_amp"] - 66.68), 0.01)
 
     def test_efel_strictstim(self):
-
         self.cell.recordings[0].efeatures = {}
 
         self.cell.extract_efeatures(
             protocol_name="IDRest",
             efeatures=["Spikecount"],
-            efel_settings={
-                'stim_start': 0,
-                'stim_end': 100,
-                'strict_stiminterval': True
-            }
+            efel_settings={"stim_start": 0, "stim_end": 100, "strict_stiminterval": True},
         )
 
-        self.assertEqual(self.cell.recordings[0].efeatures["Spikecount"], 0.)
+        self.assertEqual(self.cell.recordings[0].efeatures["Spikecount"], 0.0)
 
     def test_efel_threshold(self):
-
         self.cell.recordings[0].efeatures = {}
 
         self.cell.extract_efeatures(
-            protocol_name="IDRest",
-            efeatures=["Spikecount"],
-            efel_settings={'Threshold': 40.}
+            protocol_name="IDRest", efeatures=["Spikecount"], efel_settings={"Threshold": 40.0}
         )
 
         recording = self.cell.recordings[0]
-        self.assertEqual(recording.efeatures["Spikecount"], 0.)
+        self.assertEqual(recording.efeatures["Spikecount"], 0.0)
 
 
 if __name__ == "__main__":
