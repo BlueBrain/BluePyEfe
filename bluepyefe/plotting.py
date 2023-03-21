@@ -333,7 +333,7 @@ def plot_grouped_efeatures(
 
 
 def plot_all_recordings_efeatures(
-    cells, protocols, output_dir=None, show=False, mapper=None
+    cells, protocols, output_dir=None, show=False, mapper=map
 ):
     """Generate plots for all recordings and efeatures both for individual
     cells and across all cells."""
