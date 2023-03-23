@@ -142,12 +142,13 @@ class EFeatureTarget():
                 )
             )
             std = default_std_value
-
+        import json
         feature_dict = {
             "feature": self.efel_feature_name,
             "val": [self.mean, std],
             "n": self.sample_size,
-            "efel_settings": self.efel_settings
+            "efel_settings": self.efel_settings,
+            "values": json.dumps(self._values),
         }
 
         if self.efeature_name:
