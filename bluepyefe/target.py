@@ -76,11 +76,6 @@ class EFeatureTarget():
         self._auto_thresholds = []
 
     @property
-    def values(self):
-        """Return all values."""
-        return self._values
-
-    @property
     def mean(self):
         """Average of the e-feature value at target"""
 
