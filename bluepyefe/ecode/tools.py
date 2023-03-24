@@ -19,11 +19,11 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 import numpy
-from scipy.signal import medfilt2d
+from scipy.ndimage import median_filter
 
 
 def scipy_signal2d(data, width):
-    return medfilt2d(data.reshape(1, -1), (1, width))[0].tolist()
+    return median_filter(data, size=width).tolist()
 
 
 def base_current(current, idx_ton=300):
