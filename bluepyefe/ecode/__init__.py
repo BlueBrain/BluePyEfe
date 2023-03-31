@@ -28,6 +28,7 @@ from . import step
 # The ecode names have to be lower case only to avoid having to
 # define duplicates for upper and lower cases.
 eCodes = {
+    "spontaneous": step.Step,
     "idrest": step.Step,
     "idthresh": step.Step,
     "idthres": step.Step,
