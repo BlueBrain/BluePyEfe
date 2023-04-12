@@ -25,6 +25,7 @@ import scipy.io
 from neo import io
 
 from . import igorpy
+from .nwbreader import BBPNWBReader, ScalaNWBReader, AIBSNWBReader
 
 logger = logging.getLogger(__name__)
 
@@ -166,153 +167,8 @@ def read_matlab(in_data):
     return data
 
 
-def _format_nwb_trace(voltage, current, start_time, trace_name=None, repetition=None):
-
-    v_array = numpy.array(
-        voltage[()] * voltage.attrs["conversion"], dtype="float32"
-    )
-
-    i_array = numpy.array(
-        current[()] * current.attrs["conversion"], dtype="float32"
-    )
-
-    dt = 1. / float(start_time.attrs["rate"])
-
-    v_unit = voltage.attrs["unit"]
-    i_unit = current.attrs["unit"]
-    t_unit = start_time.attrs["unit"]
-    if not isinstance(v_unit, str):
-        v_unit = voltage.attrs["unit"].decode('UTF-8')
-        i_unit = current.attrs["unit"].decode('UTF-8')
-        t_unit = start_time.attrs["unit"].decode('UTF-8')
-
-    return {
-        "voltage": v_array,
-        "current": i_array,
-        "dt": dt,
-        "id": str(trace_name),
-        "repetition": repetition,
-        "i_unit": i_unit,
-        "v_unit": v_unit,
-        "t_unit": t_unit,
-    }
-
-
-def _nwb_reader_AIBS(content, target_protocols):
-
-    data = []
-
-    for sweep in list(content["acquisition"]["timeseries"].keys()):
-
-        protocol_name = content["acquisition"]["timeseries"][sweep]["aibs_stimulus_name"][()]
-        if not isinstance(protocol_name, str):
-            protocol_name = protocol_name.decode('UTF-8')
-
-        if target_protocols and protocol_name not in target_protocols:
-            continue
-
-        data.append(_format_nwb_trace(
-            voltage=content["acquisition"]["timeseries"][sweep]["data"],
-            current=content["stimulus"]["presentation"][sweep]["data"],
-            start_time=content["acquisition"]["timeseries"][sweep]["starting_time"],
-            trace_name=sweep
-        ))
-
-    return data
-
-
-def _nwb_reader_Scala(content, target_protocols):
-
-    data = []
-
-    for sweep in list(content['acquisition'].keys()):
-
-        key_current = sweep.replace('Series', 'StimulusSeries')
-        protocol_name = "Step"
-
-        if target_protocols and protocol_name not in target_protocols:
-            continue
-
-        if key_current not in content['stimulus']['presentation']:
-            continue
-
-        data.append(_format_nwb_trace(
-            voltage=content['acquisition'][sweep]['data'],
-            current=content['stimulus']['presentation'][key_current]['data'],
-            start_time=content["acquisition"][sweep]["starting_time"],
-            trace_name=sweep,
-        ))
-
-    return data
-
-
-def _get_repetition_keys_nwb(ecode_content, request_repetitions=None):
-
-    if isinstance(request_repetitions, (int, str)):
-        request_repetitions = [int(request_repetitions)]
-
-    reps = list(ecode_content.keys())
-    reps_id = [int(rep.replace("repetition ", "")) for rep in reps]
-
-    if request_repetitions:
-        return [reps[reps_id.index(i)] for i in request_repetitions]
-    else:
-        return list(ecode_content.keys())
-
-
-def _nwb_reader_BBP(content, target_protocols, repetition):
-
-    data = []
-
-    for ecode in target_protocols:
-
-        for cell_id in content["data_organization"].keys():
-
-            if ecode not in content["data_organization"][cell_id]:
-                logger.debug(f"No eCode {ecode} in nwb.")
-                continue
-
-            ecode_content = content["data_organization"][cell_id][ecode]
-
-            rep_iter = _get_repetition_keys_nwb(
-                ecode_content, request_repetitions=repetition
-            )
-
-            for rep in rep_iter:
-
-                for sweep in ecode_content[rep].keys():
-                    for trace_name in list(ecode_content[rep][sweep].keys()):
-
-                        if "ccs_" in trace_name:
-                            key_current = trace_name.replace("ccs_", "ccss_")
-                        elif "ic_" in trace_name:
-                            key_current = trace_name.replace("ic_", "ics_")
-                        else:
-                            continue
-
-                        if key_current not in content["stimulus"]["presentation"]:
-                            logger.debug(f"Ignoring {key_current} not"
-                                         " present in the stimulus presentation")
-                            continue
-                        if trace_name not in content["acquisition"]:
-                            logger.debug(f"Ignoring {trace_name} not"
-                                         " present in the acquisition")
-                            continue
-
-                        data.append(_format_nwb_trace(
-                            voltage=content["acquisition"][trace_name]["data"],
-                            current=content["stimulus"]["presentation"][key_current]["data"],
-                            start_time=content["stimulus"]["presentation"][key_current]["starting_time"],
-                            trace_name=trace_name,
-                            repetition=int(rep.replace("repetition ", ""))
-                        ))
-
-    return data
-
-
 def nwb_reader(in_data):
-    """ Reader for .nwb
-
+    """Reader for .nwb
     Args:
         in_data (dict): of the format
         {
@@ -333,10 +189,13 @@ def nwb_reader(in_data):
         target_protocols = [target_protocols]
 
     with h5py.File(in_data["filepath"], "r") as content:
-
         if "data_organization" in content:
-            return _nwb_reader_BBP(content, target_protocols, in_data.get("repetition", None))
+            reader = BBPNWBReader(content, target_protocols, in_data.get("repetition", None))
         elif "timeseries" in content["acquisition"].keys():
-            return _nwb_reader_AIBS(content, target_protocols)
+            reader = AIBSNWBReader(content, target_protocols)
         else:
-            return _nwb_reader_Scala(content, target_protocols)
+            reader = ScalaNWBReader(content, target_protocols)
+
+        data = reader.read()
+
+    return data
