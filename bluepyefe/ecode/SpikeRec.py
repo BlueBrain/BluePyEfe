@@ -132,6 +132,14 @@ class SpikeRec(Recording):
     def toff(self):
         return self.tend
 
+    @property
+    def multi_stim_start(self):
+        return list(self.tspike)
+
+    @property
+    def multi_stim_end(self):
+        return [t + self.spike_duration for t in self.tspike]
+
     def get_stimulus_parameters(self):
         """Returns the eCode parameters"""
 

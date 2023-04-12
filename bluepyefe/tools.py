@@ -118,7 +118,7 @@ def set_efel_settings(efeature_settings):
         elif isinstance(value, bool) or isinstance(value, int):
             efel.setIntSetting(setting, int(value))
 
-        elif isinstance(value, float):
+        elif isinstance(value, (float, list)):
             efel.setDoubleSetting(setting, value)
 
         elif isinstance(value, str):
