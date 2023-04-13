@@ -224,7 +224,7 @@ class Recording(ABC):
         return t, current, voltage
 
     def call_efel(self, efeatures, efel_settings=None):
-        """ Calls efel to computed the wanted efeature """
+        """ Calls efel to compute the wanted efeatures """
 
         if efel_settings is None:
             efel_settings = {}
@@ -239,13 +239,26 @@ class Recording(ABC):
         for setting in efel_settings:
             if setting not in ['stim_start', 'stim_end']:
                 settings[setting] = efel_settings[setting]
+
+        stim_start = efel_settings.get('stim_start', self.ton)
+        stim_end = efel_settings.get('stim_end', self.toff)
+
+        # Special case for SpikeRec
+        if "multiple_decay_time_constant_after_stim" in efeatures:
+            if hasattr(self, "multi_stim_start") and hasattr(self, "multi_stim_end"):
+                settings["multi_stim_start"] = self.multi_stim_start
+                settings["multi_stim_end"] = self.multi_stim_end
+            elif "stim_start" in efel_settings and "stim_end" in efel_settings:
+                settings["multi_stim_start"] = [stim_start]
+                settings["multi_stim_end"] = [stim_end]
+
         set_efel_settings(settings)
 
         efel_trace = {
             "T": self.t,
             "V": self.voltage,
-            'stim_start': [efel_settings.get('stim_start', self.ton)],
-            'stim_end': [efel_settings.get('stim_end', self.toff)]
+            'stim_start': [stim_start],
+            'stim_end': [stim_end]
         }
 
         try:
