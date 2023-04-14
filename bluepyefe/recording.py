@@ -326,8 +326,13 @@ class Recording(ABC):
                 "voltage goes higher than the spike detection threshold."
             )
 
-    def set_autothreshold(self, offset_voltage=20.) -> None:
+    def set_autothreshold(self, efel_settings, offset_voltage=20.) -> None:
         """Computes the threshold based on the input voltage sets it as an attribute."""
+
+        if efel_settings and "Threshold" in efel_settings:
+            self.auto_threshold = None
+            return
+
         idx_ton = self.ms_to_index(self.ton)
         idx_toff = self.ms_to_index(self.toff)
         step_voltage = numpy.median(self.voltage[idx_ton:idx_toff])

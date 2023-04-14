@@ -80,7 +80,7 @@ class HyperDePol(Recording):
             )
 
         if self.voltage is not None:
-            self.set_autothreshold()
+            self.set_autothreshold(efel_settings)
             self.compute_spikecount(efel_settings)
 
         self.export_attr = ["ton", "tmid", "toff", "tend", "amp", "amp2",
