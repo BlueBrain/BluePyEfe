@@ -132,13 +132,17 @@ class Protocol():
                     recording.files
                 )
 
-        if recording.auto_threshold is not None:
-            self.feature_targets[i]._auto_thresholds.append(recording.auto_threshold)
+            if (
+                recording.auto_threshold is not None and
+                "Threshold" not in self.feature_targets[i].efel_settings
+            ):
+                self.feature_targets[i]._auto_thresholds.append(
+                    recording.auto_threshold)
 
         self.recordings.append(recording)
 
     def as_dict(self):
-        """Returns an dictionary that defines the present protocol. This
+        """Returns a dictionary that defines the present protocol. This
         definition is computed differently depending on the mode of the
         protocol
         """
