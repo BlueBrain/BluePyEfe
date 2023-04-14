@@ -37,7 +37,6 @@ class EFeatureTarget():
             amplitude,
             tolerance,
             efel_settings=None,
-
     ):
         """Constructor.
 
