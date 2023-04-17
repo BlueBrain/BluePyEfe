@@ -120,7 +120,7 @@ def igor_reader(in_data):
     trace_data = {}
     trace_data["voltage"] = numpy.asarray(voltage)
     trace_data["v_unit"] = str(notes_v.dUnits).replace(" ", "")
-    trace_data["dt"] = str(notes_v.dx).replace(" ", "")
+    trace_data["dt"] = notes_v.dx
     trace_data["current"] = numpy.asarray(current)
     trace_data["i_unit"] = str(notes_i.dUnits).replace(" ", "")
 
