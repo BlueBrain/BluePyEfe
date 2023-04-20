@@ -373,7 +373,8 @@ class Recording(ABC):
             _, axs = plt.subplots(nrows=2, ncols=1, figsize=[4.9, 4.8])
             axis_current, axis_voltage = axs[0], axs[1]
 
-        title = "Amp = {:.03f} nA".format(self.amp)
+        title = "Holding Amp = {:.03f} nA\nAmp = {:.03f} nA".format(
+            self.hypamp, self.amp)
         if self.amp_rel is not None:
             title += self.get_plot_amplitude_title()
         if self.id is not None:

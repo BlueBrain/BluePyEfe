@@ -127,7 +127,8 @@ def plot_efeature(
     key_amp="amp",
     colors=None,
     markers=None,
-    show=False
+    show=False,
+    show_targets=True,
 ):
     """Plot one efeature for a protocol"""
 
@@ -172,18 +173,19 @@ def plot_efeature(
                      t.efel_feature_name == efeature),
                     None
                 )
-
-                ax.errorbar(
-                    x_key,
-                    target.mean,
-                    yerr=target.std,
-                    marker="o",
-                    elinewidth=0.7,
-                    markersize=3.0,
-                    c="gray",
-                    zorder=100,
-                    alpha=0.6,
-                )
+                if target is not None and show_targets:
+                    ax.errorbar(
+                        x_key,
+                        target.mean,
+                        yerr=target.std,
+                        marker="o",
+                        elinewidth=0.8,
+                        markersize=3.0,
+                        c="black",
+                        zorder=100,
+                        alpha=0.8,
+                        capsize=2
+                    )
 
     if not has_data:
         return
@@ -223,7 +225,8 @@ def plot_efeatures(
     key_amp="amp",
     colors=None,
     markers=None,
-    show=False
+    show=False,
+    show_targets=True,
 ):
     """
     Plot the efeatures of a cell or a group of cells versus current amplitude
@@ -245,11 +248,12 @@ def plot_efeatures(
             efeature,
             protocol_name,
             output_dir,
-            protocols=[],
+            protocols=protocols,
             key_amp=key_amp,
             colors=colors,
             markers=markers,
-            show=show
+            show=show,
+            show_targets=show_targets,
         )
 
 
@@ -263,7 +267,8 @@ def _plot_ind(cell, output_dir, protocols, key_amp, colors, markers, show):
             key_amp=key_amp,
             colors=colors,
             markers=markers,
-            show=show
+            show=show,
+            show_targets=False
         )
 
 

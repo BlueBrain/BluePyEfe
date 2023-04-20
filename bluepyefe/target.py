@@ -104,7 +104,7 @@ class EFeatureTarget():
             raise TypeError("Expected value of type int or float")
 
         if numpy.isnan(value) or value is None:
-            logger.warning(
+            logger.info(
                 "Trying to append {} to efeature {} for protocol {} {}. Value "
                 "will be ignored".format(
                     value,
