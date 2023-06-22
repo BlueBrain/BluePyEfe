@@ -71,13 +71,11 @@ Introduction
 ============
 
 BluePyEfe aims at easing the process of reading experimental recordings and extracting 
-batches of electrical features from these recordings. To do so, it combines
- trace reading
+batches of electrical features from these recordings. To do so, it combines trace reading
 functions and features extraction functions from the `eFel library <https://github.com/BlueBrain/eFEL>`_.
 
 BluePyEfe outputs protocols and features files in the format used
-by `BluePyOpt <https://github.com/BlueBrain/BluePyOpt>`_ for neuron electrical
- model building.
+by `BluePyOpt <https://github.com/BlueBrain/BluePyOpt>`_ for neuron electrical model building.
 
 How to cite
 ===========
@@ -91,13 +89,12 @@ Requirements
 * `Numpy <http://www.numpy.org>`_ (automatically installed by pip)
 * `Scipy <https://www.scipy.org/>`_ (automatically installed by pip)
 * `Neo <https://neo.readthedocs.io/en/stable/>`_ (automatically installed by pip)
-* The instruction below are written assuming you have access to a command shell
-on Linux / UNIX / MacOSX / Cygwin
+* The instruction below are written assuming you have access to a command shell on Linux / UNIX / MacOSX / Cygwin
 
 Installation
 ============
 
-To install BluePyEfe run:
+To install BluePyEfe, run:
 
 .. code-block:: bash
 
@@ -120,14 +117,14 @@ The efeatures extracted through the package will always be averaged over the tra
 A large part of the present software is therefore dedicated to averaging the features across set of "equivalent" recordings. To be able to average e-features across different cells in a meaningful way, an equivalence must be established between the traces coming from these different cells. It would not make sense to average the mean firing frequency obtain cell A on a 1s long step protocol with the one obtain for cell B on a ramp protocol that lasts for 500ms. We chose to define recordings as equivalent based on two criteria: (1) They have the same name and (2) they are of the same amplitude when the amplitude is expressed as a percentage of the rheobase of the cell.
 
 A pseudo-code for the main function of the package (bluepyefe.extract.extract_efeatures) could look as follows:
-```
-1. Load the data to memory by reading all the files containing the traces
-2. Extract the required e-features for all the traces
-3. Compute the rheobases of the cells based on one or several protocols
-4. Use these rheobases to associate to each protocol an amplitude expressed in % of the rheobase
-5. Compute the mean and standard deviations for the e-features across traces having the same amplitude
-6. Save the results and plot the traces and e-features
-```
+
+#. Load the data to memory by reading all the files containing the traces
+#. Extract the required e-features for all the traces
+#. Compute the rheobases of the cells based on one or several protocols
+#. Use these rheobases to associate to each protocol an amplitude expressed in % of the rheobase
+#. Compute the mean and standard deviations for the e-features across traces having the same amplitude
+#. Save the results and plot the traces and e-features
+
 Each of these steps are parametrized by a number of settings, therefore we recommend that you read carefully the docstring of the function.
 
 Coming from the legacy version
