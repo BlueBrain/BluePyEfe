@@ -5,5 +5,9 @@
 Python API
 ==========
 
-.. toctree::
-   :maxdepth: 3
+.. autosummary::
+   :nosignatures:
+   :toctree: _autosummary
+   :recursive:
+
+   bluepyefe
