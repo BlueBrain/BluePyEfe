@@ -102,7 +102,7 @@ To install BluePyEfe, run:
 
 
 Quick Start and Operating Principle
-===========
+===================================
 
 For a hands-on introduction to BluePyEfe, have a look at the notebook `examples/example_of_extraction.ipynb <examples/example_of_extraction.ipynb>`_
 
@@ -128,7 +128,7 @@ A pseudo-code for the main function of the package (bluepyefe.extract.extract_ef
 Each of these steps are parametrized by a number of settings, therefore we recommend that you read carefully the docstring of the function.
 
 Coming from the legacy version
-===============================
+==============================
 The legacy version (v0.4*) is moved to the legacy branch.
 Changes introduced in v2.0.0 are listed in the `CHANGELOG.rst <CHANGELOG.rst>`_. 
 That is the only file you need to look at for the changes as the future changes will also be noted there.
@@ -137,4 +137,13 @@ Funding
 =======
 This work has been partially funded by the European Union Seventh Framework Program (FP7/2007­2013) under grant agreement no. 604102 (HBP), and by the European Union’s Horizon 2020 Framework Programme for Research and Innovation under the Specific Grant Agreements No. 720270 (Human Brain Project SGA1) and No. 785907 (Human Brain Project SGA2) and by the EBRAINS research infrastructure, funded from the European Union’s Horizon 2020 Framework Programme for Research and Innovation under the Specific Grant Agreement No. 945539 (Human Brain Project SGA3).
 
+
+..
+    The following image is also defined in the index.rst file, as the relative path is 
+    different, depending from where it is sourced.
+    The following location is used for the github README
+    The index.rst location is used for the docs README; index.rst also defined an end-marker, 
+    to skip content after the marker 'substitutions'.
+
+.. substitutions
 .. |banner| image:: docs/source/logo/BluePyEfeBanner.jpg
