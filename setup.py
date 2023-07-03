@@ -1,7 +1,7 @@
 """BluePyEfe setup """
 
 """
-Copyright (c) 2020, EPFL/Blue Brain Project
+Copyright (c) 2020-2023, EPFL/Blue Brain Project
 
  This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
 
