@@ -1,0 +1,47 @@
+{
+  "title" : "BluePyEfe",
+  "license": "LGPLv3",
+  "upload_type": "software",
+  "description": "BluePyEfe aims at easing the process of reading experimental recordings and extracting batches of electrical features from these recordings. To do so, it combines trace reading functions and features extraction functions from the eFel library. BluePyEfe outputs protocols and features files in the format used by BluePyOpt for neuron electrical model building.",
+  "creators": [
+    {
+      "affiliation": "Blue Brain Project, EPFL",
+      "name": "Rössert, Christian",
+      "orcid": "0000-0002-4839-2424"
+    },
+    {
+      "affiliation": "Blue Brain Project, EPFL",
+      "name": "Van Geit, Werner",
+      "orcid": "0000-0002-2915-720X"
+    },
+    {
+      "affiliation": "Blue Brain Project, EPFL",
+      "name": "Iavarone, Elisabetta",
+      "orcid": "0000-0001-5157-247X"
+    },
+    {
+      "affiliation": "Institute of Biophysics (IBF), CNR",
+      "name": "Bologna, Luca Leonardo",
+      "orcid": "0000-0002-7280-9285"
+    },
+    {
+      "affiliation": "Blue Brain Project, EPFL",
+      "name": "Damart, Tanguy",
+      "orcid": "0000-0003-2175-7304"
+    },
+    {
+      "affiliation": "Blue Brain Project, EPFL",
+      "name": "Sanin, Aleksei"
+    },
+    {
+      "affiliation": "Centre National de la Recherche Scientifique (CNRS)",
+      "name": "Davison, Andrew",
+      "orcid": "0000-0002-4793-7541"
+    },
+    {
+      "affiliation": "Blue Brain Project, EPFL",
+      "name": "Jaquier, Aurélien",
+      "orcid": "0000-0001-6202-6175"
+    }
+  ]
+}
