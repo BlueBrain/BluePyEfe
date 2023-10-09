@@ -115,7 +115,6 @@ def _plot(cell, output_dir, show=False):
 
 def plot_all_recordings(cells, output_dir, show=False, mapper=map):
     """Plot recordings for all cells and all protocols"""
-    mapper(partial(_plot, output_dir=output_dir, show=show), cells)
     if mapper == map:
         # For the built-in map(), ensure immediate evaluation as it returns a lazy iterator
         # which won't execute the function until iterated over. Converting to a list forces this iteration.
