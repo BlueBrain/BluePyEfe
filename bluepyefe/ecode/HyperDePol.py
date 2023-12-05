@@ -95,7 +95,7 @@ class HyperDePol(Recording):
             "toff": self.toff,
             "amp": self.amp,
             "amp2": self.amp2,
-            "thresh_perc": self.amp2_rel,
+            "thresh_perc": self.amp_rel,
             "duration": self.toff - self.ton,
             "totduration": self.tend,
         }

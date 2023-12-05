@@ -192,6 +192,9 @@ class Protocol():
             if key == "amp" and self.global_rheobase:
                 amp_rel = operator([c["amp_rel"] for c in params])
                 mean_param = float(amp_rel) * self.global_rheobase / 100.
+            elif key == "amp2" and self.global_rheobase:
+                amp_rel2 = operator([c["amp_rel2"] for c in params])
+                mean_param = float(amp_rel2) * self.global_rheobase / 100.
             else:
                 mean_param = operator([numpy.nan if c[key] is None else c[key] for c in params])
 
