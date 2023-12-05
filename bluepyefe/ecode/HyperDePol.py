@@ -31,6 +31,9 @@ class HyperDePol(Recording):
 
     """HyperDepol current stimulus
 
+    The hyperpolarizing step is usually fixed at 100% of rheobase, and the hyperpolarizing step
+    can usually vary from -40% to -160% of rheobase.
+
 
           hypamp         hypamp+amp           hypamp+amp2         hypamp
             :                :                     :                :
@@ -95,7 +98,7 @@ class HyperDePol(Recording):
             "toff": self.toff,
             "amp": self.amp,
             "amp2": self.amp2,
-            "thresh_perc": self.amp2_rel,
+            "thresh_perc": self.amp_rel,
             "duration": self.toff - self.ton,
             "totduration": self.tend,
         }
