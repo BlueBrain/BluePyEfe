@@ -125,6 +125,7 @@ class SAHP(Recording):
         self.set_amplitudes_ecode("amp", config_data, reader_data, amp_value)
 
         amp2_value = numpy.median(smooth_current[self.tmid : self.tmid2]) - self.hypamp
+        print(f"amp2 is {amp2_value}")
         self.set_amplitudes_ecode("amp2", config_data, reader_data, amp2_value)
 
         if config_data.get("tend", None) is None:
