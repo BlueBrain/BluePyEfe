@@ -304,10 +304,16 @@ class ExtractorTest(unittest.TestCase):
         self.assertEqual(len(cells), 1)
         self.assertEqual(len(cells[0].recordings), 24)
         self.assertLess(abs(cells[0].rheobase - 0.1103), 0.01)
-        self.assertLess(abs(cells[0].recordings[0].amp - 0.0953), 0.01)
-        self.assertLess(abs(cells[0].recordings[0].amp2 - 0.3153), 0.01)
-        self.assertLess(abs(cells[0].recordings[0].amp_rel - 86.4), 0.1)
-        self.assertLess(abs(cells[0].recordings[0].amp2_rel - 285.8), 0.1)
+
+        # amplitude test for one recording
+        # sort the recordings because they can be in any order,
+        # and we want to select the same one each time we test
+        sahp_recs = [rec for rec in cells[0].recordings if rec.protocol_name == "sAHP"]
+        rec1 = sorted(sahp_recs, key=lambda x: x.amp2)[1]
+        self.assertLess(abs(rec1.amp - 0.0953), 0.01)
+        self.assertLess(abs(rec1.amp2 - 0.3153), 0.01)
+        self.assertLess(abs(rec1.amp_rel - 86.4), 0.1)
+        self.assertLess(abs(rec1.amp2_rel - 285.8), 0.1)
 
 
         protocols = bluepyefe.extract.group_efeatures(
