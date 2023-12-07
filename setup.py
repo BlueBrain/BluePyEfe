@@ -34,7 +34,7 @@ setuptools.setup(
     "the eFel library. BluePyEfe outputs protocols and features files in a "
     "format that can then be used by BluePyOpt for electrical model building "
     "purposes.",
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(exclude=["tests"]),
     python_requires=">=3.8",
     include_package_data=True,
     author="BlueBrain Project, EPFL",
