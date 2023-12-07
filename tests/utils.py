@@ -15,10 +15,6 @@ def download_sahp_datafiles():
     idthresh_pathname = "X_IDthresh"
     idthresh_ch = ["ch0", "ch1"]
     idthresh_numbers = list(range(349, 358)) + list(range(362, 371))
-    # https://raw.githubusercontent.com/BlueBrain/SSCxEModelExamples/tree/main/feature_extraction/input-traces/C060109A1-SR-C1/
-    # https://github.com/BlueBrain/SSCxEModelExamples/blob/c24f096495150698547741b9a34dab84e0335649/feature_extraction/input-traces/C060109A1-SR-C1/X_IDthresh_ch1_370.ibw
-    # https://github.com/BlueBrain/SSCxEModelExamples/raw/main/feature_extraction/input-traces/C060109A1-SR-C1/X_IDthresh_ch1_370.ibw
-    # https://raw.githubusercontent.com/BlueBrain/SSCxEModelExamples/main/feature_extraction/input-traces/C060109A1-SR-C1//X_IDthresh_ch1_370.ibw
 
     sahp_paths = [f"{sahp_pathname}_{ch}_{n}.ibw" for ch in sahp_ch for n in sahp_numbers]
     idthresh_paths = [f"{idthresh_pathname}_{ch}_{n}.ibw" for ch in idthresh_ch for n in idthresh_numbers]
