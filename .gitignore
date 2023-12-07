@@ -14,3 +14,5 @@ test_run
 MouseCells/
 .ipynb_checkpoints/
 coverage.xml
+MouseCells_sAHP/
+tests/exp_data/X/
