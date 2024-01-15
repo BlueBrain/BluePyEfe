@@ -67,11 +67,13 @@ class Recording(ABC):
         self.t = None
         self.current = None
         self.voltage = None
+        self.amp = None
+        self.hypamp = None
 
         self.repetition = None
 
         if len(reader_data):
-            self.t, self.current, self.voltage = self.standardize_trace(
+            self.t, self.current, self.voltage, self.amp, self.hypamp = self.standardize_trace(
                 config_data, reader_data
             )
 
@@ -189,8 +191,12 @@ class Recording(ABC):
         # Convert current to nA
         if "i_unit" in config_data and config_data["i_unit"] is not None:
             current = to_nA(reader_data["current"], config_data["i_unit"])
+            amp = to_nA(reader_data["amp"], config_data["i_unit"])
+            hypamp = to_nA(reader_data["hypamp"], config_data["i_unit"])
         elif "i_unit" in reader_data and reader_data["i_unit"] is not None:
             current = to_nA(reader_data["current"], reader_data["i_unit"])
+            amp = to_nA(reader_data["amp"], reader_data["i_unit"])
+            hypamp = to_nA(reader_data["hypamp"], reader_data["i_unit"])
         else:
             raise Exception(
                 "Current unit not configured for " "file {}".format(self.files)
@@ -221,7 +227,7 @@ class Recording(ABC):
         if "repetition" in reader_data:
             self.repetition = reader_data["repetition"]
 
-        return t, current, voltage
+        return t, current, voltage, amp, hypamp
 
     def call_efel(self, efeatures, efel_settings=None):
         """ Calls efel to compute the wanted efeatures """
