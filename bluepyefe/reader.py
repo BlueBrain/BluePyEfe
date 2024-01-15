@@ -208,16 +208,16 @@ def csv_lccr_reader(in_data):
         in_data (dict): of the format
         {
             'filepath': "./XXX.txt",
-            'dt': 1,
+            'dt': 0.1,
             'ton': 2000,
             'toff': 2500,
             'ljp': 14.0,
             'amplitudes': [10 -10 20 -20 30 -30 40 -40 50 -50],
-            'hypamp': -0.2,
+            'hypamp': -20 (units should match 'amplitudes'),
             'remove_last_100ms': True,
             'v_unit': 'mV',
             't_unit': 'ms',
-            'i_unit': 'pA' units of amplitudes array
+            'i_unit': 'pA' current unit for 'amplitudes' and 'hypamp'
         }
     """
     _check_metadata(
@@ -266,7 +266,7 @@ def csv_lccr_reader(in_data):
         current = numpy.zeros_like(voltage)
         ion, ioff = int(ton / dt), int(toff / dt)
         current[:] = hypamp
-        current[ion:ioff] = [amplitude + hypamp]
+        current[ion:ioff] = amplitude + hypamp
         trace_data = {
             "filename": os.path.basename(in_data['filepath']),
             "current": current,
