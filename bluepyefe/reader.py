@@ -212,12 +212,12 @@ def csv_lccr_reader(in_data):
             'ton': 2000,
             'toff': 2500,
             'ljp': 14.0,
-            'amplitudes': [0, 10, 20, 30, 40, 50, 60, 70, 80, 90],
+            'amplitudes': [10 -10 20 -20 30 -30 40 -40 50 -50],
             'hypamp': -0.2
             'remove_last_100ms': True,
             'v_unit': 'mV',
             't_unit': 'ms',
-            'i_unit': 'nA'
+            'i_unit': 'pA' units of amplitudes array
         }
     """
     _check_metadata(
@@ -231,7 +231,7 @@ def csv_lccr_reader(in_data):
     fln = os.path.join(in_data['filepath'])
     if not os.path.isfile(fln):
         raise FileNotFoundError(
-            f"Please provide a string with the filename of the CSV file; "
+            "Please provide a string with the filename of the txt file; "
             f"current path not found: {fln}"
         )
 
@@ -247,7 +247,7 @@ def csv_lccr_reader(in_data):
         columns = list(zip(*reader))
         length = numpy.shape(columns)[1]
 
-        voltage = numpy.array([
+        voltages = numpy.array([
             [
                 float(string) if string not in ["-", ""] else 0
                 for string in column
@@ -259,14 +259,13 @@ def csv_lccr_reader(in_data):
     # Remove last 100 ms if needed
     if in_data.get('remove_last_100ms', False):
         slice_end = int(-100. / dt)
-        voltage = voltage[:, :slice_end]
+        voltages = voltages[:, :slice_end]
         t = t[:slice_end]
 
-    for ic, voltage in enumerate(voltage):
-        amp = amplitudes[ic]
+    for amplitude, voltage in zip(amplitudes, voltages):
         current = numpy.zeros_like(voltage)
         ion, ioff = int(ton / dt), int(toff / dt)
-        current[ion:ioff] = amp
+        current[ion:ioff] = amplitude
 
         trace_data = {
             "filename": os.path.basename(in_data['filepath']),
@@ -276,7 +275,7 @@ def csv_lccr_reader(in_data):
             "dt": numpy.float64(dt),
             "ton": numpy.float64(ton),
             "toff": numpy.float64(toff),
-            "amp": numpy.float64(amp),
+            "amp": numpy.float64(amplitude),
             "hypamp": numpy.float64(hypamp),
             "ljp": in_data.get('ljp', 0),
             "i_unit": in_data['i_unit'],
