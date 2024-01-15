@@ -189,14 +189,20 @@ class Recording(ABC):
             )
 
         # Convert current to nA
+        amp = None
+        hypamp = None
         if "i_unit" in config_data and config_data["i_unit"] is not None:
             current = to_nA(reader_data["current"], config_data["i_unit"])
-            amp = to_nA(reader_data["amp"], config_data["i_unit"])
-            hypamp = to_nA(reader_data["hypamp"], config_data["i_unit"])
+            if "amp" in reader_data:
+                amp = to_nA(reader_data["amp"], config_data["i_unit"])
+            if "hypamp" in reader_data:
+                hypamp = to_nA(reader_data["hypamp"], config_data["i_unit"])
         elif "i_unit" in reader_data and reader_data["i_unit"] is not None:
             current = to_nA(reader_data["current"], reader_data["i_unit"])
-            amp = to_nA(reader_data["amp"], reader_data["i_unit"])
-            hypamp = to_nA(reader_data["hypamp"], reader_data["i_unit"])
+            if "amp" in reader_data:
+                amp = to_nA(reader_data["amp"], reader_data["i_unit"])
+            if "hypamp" in reader_data:
+                hypamp = to_nA(reader_data["hypamp"], reader_data["i_unit"])
         else:
             raise Exception(
                 "Current unit not configured for " "file {}".format(self.files)
