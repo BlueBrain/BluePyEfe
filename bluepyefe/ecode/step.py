@@ -129,8 +129,7 @@ class Step(Recording):
                 smooth_current = scipy_signal2d(current, 85)
             _ = numpy.abs(smooth_current[idx_buffer:] - self.hypamp)
             self.ton = idx_buffer + numpy.argmax(_ > step_threshold)
-
-        else:
+        elif self.hypamp is None:
             # Infer the base current hypamp
             self.hypamp = base_current(current, idx_ton=self.ton)
 
