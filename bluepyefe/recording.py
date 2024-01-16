@@ -233,8 +233,7 @@ class Recording(ABC):
         # WARNING: the ljp is informed as a positive float but we substract it
         # from the voltage
         if "ljp" in config_data and config_data["ljp"] is not None:
-            voltage = voltage - config_data["ljp"]
-
+            voltage = numpy.array(voltage) - config_data["ljp"]
         if "repetition" in reader_data:
             self.repetition = reader_data["repetition"]
 

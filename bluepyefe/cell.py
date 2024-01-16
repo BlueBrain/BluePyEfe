@@ -73,6 +73,8 @@ class Cell(object):
             return igor_reader(config_data)
         if ".nwb" in filename:
             return nwb_reader(config_data)
+        if ".txt" in filename:
+            return csv_lccr_reader(config_data)
 
         raise Exception(
             "The format of the ephys files is unknown and no custom reader"

@@ -23,6 +23,7 @@ import h5py
 import numpy
 import scipy.io
 from neo import io
+import os
 
 from . import igorpy
 from .nwbreader import BBPNWBReader, ScalaNWBReader, AIBSNWBReader
@@ -197,5 +198,91 @@ def nwb_reader(in_data):
             reader = ScalaNWBReader(content, target_protocols)
 
         data = reader.read()
+
+    return data
+
+
+def csv_lccr_reader(in_data):
+    """Reader to read .txt (csv_lccr)
+    Args:
+        in_data (dict): of the format
+        {
+            'filepath': "./XXX.txt",
+            'dt': 0.1,
+            'ton': 2000,
+            'toff': 2500,
+            'ljp': 14.0,
+            'amplitudes': [10 -10 20 -20 30 -30 40 -40 50 -50],
+            'hypamp': -20 # (units should match 'amplitudes'),
+            'remove_last_100ms': True,
+            'v_unit': 'mV',
+            't_unit': 'ms',
+            'i_unit': 'pA' # current unit for 'amplitudes' and 'hypamp'
+        }
+    """
+    _check_metadata(
+        in_data,
+        csv_lccr_reader.__name__,
+        ["filepath", "dt", "amplitudes", "v_unit", "t_unit", "i_unit", "ton", "toff", "hypamp"],
+    )
+
+    data = []
+
+    fln = os.path.join(in_data['filepath'])
+    if not os.path.isfile(fln):
+        raise FileNotFoundError(
+            "Please provide a string with the filename of the txt file; "
+            f"current path not found: {fln}"
+        )
+
+    dt = in_data['dt']
+    ton = in_data['ton']
+    toff = in_data['toff']
+    amplitudes = in_data['amplitudes']
+    hypamp = in_data['hypamp']
+
+    import csv
+    with open(fln, 'rt') as f:
+        reader = csv.reader(f, delimiter='\t')
+        columns = list(zip(*reader))
+        length = numpy.shape(columns)[1]
+
+        voltages = numpy.array([
+            [
+                float(string) if string not in ["-", ""] else 0
+                for string in column
+            ]
+            for column in columns
+        ])
+        t = numpy.arange(length) * dt
+
+    # Remove last 100 ms if needed
+    if in_data.get('remove_last_100ms', False):
+        slice_end = int(-100. / dt)
+        voltages = voltages[:, :slice_end]
+        t = t[:slice_end]
+
+    for amplitude, voltage in zip(amplitudes, voltages):
+        current = numpy.zeros_like(voltage)
+        ion, ioff = int(ton / dt), int(toff / dt)
+        current[:] = hypamp
+        current[ion:ioff] = amplitude + hypamp
+        trace_data = {
+            "filename": os.path.basename(in_data['filepath']),
+            "current": current,
+            "voltage": voltage,
+            "t": t,
+            "dt": numpy.float64(dt),
+            "ton": numpy.float64(ton),
+            "toff": numpy.float64(toff),
+            "amp": numpy.float64(amplitude),
+            "hypamp": numpy.float64(hypamp),
+            "ljp": in_data.get('ljp', 0),
+            "i_unit": in_data['i_unit'],
+            "v_unit": in_data['v_unit'],
+            "t_unit": in_data['t_unit'],
+        }
+
+        data.append(trace_data)
 
     return data
