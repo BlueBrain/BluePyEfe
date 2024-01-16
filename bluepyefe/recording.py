@@ -117,12 +117,19 @@ class Recording(ABC):
          given current amplitude is provided. If it isn't use the value
          computed from the current series"""
 
+        unit = config_data.get("i_unit") or reader_data.get("i_unit")
+
+        if unit is None:
+            raise Exception(f"Current unit not configured for file {self.files}")
+
         if amp_name in config_data and config_data[amp_name] is not None:
-            setattr(self, amp_name, config_data[amp_name])
+            amp = to_nA(config_data[amp_name], unit)
         elif amp_name in reader_data and reader_data[amp_name] is not None:
-            setattr(self, amp_name, reader_data[amp_name])
+            amp = to_nA(reader_data[amp_name], unit)
         else:
-            setattr(self, amp_name, value)
+            amp = value
+
+        setattr(self, amp_name, amp)
 
     def index_to_ms(self, name_timing, time_series):
         """Used by some of the children classes to translate a timing attribute
