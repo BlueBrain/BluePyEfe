@@ -60,8 +60,6 @@ class Step(Recording):
         self.ton = None
         self.toff = None
         self.tend = None
-        self.amp = None
-        self.hypamp = None
         self.dt = None
 
         self.amp_rel = None
@@ -122,20 +120,6 @@ class Step(Recording):
             self.toff = int(round(reader_data["toff"]))
         else:
             self.toff = None
-
-        # amp
-        if "amp" in config_data and config_data["amp"] is not None:
-            self.amp = config_data["amp"]
-        elif "amp" in reader_data and reader_data["amp"] is not None:
-            self.amp = reader_data["amp"]
-        else:
-            self.amp = None
-
-        # hypamp
-        if "hypamp" in config_data and config_data["hypamp"] is not None:
-            self.hypamp = config_data["hypamp"]
-        elif "hypamp" in reader_data and reader_data["hypamp"] is not None:
-            self.hypamp = reader_data["hypamp"]
 
         # Infer the begin and end of the step current
         if self.ton is None:

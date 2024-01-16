@@ -288,7 +288,7 @@ class ExtractorTest(unittest.TestCase):
             protocols = json.load(fp)
 
         self.assertEqual(len(features), len(protocols))
-    
+
     def test_extract_sahp(self):
 
         files_metadata, targets = get_sahp_config()

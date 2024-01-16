@@ -67,11 +67,13 @@ class Recording(ABC):
         self.t = None
         self.current = None
         self.voltage = None
+        self.amp = None
+        self.hypamp = None
 
         self.repetition = None
 
         if len(reader_data):
-            self.t, self.current, self.voltage = self.standardize_trace(
+            self.t, self.current, self.voltage, self.amp, self.hypamp = self.standardize_trace(
                 config_data, reader_data
             )
 
@@ -115,12 +117,19 @@ class Recording(ABC):
          given current amplitude is provided. If it isn't use the value
          computed from the current series"""
 
+        unit = config_data.get("i_unit") or reader_data.get("i_unit")
+
+        if unit is None:
+            raise Exception(f"Current unit not configured for file {self.files}")
+
         if amp_name in config_data and config_data[amp_name] is not None:
-            setattr(self, amp_name, config_data[amp_name])
+            amp = to_nA(config_data[amp_name], unit)
         elif amp_name in reader_data and reader_data[amp_name] is not None:
-            setattr(self, amp_name, reader_data[amp_name])
+            amp = to_nA(reader_data[amp_name], unit)
         else:
-            setattr(self, amp_name, value)
+            amp = value
+
+        setattr(self, amp_name, amp)
 
     def index_to_ms(self, name_timing, time_series):
         """Used by some of the children classes to translate a timing attribute
@@ -187,10 +196,18 @@ class Recording(ABC):
             )
 
         # Convert current to nA
-        if "i_unit" in config_data and config_data["i_unit"] is not None:
-            current = to_nA(reader_data["current"], config_data["i_unit"])
-        elif "i_unit" in reader_data and reader_data["i_unit"] is not None:
-            current = to_nA(reader_data["current"], reader_data["i_unit"])
+        # Determine the unit to use
+        unit = config_data.get("i_unit") or reader_data.get("i_unit")
+        if unit:
+            current = to_nA(reader_data.get("current", 0), unit)
+
+            # Set amp - prioritize amp in config_data
+            amp_source = config_data if "amp" in config_data else reader_data
+            amp = to_nA(amp_source.get("amp", 0), unit) if "amp" in amp_source else None
+
+            # Set hypamp - prioritize hypamp in config_data
+            hypamp_source = config_data if "hypamp" in config_data else reader_data
+            hypamp = to_nA(hypamp_source.get("hypamp", 0), unit) if "hypamp" in hypamp_source else None
         else:
             raise Exception(
                 "Current unit not configured for " "file {}".format(self.files)
@@ -220,7 +237,7 @@ class Recording(ABC):
         if "repetition" in reader_data:
             self.repetition = reader_data["repetition"]
 
-        return t, current, voltage
+        return t, current, voltage, amp, hypamp
 
     def call_efel(self, efeatures, efel_settings=None):
         """ Calls efel to compute the wanted efeatures """
