@@ -189,20 +189,18 @@ class Recording(ABC):
             )
 
         # Convert current to nA
-        amp = None
-        hypamp = None
-        if "i_unit" in config_data and config_data["i_unit"] is not None:
-            current = to_nA(reader_data["current"], config_data["i_unit"])
-            if "amp" in reader_data:
-                amp = to_nA(reader_data["amp"], config_data["i_unit"])
-            if "hypamp" in reader_data:
-                hypamp = to_nA(reader_data["hypamp"], config_data["i_unit"])
-        elif "i_unit" in reader_data and reader_data["i_unit"] is not None:
-            current = to_nA(reader_data["current"], reader_data["i_unit"])
-            if "amp" in reader_data:
-                amp = to_nA(reader_data["amp"], reader_data["i_unit"])
-            if "hypamp" in reader_data:
-                hypamp = to_nA(reader_data["hypamp"], reader_data["i_unit"])
+        # Determine the unit to use
+        unit = config_data.get("i_unit") or reader_data.get("i_unit")
+        if unit:
+            current = to_nA(reader_data.get("current", 0), unit)
+
+            # Set amp - prioritize amp in config_data
+            amp_source = config_data if "amp" in config_data else reader_data
+            amp = to_nA(amp_source.get("amp", 0), unit) if "amp" in amp_source else None
+
+            # Set hypamp - prioritize hypamp in config_data
+            hypamp_source = config_data if "hypamp" in config_data else reader_data
+            hypamp = to_nA(hypamp_source.get("hypamp", 0), unit) if "hypamp" in hypamp_source else None
         else:
             raise Exception(
                 "Current unit not configured for " "file {}".format(self.files)
