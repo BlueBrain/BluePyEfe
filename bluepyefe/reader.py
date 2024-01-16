@@ -213,11 +213,11 @@ def csv_lccr_reader(in_data):
             'toff': 2500,
             'ljp': 14.0,
             'amplitudes': [10 -10 20 -20 30 -30 40 -40 50 -50],
-            'hypamp': -20 (units should match 'amplitudes'),
+            'hypamp': -20 # (units should match 'amplitudes'),
             'remove_last_100ms': True,
             'v_unit': 'mV',
             't_unit': 'ms',
-            'i_unit': 'pA' current unit for 'amplitudes' and 'hypamp'
+            'i_unit': 'pA' # current unit for 'amplitudes' and 'hypamp'
         }
     """
     _check_metadata(
