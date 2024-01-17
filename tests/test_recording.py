@@ -43,7 +43,7 @@ class RecordingTest(unittest.TestCase):
     def test_get_params(self):
         params = self.recording.get_params()
         self.assertEqual(len(params), len(self.recording.export_attr))
-    
+
     def test_generate(self):
         t, c = self.recording.generate()
         self.assertEqual(len(t), len(c))
