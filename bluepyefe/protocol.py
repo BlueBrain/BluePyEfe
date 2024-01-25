@@ -198,6 +198,9 @@ class Protocol():
             else:
                 mean_param = operator([numpy.nan if c[key] is None else c[key] for c in params])
 
+            if numpy.isnan(mean_param):
+                mean_param = None
+
             setattr(ecode, key, mean_param)
 
         return ecode
