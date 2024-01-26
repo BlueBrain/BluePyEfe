@@ -32,7 +32,7 @@ def get_apthresh_config(absolute_amplitude=False):
                 "t_unit": "ms",
                 "dt": 0.25,
                 "ljp": 14,
-                "ton": 10,
+                "ton": 10, # in ms
                 "tmid": 260, # in ms
                 "tmid2": 360, # in ms
                 "toff": 1360, # in ms
