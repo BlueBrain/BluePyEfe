@@ -29,13 +29,13 @@ def get_apthresh_config(absolute_amplitude=False):
                 "v_file": file.replace("ch0", "ch1"),
                 "i_unit": "A",
                 "v_unit": "V",
-                "t_unit": "s",
-                "dt": 0.00025,
+                "t_unit": "ms",
+                "dt": 0.25,
                 "ljp": 14,
                 "ton": 10,
-                "tmid": 260,
-                "tmid2": 360,
-                "toff": 1360,
+                "tmid": 260, # in ms
+                "tmid2": 360, # in ms
+                "toff": 1360, # in ms
             }
         )
     files_metadata2 = []
@@ -46,8 +46,8 @@ def get_apthresh_config(absolute_amplitude=False):
                 "v_file": file.replace("ch0", "ch1"),
                 "i_unit": "A",
                 "v_unit": "V",
-                "t_unit": "s",
-                "dt": 0.00025,
+                "t_unit": "ms",
+                "dt": 0.25,
                 "ljp": 14,
             }
         )
