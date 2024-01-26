@@ -141,7 +141,7 @@ class NegCheops(Recording):
         toff = int(self.toff / self.dt)
 
         time = numpy.arange(0.0, self.tend, self.dt)
-        current = numpy.full(time.shape, self.hypamp)
+        current = numpy.full(time.shape, numpy.float64(self.hypamp))
 
         # First peak
         mid = int(0.5 * (ton + t1))

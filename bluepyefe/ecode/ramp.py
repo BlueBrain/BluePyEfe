@@ -128,7 +128,7 @@ class Ramp(Recording):
         toff_idx = int(self.toff / self.dt)
 
         t = numpy.arange(0.0, self.tend, self.dt)
-        current = numpy.full(t.shape, self.hypamp)
+        current = numpy.full(t.shape, numpy.float64(self.hypamp))
         current[ton_idx:toff_idx] += numpy.linspace(
             0.0, self.amp, toff_idx - ton_idx
         )
