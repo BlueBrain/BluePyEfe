@@ -176,7 +176,7 @@ class Step(Recording):
         toff_idx = int(self.toff / self.dt)
 
         t = numpy.arange(0.0, self.tend, self.dt)
-        current = numpy.full(t.shape, self.hypamp)
-        current[ton_idx:toff_idx] += self.amp
+        current = numpy.full(t.shape, numpy.float64(self.hypamp))
+        current[ton_idx:toff_idx] += numpy.float64(self.amp)
 
         return t, current

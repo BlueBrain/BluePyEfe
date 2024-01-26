@@ -239,10 +239,10 @@ class SAHP(Recording):
         toff = int(self.toff / self.dt)
 
         time = numpy.arange(0.0, self.tend, self.dt)
-        current = numpy.full(time.shape, self.hypamp)
-        current[ton:tmid] += self.amp
-        current[tmid2:toff] += self.amp
-        current[tmid:tmid2] += self.amp2
+        current = numpy.full(time.shape, numpy.float64(self.hypamp))
+        current[ton:tmid] += numpy.float64(self.amp)
+        current[tmid2:toff] += numpy.float64(self.amp)
+        current[tmid:tmid2] += numpy.float64(self.amp2)
 
         return time, current
 
