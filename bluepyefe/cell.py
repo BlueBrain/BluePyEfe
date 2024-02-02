@@ -277,7 +277,6 @@ class Cell(object):
                 dirname = pathlib.Path(output_dir) / self.name
                 _save_fig(dirname, filename)
 
-
     def plot_all_recordings(self, output_dir=None, show=False):
         """Plot all the recordings of the cell.
 
