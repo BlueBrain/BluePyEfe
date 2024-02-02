@@ -270,7 +270,7 @@ class Cell(object):
             plt.margins(0, 0)
 
             if show:
-                plt.show()
+                fig.show()
 
             if output_dir is not None:
                 filename = f"{self.name}_{protocol_name}_recordings_page_{page + 1}.pdf"
