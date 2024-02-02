@@ -230,7 +230,7 @@ class Cell(object):
         recordings_sorted = [recordings[k] for k in numpy.argsort(recordings_amp)]
 
         n_cols = 6
-        max_plots_per_page = 48
+        max_plots_per_page = 24
         total_pages = int(numpy.ceil(len(recordings_sorted) / max_plots_per_page))
 
         for page in range(total_pages):
@@ -253,7 +253,7 @@ class Cell(object):
                 display_ylabel = col == 0
                 display_xlabel = (row // 2) + 1 == n_rows // 2
 
-                _, _ = rec.plot(
+                rec.plot(
                     axis_current=axs[row][col],
                     axis_voltage=axs[row + 1][col],
                     display_xlabel=display_xlabel,
@@ -275,11 +275,7 @@ class Cell(object):
             if output_dir is not None:
                 filename = f"{self.name}_{protocol_name}_recordings_page_{page + 1}.pdf"
                 dirname = pathlib.Path(output_dir) / self.name
-                filepath = dirname / filename
-                dirname.mkdir(parents=True, exist_ok=True)
-                fig.savefig(filepath, bbox_inches='tight')
-
-            plt.close(fig)
+                _save_fig(dirname, filename)
 
 
     def plot_all_recordings(self, output_dir=None, show=False):
