@@ -26,6 +26,7 @@ import pathlib
 from bluepyefe.ecode import eCodes
 from bluepyefe.reader import *
 from bluepyefe.plotting import _save_fig
+from matplotlib.backends.backend_pdf import PdfPages
 
 logger = logging.getLogger(__name__)
 
@@ -233,6 +234,13 @@ class Cell(object):
         max_plots_per_page = 24
         total_pages = int(numpy.ceil(len(recordings_sorted) / max_plots_per_page))
 
+        if output_dir is not None:
+            filename = f"{self.name}_{protocol_name}_recordings.pdf"
+            dirname = pathlib.Path(output_dir) / self.name
+            dirname.mkdir(parents=True, exist_ok=True)
+            filepath = dirname / filename
+            pdf = PdfPages(filepath)
+
         for page in range(total_pages):
             start_idx = page * max_plots_per_page
             end_idx = start_idx + max_plots_per_page
@@ -273,9 +281,10 @@ class Cell(object):
                 fig.show()
 
             if output_dir is not None:
-                filename = f"{self.name}_{protocol_name}_recordings_page_{page + 1}.pdf"
-                dirname = pathlib.Path(output_dir) / self.name
-                _save_fig(dirname, filename)
+                pdf.savefig(fig)
+
+        if output_dir is not None:
+            pdf.close()
 
     def plot_all_recordings(self, output_dir=None, show=False):
         """Plot all the recordings of the cell.
