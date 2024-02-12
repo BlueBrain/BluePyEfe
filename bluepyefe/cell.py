@@ -284,7 +284,6 @@ class Cell(object):
                     plt.close("all")
                     plt.clf()
 
-
     def plot_all_recordings(self, output_dir=None, show=False):
         """Plot all the recordings of the cell.
 
