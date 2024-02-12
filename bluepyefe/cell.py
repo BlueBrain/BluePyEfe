@@ -231,7 +231,7 @@ class Cell(object):
         recordings_sorted = [recordings[k] for k in numpy.argsort(recordings_amp)]
 
         n_cols = 6
-        max_plots_per_page = 24
+        max_plots_per_page = 12
         total_pages = int(numpy.ceil(len(recordings_sorted) / max_plots_per_page))
 
         if output_dir is not None:
