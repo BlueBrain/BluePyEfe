@@ -26,6 +26,7 @@ import pathlib
 from bluepyefe.ecode import eCodes
 from bluepyefe.reader import *
 from bluepyefe.plotting import _save_fig
+from matplotlib.backends.backend_pdf import PdfPages
 
 logger = logging.getLogger(__name__)
 
@@ -225,55 +226,64 @@ class Cell(object):
         recordings = self.get_recordings_by_protocol_name(protocol_name)
 
         if not len(recordings):
-            return None, None
+            return
 
         recordings_amp = [rec.amp for rec in recordings]
-        recordings = [recordings[k] for k in numpy.argsort(recordings_amp)]
+        recordings_sorted = [recordings[k] for k in numpy.argsort(recordings_amp)]
 
         n_cols = 6
-        n_rows = int(2 * numpy.ceil(len(recordings) / n_cols))
-
-        fig, axs = plt.subplots(
-            n_rows, n_cols,
-            figsize=[3.0 + 3.0 * int(n_cols), 2.5 * n_rows],
-            squeeze=False
-        )
-
-        for i, rec in enumerate(recordings):
-
-            col = i % int(n_cols)
-            row = 2 * int(i / n_cols)
-
-            display_ylabel = col == 0
-            display_xlabel = row + 1 == axs.shape[0]
-
-            _, _ = rec.plot(
-                axis_current=axs[row][col],
-                axis_voltage=axs[row + 1][col],
-                display_xlabel=display_xlabel,
-                display_ylabel=display_ylabel
-            )
-
-        fig.suptitle("Cell: {}, Experiment: {}".format(self.name, protocol_name))
-
-        plt.subplots_adjust(wspace=0.53, hspace=0.7)
-
-        for ax in axs.flatten():
-            if not ax.lines:
-                ax.set_visible(False)
-
-        # Do not use tight-layout, it significantly increases the runtime
-        plt.margins(0, 0)
-
-        if show:
-            fig.show()
+        max_plots_per_page = 12
+        total_pages = int(numpy.ceil(len(recordings_sorted) / max_plots_per_page))
 
         if output_dir is not None:
-            filename = "{}_{}_recordings.pdf".format(self.name, protocol_name)
+            filename = f"{self.name}_{protocol_name}_recordings.pdf"
             dirname = pathlib.Path(output_dir) / self.name
-            _save_fig(dirname, filename)
+            dirname.mkdir(parents=True, exist_ok=True)
+            filepath = dirname / filename
 
-        return fig, axs
+            with PdfPages(filepath) as pdf:
+                for page in range(total_pages):
+                    start_idx = page * max_plots_per_page
+                    end_idx = start_idx + max_plots_per_page
+                    page_recordings = recordings_sorted[start_idx:end_idx]
+
+                    n_rows = int(numpy.ceil(len(page_recordings) / n_cols)) * 2
+
+                    fig, axs = plt.subplots(
+                        n_rows, n_cols,
+                        figsize=[3.0 * n_cols, 2.5 * n_rows],
+                        squeeze=False
+                    )
+
+                    for i, rec in enumerate(page_recordings):
+                        col = i % n_cols
+                        row = (i // n_cols) * 2
+
+                        display_ylabel = col == 0
+                        display_xlabel = (row // 2) + 1 == n_rows // 2
+
+                        rec.plot(
+                            axis_current=axs[row][col],
+                            axis_voltage=axs[row + 1][col],
+                            display_xlabel=display_xlabel,
+                            display_ylabel=display_ylabel
+                        )
+
+                    fig.suptitle(f"Cell: {self.name}, Experiment: {protocol_name}, Page: {page + 1}")
+                    plt.subplots_adjust(wspace=0.53, hspace=0.7)
+
+                    for ax in axs.flatten():
+                        if not ax.lines:
+                            ax.set_visible(False)
+
+                    plt.margins(0, 0)
+
+                    if show:
+                        plt.show()
+
+                    pdf.savefig(fig, dpi=80)
+                    plt.close("all")
+                    plt.clf()
 
     def plot_all_recordings(self, output_dir=None, show=False):
         """Plot all the recordings of the cell.
