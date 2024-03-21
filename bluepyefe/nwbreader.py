@@ -86,7 +86,10 @@ class AIBSNWBReader(NWBReader):
             if not isinstance(protocol_name, str):
                 protocol_name = protocol_name.decode('UTF-8')
 
-            if self.target_protocols and protocol_name not in self.target_protocols:
+            if (
+                self.target_protocols and
+                protocol_name.lower() not in [prot.lower() for prot in self.target_protocols]
+            ):
                 continue
 
             data.append(self._format_nwb_trace(
@@ -113,7 +116,10 @@ class ScalaNWBReader(NWBReader):
             key_current = sweep.replace('Series', 'StimulusSeries')
             protocol_name = "Step"
 
-            if self.target_protocols and protocol_name not in self.target_protocols:
+            if (
+                self.target_protocols and
+                protocol_name.lower() not in [prot.lower() for prot in self.target_protocols]
+            ):
                 continue
 
             if key_current not in self.content['stimulus']['presentation']:
