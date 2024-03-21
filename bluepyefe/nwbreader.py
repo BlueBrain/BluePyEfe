@@ -215,7 +215,7 @@ class BBPNWBReader(NWBReader):
                             # if we have v_file, check that trace comes from this original file
                             if self.v_file is not None:
                                 attrs = self.content["acquisition"][trace_name].attrs
-                                if not "description" in attrs:
+                                if "description" not in attrs:
                                     logger.warning(
                                         "Ignoring %s because no description could be found.",
                                         trace_name
