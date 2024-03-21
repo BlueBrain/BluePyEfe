@@ -5,18 +5,20 @@ logger = logging.getLogger(__name__)
 
 
 class NWBReader:
-    def __init__(self, content, target_protocols, repetition=None):
+    def __init__(self, content, target_protocols, repetition=None, v_file=None):
         """ Init
 
         Args:
             content (h5.File): NWB file
             target_protocols (list of str): list of the protocols to be read and returned
             repetition (list of int): id of the repetition(s) to be read and returned
+            v_file (str): name of original file that can be retrieved in sweep's description
         """
 
         self.content = content
         self.target_protocols = target_protocols
         self.repetition = repetition
+        self.v_file = v_file
 
     def read(self):
         """ Read the content of the NWB file
@@ -162,8 +164,21 @@ class BBPNWBReader(NWBReader):
         for ecode in self.target_protocols:
             for cell_id in self.content["data_organization"].keys():
                 if ecode not in self.content["data_organization"][cell_id]:
-                    logger.debug(f"No eCode {ecode} in nwb.")
-                    continue
+                    new_ecode = next(
+                        iter(
+                            ec
+                            for ec in self.content["data_organization"][cell_id]
+                            if ec.lower() == ecode.lower()
+                        )
+                    )
+                    if new_ecode:
+                        logger.debug(
+                            f"Could not find {ecode} in nwb file, will use {new_ecode} instead"
+                        )
+                        ecode = new_ecode
+                    else:
+                        logger.debug(f"No eCode {ecode} in nwb.")
+                        continue
 
                 ecode_content = self.content["data_organization"][cell_id][ecode]
 
@@ -185,10 +200,19 @@ class BBPNWBReader(NWBReader):
                                 logger.debug(f"Ignoring {key_current} not"
                                              " present in the stimulus presentation")
                                 continue
+
                             if trace_name not in self.content["acquisition"]:
                                 logger.debug(f"Ignoring {trace_name} not"
                                              " present in the acquisition")
                                 continue
+
+                            # if we have v_file, check that trace comes from this original file
+                            if self.v_file is not None:
+                                attrs = self.content["acquisition"][trace_name].attrs
+                                v_file_end = "/" + "/".join(self.v_file.split("/")[-2:])
+                                if v_file_end != attrs.get("description", ""):
+                                    logger.debug(f"Ignoring {trace_name} not matching v_file")
+                                    continue
 
                             data.append(self._format_nwb_trace(
                                 voltage=self.content["acquisition"][trace_name]["data"],

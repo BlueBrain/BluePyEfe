@@ -62,7 +62,8 @@ class Cell(object):
 
         if "v_file" in config_data:
             filename = config_data["v_file"]
-        elif "filepath" in config_data:
+        # if both present: use filepath. e.g. for some nwb that 'contain' igor files
+        if "filepath" in config_data:
             filename = config_data["filepath"]
 
         if recording_reader:
