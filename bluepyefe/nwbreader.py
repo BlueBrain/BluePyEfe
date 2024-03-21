@@ -209,8 +209,8 @@ class BBPNWBReader(NWBReader):
                             # if we have v_file, check that trace comes from this original file
                             if self.v_file is not None:
                                 attrs = self.content["acquisition"][trace_name].attrs
-                                v_file_end = "/" + "/".join(self.v_file.split("/")[-2:])
-                                if v_file_end != attrs.get("description", ""):
+                                v_file_end = self.v_file.split("/")[-1]
+                                if v_file_end != attrs.get("description", "").split("/")[-1]:
                                     logger.debug(f"Ignoring {trace_name} not matching v_file")
                                     continue
 
