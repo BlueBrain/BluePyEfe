@@ -191,7 +191,12 @@ def nwb_reader(in_data):
 
     with h5py.File(in_data["filepath"], "r") as content:
         if "data_organization" in content:
-            reader = BBPNWBReader(content, target_protocols, in_data.get("repetition", None))
+            reader = BBPNWBReader(
+                content,
+                target_protocols,
+                in_data.get("repetition", None),
+                in_data.get("v_file", None)
+            )
         elif "timeseries" in content["acquisition"].keys():
             reader = AIBSNWBReader(content, target_protocols)
         else:
