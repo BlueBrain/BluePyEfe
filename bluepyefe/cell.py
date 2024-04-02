@@ -70,7 +70,7 @@ class Cell(object):
 
         if filename is None:
             raise Exception(
-                "No 'filename' provided in the metadata for the recording."
+                "No 'filepath' provided in the metadata for the recording."
             )
 
         if recording_reader:
