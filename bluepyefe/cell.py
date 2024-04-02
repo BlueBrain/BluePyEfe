@@ -60,22 +60,28 @@ class Cell(object):
                 used will be chosen automatically based on the extension
                 of the file.
         """
-
-        if "v_file" in config_data:
-            filename = config_data["v_file"]
-        # if both present: use filepath. e.g. for some nwb that 'contain' igor files
+        # if both present: use filepath.
+        # e.g. for some nwb that 'contain' igor files
+        filepath = None
         if "filepath" in config_data:
-            filename = config_data["filepath"]
+            filepath = config_data["filepath"]
+        if "v_file" in config_data and filepath is None:
+            filepath = config_data["v_file"]
+
+        if filepath is None:
+            raise Exception(
+                "No 'filepath' or 'v_file' provided in the metadata for the recording."
+            )
 
         if recording_reader:
             return recording_reader(config_data)
-        if ".abf" in filename:
+        if ".abf" in filepath:
             return axon_reader(config_data)
-        if ".ibw" in filename or ".bwav" in filename:
+        if ".ibw" in filepath or ".bwav" in filepath:
             return igor_reader(config_data)
-        if ".nwb" in filename:
+        if ".nwb" in filepath:
             return nwb_reader(config_data)
-        if ".txt" in filename:
+        if ".txt" in filepath:
             return csv_lccr_reader(config_data)
 
         raise Exception(
