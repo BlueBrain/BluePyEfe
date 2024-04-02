@@ -62,6 +62,7 @@ class Cell(object):
         """
         # if both present: use filepath.
         # e.g. for some nwb that 'contain' igor files
+        filename = None
         if "filepath" in config_data:
             filename = config_data["filepath"]
         if "v_file" in config_data and filename is None:
