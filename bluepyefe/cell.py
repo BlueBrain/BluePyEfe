@@ -60,12 +60,17 @@ class Cell(object):
                 used will be chosen automatically based on the extension
                 of the file.
         """
-
-        if "v_file" in config_data:
-            filename = config_data["v_file"]
-        # if both present: use filepath. e.g. for some nwb that 'contain' igor files
+        # if both present: use filepath.
+        # e.g. for some nwb that 'contain' igor files
         if "filepath" in config_data:
             filename = config_data["filepath"]
+        if "v_file" in config_data and filename is None:
+            filename = config_data["v_file"]
+
+        if filename is None:
+            raise Exception(
+                "No 'filename' provided in the metadata for the recording."
+            )
 
         if recording_reader:
             return recording_reader(config_data)
