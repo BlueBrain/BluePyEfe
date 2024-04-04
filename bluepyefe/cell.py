@@ -19,6 +19,7 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 import logging
+from multiprocessing import Pool
 import numpy
 import matplotlib.pyplot as plt
 import pathlib
@@ -172,6 +173,12 @@ class Cell(object):
                         f"the available stimuli names"
                     )
 
+    def extract_efeatures_helper(self, recording_id, efeatures, efeature_names, efel_settings):
+        """Helper function to compute efeatures for a single recording."""
+        self.recordings[recording_id].compute_efeatures(
+            efeatures, efeature_names, efel_settings)
+        return self.recordings[recording_id]
+
     def extract_efeatures(
         self,
         protocol_name,
@@ -192,10 +199,17 @@ class Cell(object):
                 is to be extracted several time on different sections
                 of the same recording.
         """
+        recording_ids = self.get_recordings_id_by_protocol_name(protocol_name)
 
-        for i in self.get_recordings_id_by_protocol_name(protocol_name):
-            self.recordings[i].compute_efeatures(
-                efeatures, efeature_names, efel_settings)
+        # Run in parallel via multiprocessing
+        with Pool(maxtasksperchild=1) as pool:
+            tasks = [
+                (rec_id, efeatures, efeature_names, efel_settings)
+                for rec_id in recording_ids
+            ]
+            results = pool.starmap(self.extract_efeatures_helper, tasks)
+
+        self.recordings = results
 
     def compute_relative_amp(self):
         """Compute the relative current amplitude for all the recordings as a
