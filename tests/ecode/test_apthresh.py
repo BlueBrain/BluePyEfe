@@ -96,13 +96,13 @@ class APThreshTest(unittest.TestCase):
         bluepyefe.extract.compute_rheobase(cells, protocols_rheobase=["IDthresh"])
 
         self.assertEqual(len(cells), 1)
-        self.assertEqual(len(cells[0].recordings), 21)
+        self.assertEqual(len(cells[0].recordings_as_list), 21)
         self.assertLess(abs(cells[0].rheobase - 0.1103), 0.01)
 
         # amplitude test for one recording
         # sort the recordings because they can be in any order,
         # and we want to select the same one each time we test
-        apthresh_recs = [rec for rec in cells[0].recordings if rec.protocol_name == "APThreshold"]
+        apthresh_recs = cells[0].recordings["APThreshold"]
         rec1 = sorted(apthresh_recs, key=lambda x: x.amp)[1]
         self.assertLess(abs(rec1.amp - 0.1740), 0.01)
         self.assertLess(abs(rec1.amp_rel - 157.7), 0.1)

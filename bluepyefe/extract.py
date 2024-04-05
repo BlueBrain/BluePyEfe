@@ -448,10 +448,8 @@ def _build_current_dict(cells, default_std_value):
     threshold = {}
 
     for cell in cells:
-
-        holding[cell.name] = numpy.nanmean(
-            [t.hypamp for t in cell.recordings]
-        )
+        holding_currents = [rec.hypamp for rec in cell.recordings_as_list]
+        holding[cell.name] = numpy.nanmean(holding_currents)
 
         if cell.rheobase is not None:
             threshold[cell.name] = cell.rheobase
@@ -762,7 +760,7 @@ def _extract_auto_targets(
 
     recordings = []
     for c in cells:
-        recordings += c.recordings
+        recordings += c.recordings_as_list
 
     for i in range(len(auto_targets)):
         auto_targets[i].select_ecode_and_amplitude(recordings)

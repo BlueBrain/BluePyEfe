@@ -28,7 +28,7 @@ class EfelSettingTest(unittest.TestCase):
 
     def test_efel_threshold(self):
         
-        self.cell.recordings[0].efeatures = {}
+        self.cell.recordings["IDRest"][0].efeatures = {}
 
         self.cell.extract_efeatures(
             protocol_name="IDRest",
@@ -36,13 +36,13 @@ class EfelSettingTest(unittest.TestCase):
             efel_settings={'Threshold': 40.}
         )
 
-        recording = self.cell.recordings[0]
+        recording = self.cell.recordings["IDRest"][0]
         self.assertEqual(recording.efeatures["Spikecount"], 0.)
         self.assertLess(abs(recording.efeatures["AP1_amp"] - 66.68), 0.01)
 
     def test_efel_strictstim(self):
 
-        self.cell.recordings[0].efeatures = {}
+        self.cell.recordings["IDRest"][0].efeatures = {}
 
         self.cell.extract_efeatures(
             protocol_name="IDRest",
@@ -54,11 +54,11 @@ class EfelSettingTest(unittest.TestCase):
             }
         )
 
-        self.assertEqual(self.cell.recordings[0].efeatures["Spikecount"], 0.)
+        self.assertEqual(self.cell.recordings["IDRest"][0].efeatures["Spikecount"], 0.)
 
     def test_efel_threshold(self):
 
-        self.cell.recordings[0].efeatures = {}
+        self.cell.recordings["IDRest"][0].efeatures = {}
 
         self.cell.extract_efeatures(
             protocol_name="IDRest",
@@ -66,7 +66,7 @@ class EfelSettingTest(unittest.TestCase):
             efel_settings={'Threshold': 40.}
         )
 
-        recording = self.cell.recordings[0]
+        recording = self.cell.recordings["IDRest"][0]
         self.assertEqual(recording.efeatures["Spikecount"], 0.)
 
 

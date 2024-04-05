@@ -96,13 +96,13 @@ class SAHPTest(unittest.TestCase):
         bluepyefe.extract.compute_rheobase(cells, protocols_rheobase=["IDthresh"])
 
         self.assertEqual(len(cells), 1)
-        self.assertEqual(len(cells[0].recordings), 24)
+        self.assertEqual(len(cells[0].recordings_as_list), 24)
         self.assertLess(abs(cells[0].rheobase - 0.1103), 0.01)
 
         # amplitude test for one recording
         # sort the recordings because they can be in any order,
         # and we want to select the same one each time we test
-        sahp_recs = [rec for rec in cells[0].recordings if rec.protocol_name == "sAHP"]
+        sahp_recs = cells[0].recordings["sAHP"]
         rec1 = sorted(sahp_recs, key=lambda x: x.amp2)[1]
         self.assertLess(abs(rec1.amp - 0.0953), 0.01)
         self.assertLess(abs(rec1.amp2 - 0.3153), 0.01)

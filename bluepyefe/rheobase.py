@@ -25,30 +25,34 @@ logger = logging.getLogger(__name__)
 
 
 def _get_list_spiking_amplitude(cell, protocols_rheobase):
-    """Return the list of sorted list of amplitude that triggered at least
-    one spike"""
+    """Return the list of sorted amplitudes that triggered at least
+    one spike, along with their corresponding spike counts."""
 
     amps = []
     spike_counts = []
 
-    for i, rec in enumerate(cell.recordings):
-        if rec.protocol_name in protocols_rheobase:
-            if rec.spikecount is not None:
+    for protocol_name, recordings_list in cell.recordings.items():
+        if protocol_name in protocols_rheobase:
+            for rec in recordings_list:
+                if rec.spikecount is not None:
 
-                amps.append(rec.amp)
-                spike_counts.append(rec.spikecount)
+                    amps.append(rec.amp)
+                    spike_counts.append(rec.spikecount)
 
-                if rec.amp < 0.01 and rec.spikecount >= 1:
-                    logger.warning(
-                        f"A recording of cell {cell.name} protocol "
-                        f"{rec.protocol_name} shows spikes at a "
-                        "suspiciously low current in a trace from file"
-                        f" {rec.files}. Check that the ton and toff are"
-                        "correct or for the presence of unwanted spikes."
-                    )
+                    if rec.amp < 0.01 and rec.spikecount >= 1:
+                        logger.warning(
+                            f"A recording of cell {cell.name} protocol "
+                            f"{protocol_name} shows spikes at a "
+                            "suspiciously low current in a trace from file "
+                            f"{rec.files}. Check that the ton and toff are "
+                            "correct or for the presence of unwanted spikes."
+                        )
 
+    # Sort amplitudes and their corresponding spike counts
     if amps:
         amps, spike_counts = zip(*sorted(zip(amps, spike_counts)))
+    else:
+        amps, spike_counts = (), ()
 
     return amps, spike_counts
 
