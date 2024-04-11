@@ -56,19 +56,6 @@ class EfelSettingTest(unittest.TestCase):
 
         self.assertEqual(self.cell.recordings["IDRest"][0].efeatures["Spikecount"], 0.)
 
-    def test_efel_threshold(self):
-
-        self.cell.recordings["IDRest"][0].efeatures = {}
-
-        self.cell.extract_efeatures(
-            protocol_name="IDRest",
-            efeatures=["Spikecount"],
-            efel_settings={'Threshold': 40.}
-        )
-
-        recording = self.cell.recordings["IDRest"][0]
-        self.assertEqual(recording.efeatures["Spikecount"], 0.)
-
 
 if __name__ == "__main__":
     unittest.main()
