@@ -204,9 +204,8 @@ class Cell:
         percentage of the rheobase."""
 
         if self.rheobase not in (0.0, None, False, numpy.nan):
-            for _, recordings_list in self.recordings.items():
-                for recording in recordings_list:
-                    recording.compute_relative_amp(self.rheobase)
+            for recording in self.recordings_as_list:
+                recording.compute_relative_amp(self.rheobase)
 
         else:
 
