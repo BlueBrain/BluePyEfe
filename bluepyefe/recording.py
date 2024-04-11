@@ -278,7 +278,7 @@ class Recording(ABC):
         }
 
         try:
-            return efel.getFeatureValues(
+            return efel.get_feature_values(
                 [efel_trace], efeatures, raise_warnings=False
             )
         except TypeError as e:
