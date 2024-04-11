@@ -2,15 +2,14 @@
 
 import unittest
 
-import bluepyefe.cell
-import bluepyefe.recording
+from bluepyefe.cell import Cell, extract_efeatures_helper
 from bluepyefe.rheobase import compute_rheobase_absolute
 
 
 class CellTest(unittest.TestCase):
     def setUp(self):
 
-        self.cell = bluepyefe.cell.Cell(name="MouseNeuron")
+        self.cell = Cell(name="MouseNeuron")
         self.protocol_name = "IDRest"
 
         file_metadata = {
@@ -34,6 +33,10 @@ class CellTest(unittest.TestCase):
         self.assertEqual(2, len(recording.efeatures))
         self.assertEqual(recording.efeatures["Spikecount"], 9.0)
         self.assertLess(abs(recording.efeatures["AP1_amp"] - 66.4), 2.0)
+
+    def test_extract_efeatures_helper(self):
+        recording = self.cell.recordings[self.protocol_name][0]
+        extract_efeatures_helper(recording, ["Spikecount", "AP1_amp"], None, None)
 
     def test_amp_threshold(self):
         recording = self.cell.recordings[self.protocol_name][0]
