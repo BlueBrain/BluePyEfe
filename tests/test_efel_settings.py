@@ -1,5 +1,6 @@
 """bluepyefe.cell tests"""
 
+import math
 import unittest
 
 import bluepyefe.cell
@@ -38,7 +39,7 @@ class EfelSettingTest(unittest.TestCase):
 
         recording = self.cell.recordings["IDRest"][0]
         self.assertEqual(recording.efeatures["Spikecount"], 0.)
-        self.assertLess(abs(recording.efeatures["AP1_amp"] - 66.68), 0.01)
+        assert math.isnan(recording.efeatures["AP1_amp"])
 
     def test_efel_strictstim(self):
 
