@@ -27,7 +27,6 @@ import pathlib
 
 from bluepyefe.ecode import eCodes
 from bluepyefe.reader import *
-from bluepyefe.plotting import _save_fig
 from matplotlib.backends.backend_pdf import PdfPages
 
 from bluepyefe.recording import Recording

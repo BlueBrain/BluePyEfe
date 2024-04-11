@@ -1,7 +1,6 @@
 """bluepyefe.ecode.APThreshold tests"""
 
 import unittest
-import pytest
 import glob
 import json
 

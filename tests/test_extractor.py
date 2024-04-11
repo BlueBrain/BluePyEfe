@@ -6,7 +6,6 @@ import json
 
 import bluepyefe.extract
 import bluepyefe.tools
-from tests.utils import download_sahp_datafiles
 
 
 def get_config(absolute_amplitude=False):
