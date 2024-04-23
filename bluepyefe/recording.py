@@ -312,7 +312,10 @@ class Recording(ABC):
         efel_vals = self.call_efel(efeatures, efel_settings)
         for efeature_name, efeature in zip(efeature_names, efeatures):
 
-            value = [v for v in efel_vals[0][efeature] if v is not None]
+            if efel_vals[0][efeature] is not None:
+                value = [v for v in efel_vals[0][efeature] if v is not None]
+            else:
+                value = []
             if len(value) == 0 or numpy.isinf(numpy.nanmean(value)):
                 self.efeatures[efeature_name] = numpy.nan
             else:
