@@ -313,7 +313,7 @@ class Recording(ABC):
         for efeature_name, efeature in zip(efeature_names, efeatures):
 
             value = [v for v in efel_vals[0][efeature] if v is not None]
-            if value is None or len(value) == 0 or numpy.isinf(numpy.nanmean(value)):
+            if len(value) == 0 or numpy.isinf(numpy.nanmean(value)):
                 self.efeatures[efeature_name] = numpy.nan
             else:
                 self.efeatures[efeature_name] = numpy.nanmean(value)
