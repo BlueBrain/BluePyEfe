@@ -35,7 +35,7 @@ setuptools.setup(
     "format that can then be used by BluePyOpt for electrical model building "
     "purposes.",
     packages=setuptools.find_packages(exclude=["tests"]),
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     include_package_data=True,
     author="BlueBrain Project, EPFL",
     license="LGPLv3",
