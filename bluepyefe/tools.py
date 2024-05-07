@@ -112,17 +112,7 @@ def set_efel_settings(efeature_settings):
         if setting in ['stim_start', 'stim_end']:
             value = float(value)
 
-        if setting == 'Threshold':
-            efel.setThreshold(value)
-
-        elif isinstance(value, bool) or isinstance(value, int):
-            efel.setIntSetting(setting, int(value))
-
-        elif isinstance(value, (float, list)):
-            efel.setDoubleSetting(setting, value)
-
-        elif isinstance(value, str):
-            efel.setStrSetting(setting, value)
+        efel.set_setting(setting, value)
 
 
 def dict_to_json(data, path):

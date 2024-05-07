@@ -931,7 +931,8 @@ def extract_efeatures(
 
     if efel_settings is None:
         logger.warning(
-            "efel_settings is None. Default settings will be used"
+            "efel_settings is None. Default settings will be used: " +
+            str(DEFAULT_EFEL_SETTINGS)
         )
         efel_settings = DEFAULT_EFEL_SETTINGS.copy()
 
