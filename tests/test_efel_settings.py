@@ -64,7 +64,7 @@ class EfelSettingTest(unittest.TestCase):
         self.cell.extract_efeatures(
             protocol_name="IDRest",
             efeatures=["Spikecount"],
-            efel_settings={'Threshold': 40.}
+            efel_settings={'Threshold': 40}
         )
 
         recording = self.cell.recordings[0]
@@ -78,7 +78,7 @@ class EfelSettingTest(unittest.TestCase):
             self.cell.extract_efeatures(
                 protocol_name="IDRest",
                 efeatures=["Spikecount"],
-                efel_settings={'Threshold': "40."}
+                efel_settings={'Threshold': ["40."]}
             )
 
 if __name__ == "__main__":
