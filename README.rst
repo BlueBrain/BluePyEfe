@@ -146,4 +146,4 @@ This work has been partially funded by the European Union Seventh Framework Prog
     to skip content after the marker 'substitutions'.
 
 .. substitutions
-.. |banner| image:: docs/source/logo/BluePyEfeBanner.jpg
+.. |banner| image::  https://raw.githubusercontent.com/BlueBrain/BluePyEfe/master/docs/source/logo/BluePyEfeBanner.jpg
