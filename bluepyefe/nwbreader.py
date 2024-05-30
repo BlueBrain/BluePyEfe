@@ -175,7 +175,8 @@ class BBPNWBReader(NWBReader):
                             ec
                             for ec in self.content["data_organization"][cell_id]
                             if ec.lower() == ecode.lower()
-                        )
+                        ),
+                        None
                     )
                     if new_ecode:
                         logger.debug(
