@@ -114,7 +114,14 @@ class ScalaNWBReader(NWBReader):
 
         for sweep in list(self.content['acquisition'].keys()):
             key_current = sweep.replace('Series', 'StimulusSeries')
-            protocol_name = "Step"
+            try:
+                protocol_name = self.content["acquisition"][sweep].attrs["stimulus_description"]
+            except KeyError:
+                logger.warning(f'Could not find "stimulus_description" attribute for {sweep}, Setting it as "Step"')
+                protocol_name = "Step"
+
+            if ("na" == protocol_name.lower()) or ("step" in protocol_name.lower()):
+                protocol_name = "Step"
 
             if (
                 self.target_protocols and
