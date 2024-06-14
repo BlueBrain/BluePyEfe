@@ -116,7 +116,7 @@ class ScalaNWBReader(NWBReader):
             key_current = sweep.replace('Series', 'StimulusSeries')
             try:
                 protocol_name = self.content["acquisition"][sweep].attrs["stimulus_description"]
-            except AttributeError:
+            except KeyError:
                 logger.warning(f'Could not find "stimulus_description" attribute for {sweep}, Setting it as "Step"')
                 protocol_name = "Step"
 
