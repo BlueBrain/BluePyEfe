@@ -2,6 +2,7 @@
 
 import math
 import unittest
+import pytest
 
 import bluepyefe.cell
 import bluepyefe.recording
@@ -28,7 +29,6 @@ class EfelSettingTest(unittest.TestCase):
         )
 
     def test_efel_threshold(self):
-        
         self.cell.recordings["IDRest"][0].efeatures = {}
 
         self.cell.extract_efeatures(
@@ -57,6 +57,17 @@ class EfelSettingTest(unittest.TestCase):
 
         self.assertEqual(self.cell.recordings["IDRest"][0].efeatures["Spikecount"], 0.)
 
+
+    def test_efel_incorrect_threshold(self):
+
+        self.cell.recordings[0].efeatures = {}
+
+        with pytest.raises(ValueError):
+            self.cell.extract_efeatures(
+                protocol_name="IDRest",
+                efeatures=["Spikecount"],
+                efel_settings={'Threshold': ["40."]}
+            )
 
 if __name__ == "__main__":
     unittest.main()

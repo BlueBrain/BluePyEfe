@@ -39,6 +39,8 @@ eCodes = {
     "firepattern": step.Step,
     "sponnohold30": step.Step,
     "sponhold30": step.Step,
+    "spontnohold30": step.Step,
+    "sponthold30": step.Step,
     "starthold": step.Step,
     "startnohold": step.Step,
     "delta": step.Step,

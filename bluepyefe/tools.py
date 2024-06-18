@@ -116,13 +116,10 @@ def set_efel_settings(efeature_settings):
             efel.set_threshold(value)
 
         elif isinstance(value, bool) or isinstance(value, int):
-            efel.set_int_setting(setting, int(value))
+            efel.set_setting(setting, int(value))
 
-        elif isinstance(value, (float, list)):
-            efel.set_double_setting(setting, value)
-
-        elif isinstance(value, str):
-            efel.set_str_setting(setting, value)
+        elif isinstance(value, (float, str)):
+            efel.set_setting(setting, value)
 
 
 def dict_to_json(data, path):
