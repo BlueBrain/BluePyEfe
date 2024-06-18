@@ -609,10 +609,10 @@ def _read_extract_low_memory(
 
         # clean traces voltage and time
         for i in range(len(cell.recordings)):
-            cell.recordings[i].t = None
-            cell.recordings[i].voltage = None
-            cell.recordings[i].current = None
-            cell.recordings[i].reader_data = None
+            cell.recordings_as_list[i].t = None
+            cell.recordings_as_list[i].voltage = None
+            cell.recordings_as_list[i].current = None
+            cell.recordings_as_list[i].reader_data = None
 
         cells.append(cell)
         gc.collect()

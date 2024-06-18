@@ -60,7 +60,7 @@ class EfelSettingTest(unittest.TestCase):
 
     def test_efel_incorrect_threshold(self):
 
-        self.cell.recordings[0].efeatures = {}
+        self.cell.recordings_as_list[0].efeatures = {}
 
         with pytest.raises(ValueError):
             self.cell.extract_efeatures(
