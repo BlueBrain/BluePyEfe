@@ -1079,7 +1079,7 @@ def plot_recordings(
             has to be used. Of the form:
 
                 .. code-block:: python
-                
+
                     {
                         cell_id: {
                             protocol_name: [
