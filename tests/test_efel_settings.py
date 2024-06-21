@@ -1,5 +1,6 @@
 """bluepyefe.cell tests"""
 
+import math
 import unittest
 import pytest
 
@@ -28,8 +29,7 @@ class EfelSettingTest(unittest.TestCase):
         )
 
     def test_efel_threshold(self):
-
-        self.cell.recordings[0].efeatures = {}
+        self.cell.recordings["IDRest"][0].efeatures = {}
 
         self.cell.extract_efeatures(
             protocol_name="IDRest",
@@ -37,13 +37,13 @@ class EfelSettingTest(unittest.TestCase):
             efel_settings={'Threshold': 40.}
         )
 
-        recording = self.cell.recordings[0]
+        recording = self.cell.recordings["IDRest"][0]
         self.assertEqual(recording.efeatures["Spikecount"], 0.)
-        self.assertLess(abs(recording.efeatures["AP1_amp"] - 66.68), 0.01)
+        assert math.isnan(recording.efeatures["AP1_amp"])
 
     def test_efel_strictstim(self):
 
-        self.cell.recordings[0].efeatures = {}
+        self.cell.recordings["IDRest"][0].efeatures = {}
 
         self.cell.extract_efeatures(
             protocol_name="IDRest",
@@ -55,24 +55,12 @@ class EfelSettingTest(unittest.TestCase):
             }
         )
 
-        self.assertEqual(self.cell.recordings[0].efeatures["Spikecount"], 0.)
+        self.assertEqual(self.cell.recordings["IDRest"][0].efeatures["Spikecount"], 0.)
 
-    def test_efel_threshold(self):
-
-        self.cell.recordings[0].efeatures = {}
-
-        self.cell.extract_efeatures(
-            protocol_name="IDRest",
-            efeatures=["Spikecount"],
-            efel_settings={'Threshold': 40}
-        )
-
-        recording = self.cell.recordings[0]
-        self.assertEqual(recording.efeatures["Spikecount"], 0.)
 
     def test_efel_incorrect_threshold(self):
 
-        self.cell.recordings[0].efeatures = {}
+        self.cell.recordings_as_list[0].efeatures = {}
 
         with pytest.raises(ValueError):
             self.cell.extract_efeatures(
