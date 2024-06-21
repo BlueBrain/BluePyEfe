@@ -169,7 +169,7 @@ class Recording(ABC):
     def standardize_trace(self, config_data, reader_data):
         """Standardize the units of the current and voltage times series. If
         some metadata are present both in the file itself and the file_metadata
-         dictionary, the latter is used."""
+        dictionary, the latter is used."""
 
         # Create the time series
         t = numpy.arange(len(reader_data["voltage"]))

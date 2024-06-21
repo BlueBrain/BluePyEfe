@@ -173,11 +173,18 @@ def read_recordings(
     Args:
         files_metadata (dict): define for which cell and protocol each file
             has to be used. Of the form:
-            {
-                cell_id: {
-                    protocol_name: [{file_metadata1}, {file_metadata1}]
-                }
-            }
+
+                .. code-block:: python
+
+                    {
+                        cell_id: {
+                            protocol_name: [
+                                {file_metadata1},
+                                {file_metadata1}
+                            ]
+                        }
+                    }
+
             A same file path might be present in the file metadata for
             different protocols.
             The entries required in the file_metadata are specific to each
@@ -225,17 +232,21 @@ def extract_efeatures_at_targets(
         targets (dict): define the efeatures to extract as well as which
             protocols and current amplitude they should be extracted for. Of
             the form:
-            [{
-                "efeature": "AP_amplitude",
-                "protocol": "IDRest",
-                "amplitude": 150.,
-                "tolerance": 10.,
-                "efel_settings": {
-                    'stim_start': 200.,
-                    'stim_end': 500.,
-                    'Threshold': -10.
-                }
-            }]
+
+            .. code-block:: python
+
+                [{
+                    "efeature": "AP_amplitude",
+                    "protocol": "IDRest",
+                    "amplitude": 150.,
+                    "tolerance": 10.,
+                    "efel_settings": {
+                        "stim_start": 200.,
+                        "stim_end": 500.,
+                        "Threshold": -10.
+                    }
+                }]
+
         map_function (function): Function used to map (parallelize) the
             feature extraction operations. Note: the parallelization is
             done across cells an not across efeatures.
@@ -373,17 +384,21 @@ def group_efeatures(
         targets (dict): define the efeatures to extract as well as which
             protocols and current amplitude they should be extracted for. Of
             the form:
-            [{
-                "efeature": "AP_amplitude",
-                "protocol": "IDRest",
-                "amplitude": 150.,
-                "tolerance": 10.,
-                "efel_settings": {
-                    'stim_start': 200.,
-                    'stim_end': 500.,
-                    'Threshold': -10.
-                }
-            }]
+
+            .. code-block:: python
+
+                [{
+                    "efeature": "AP_amplitude",
+                    "protocol": "IDRest",
+                    "amplitude": 150.,
+                    "tolerance": 10.,
+                    "efel_settings": {
+                        "stim_start": 200.,
+                        "stim_end": 500.,
+                        "Threshold": -10.
+                    }
+                }]
+
         absolute_amplitude (bool): if True, will use the absolute amplitude
             instead of the relative amplitudes of the recordings when checking
             if a recording has to be used for a given target.
@@ -624,26 +639,32 @@ def _read_extract_low_memory(
 
 
 def convert_legacy_targets(targets):
-    """Convert targets of the form:
-        protocol_name: {
+    """Convert targets of the form::
+
+        .. code-block:: python
+
+            protocol_name: {
                 "amplitudes": [50, 100],
                 "tolerances": [10, 10],
                 "efeatures": {"Spikecount": {'Threshold': -10.}},
                 "location": "soma"
             }
-        }
-    To ones of the form:
-        [{
-            "efeature": "AP_amplitude",
-            "protocol": "IDRest",
-            "amplitude": 150.,
-            "tolerance": 10.,
-            "efel_settings": {
-                'stim_start': 200.,
-                'stim_end': 500.,
-                'Threshold': -10.
-            }
-        }]
+
+    To ones of the form::
+
+        .. code-block:: python
+
+            [{
+                "efeature": "AP_amplitude",
+                "protocol": "IDRest",
+                "amplitude": 150.,
+                "tolerance": 10.,
+                "efel_settings": {
+                    "stim_start": 200.,
+                    "stim_end": 500.,
+                    "Threshold": -10.
+                }
+            }]
     """
 
     formatted_targets = []
@@ -852,12 +873,19 @@ def extract_efeatures(
         output_directory (str): path to the output directory
         files_metadata (dict): define from files to read the data as well as
             the name of the cells and protocols to which these data are
-            related. Of the form:
-            {
-                cell_id: {
-                    protocol_name: [{file_metadata1}, {file_metadata1}]
-                }
-            }
+            related. Of the form::
+
+                .. code-block:: python
+
+                    {
+                        cell_id: {
+                            protocol_name: [
+                                {file_metadata1},
+                                {file_metadata1}
+                            ]
+                        }
+                    }
+
             The entries required in the file_metadata are specific to each
             recording_reader (see bluepyemodel/reader.py to know which one are
             needed for your recording_reader).
@@ -869,18 +897,22 @@ def extract_efeatures(
             rheobase if absolute_amplitude if False or in nA if
             absolute_amplitude is True) they should be extracted.
             If targets are not provided, automatic targets will be used.
-            Of the form:
-            [{
-                "efeature": "AP_amplitude",
-                "protocol": "IDRest",
-                "amplitude": 150.,
-                "tolerance": 10.,
-                "efel_settings": {
-                    'stim_start': 200.,
-                    'stim_end': 500.,
-                    'Threshold': -10.
-                }
-            }]
+            Of the form::
+
+                .. code-block:: python
+
+                    [{
+                        "efeature": "AP_amplitude",
+                        "protocol": "IDRest",
+                        "amplitude": 150.,
+                        "tolerance": 10.,
+                        "efel_settings": {
+                            "stim_start": 200.,
+                            "stim_end": 500.,
+                            "Threshold": -10.
+                        }
+                    }]
+
         threshold_nvalue_save (int): minimum number of values needed for
             an efeatures to be averaged and returned in the output.
         protocols_rheobase (list): names of the protocols that will be
@@ -905,12 +937,16 @@ def extract_efeatures(
         efel_settings (dict): eFEL settings in the form
             {setting_name: setting_value}. If settings are also informed
             in the targets per efeature, the latter will have priority. If
-            None, will be set to:
-            {
-                'strict_stiminterval': True,
-                'Threshold': -20.,
-                'interp_step': 0.025
-            }
+            None, will be set to::
+
+                .. code-block:: python
+
+                    {
+                        "strict_stiminterval": True,
+                        "Threshold": -20.,
+                        "interp_step": 0.025
+                    }
+
         extract_per_cell (bool): if True, also generates the features.json and
             protocol.json for each individual cells.
         rheobase_strategy (str): function used to compute the rheobase. Can be
@@ -1041,11 +1077,18 @@ def plot_recordings(
     Args:
         files_metadata (dict): define for which cell and protocol each file
             has to be used. Of the form:
-            {
-                cell_id: {
-                    protocol_name: [{file_metadata1}, {file_metadata1}]
-                }
-            }
+
+                .. code-block:: python
+                
+                    {
+                        cell_id: {
+                            protocol_name: [
+                                {file_metadata1},
+                                {file_metadata1}
+                            ]
+                        }
+                    }
+
             A same file path might be present in the file metadata for
             different protocols.
             The entries required in the file_metadata are specific to each

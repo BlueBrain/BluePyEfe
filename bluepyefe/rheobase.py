@@ -74,11 +74,14 @@ def compute_rheobase_absolute(cell, protocols_rheobase, spike_threshold=1):
 
 
 def compute_rheobase_flush(cell, protocols_rheobase, flush_length=1, upper_bound_spikecount=None):
-    """ Compute the rheobase by finding the smallest current amplitude that:
+    """ Compute the rheobase by finding the smallest current amplitude that::
+
         1. Triggered at least one spike
         2. Is followed by flush_length other traces that also trigger spikes.
+
     The advantage of this strategy is that it ignores traces showing spurious
     spikes at low amplitudes.
+
     Args:
         cell (Cell): cell for which to compute the rheobase
         protocols_rheobase (list): names of the protocols that will be
