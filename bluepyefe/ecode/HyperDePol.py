@@ -34,22 +34,23 @@ class HyperDePol(Recording):
     The hyperpolarizing step is usually fixed at 100% of rheobase, and the hyperpolarizing step
     can usually vary from -40% to -160% of rheobase.
 
+    .. code-block:: none
 
-    ``      hypamp         hypamp+amp           hypamp+amp2         hypamp      ``
-    ``        :                :                     :                :         ``
-    ``        :                :           _____________________      :         ``
-    ``        :                :          |                     |     :         ``
-    ``        :                :          |                     |     :         ``
-    ``        :                :          |                     |     :         ``
-    ``        :                :          |                     |     :         ``
-    ``        :                :          |                     |     :         ``
-    ``|_______________         :          |                     |___________    ``
-    ``^               |        :          |                     ^           ^   ``
-    ``:               |___________________|                     :           :   ``
-    ``:               ^                   ^                     :           :   ``
-    ``:               :                   :                     :           :   ``
-    ``:               :                   :                     :           :   ``
-    ``t=0             ton                 tmid                  toff        tend``
+              hypamp         hypamp+amp           hypamp+amp2         hypamp
+                :                :                     :                :
+                :                :           _____________________      :
+                :                :          |                     |     :
+                :                :          |                     |     :
+                :                :          |                     |     :
+                :                :          |                     |     :
+                :                :          |                     |     :
+        |_______________         :          |                     |___________
+        ^               |        :          |                     ^           ^
+        :               |___________________|                     :           :
+        :               ^                   ^                     :           :
+        :               :                   :                     :           :
+        :               :                   :                     :           :
+        t=0             ton                 tmid                  toff        tend
     """
 
     def __init__(

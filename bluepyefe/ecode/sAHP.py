@@ -35,20 +35,21 @@ class SAHP(Recording):
     The long step (here amp) is usually fixed at 40% of rheobase, and the short step (here amp2)
     can usually vary from 150% to 300% of rheobase.
 
+    .. code-block:: none
 
-    ``   hypamp        hypamp+amp       hypamp+amp2        hypamp+amp           hypamp           ``
-    ``     :                :                :                 :                   :             ``
-    ``     :                :          ______________          :                   :             ``
-    ``     :                :         |              |         :                   :             ``
-    ``     :                :         |              |         :                   :             ``
-    ``     :      ____________________                ____________________         :             ``
-    ``     :     |                    ^              ^                    |        :             ``
-    ``     :     |                    :              :                    |        :             ``
-    ``|__________|                    :              :                    |__________________    ``
-    ``^          ^                    :              :                    ^                  ^   ``
-    ``:          :                    :              :                    :                  :   ``
-    ``:          :                    :              :                    :                  :   ``
-    ``t=0        ton                  tmid           tmid2                toff               tend``
+           hypamp        hypamp+amp       hypamp+amp2        hypamp+amp           hypamp
+             :                :                :                 :                   :
+             :                :          ______________          :                   :
+             :                :         |              |         :                   :
+             :                :         |              |         :                   :
+             :      ____________________                ____________________         :
+             :     |                    ^              ^                    |        :
+             :     |                    :              :                    |        :
+        |__________|                    :              :                    |__________________
+        ^          ^                    :              :                    ^                  ^
+        :          :                    :              :                    :                  :
+        :          :                    :              :                    :                  :
+        t=0        ton                  tmid           tmid2                toff               tend
     """
 
     def __init__(
