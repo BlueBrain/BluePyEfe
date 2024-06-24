@@ -76,18 +76,20 @@ class SpikeRec(Recording):
 
     """SpikeRec current stimulus
 
-    ``      hypamp        hypamp+amp      hypamp       hypamp+amp          .   .   .                              ``
-    ``        :                :             :             :                                                      ``
-    ``        :        _________________     :      _________________                      _________________      ``
-    ``        :       |                 |    :     |                 |                    |                 |     ``
-    ``        :       |                 |    :     |                 |   * len(tspike)    |                 |     ``
-    ``        :       |                 |    :     |                 |     .   .   .      |                 |     ``
-    ``        :       |                 |    :     |                 |                    |                 |     ``
-    ``|_______________|                 |__________|                 |__                __|                 |___  ``
-    ``:               :                 :          :                 :                                          ^ ``
-    ``:               :                 :          :                 :                                          : ``
-    ``:               :                 :          :                 :                                          : ``
-    `` <--tspike[0]--><-spike_duration-><- delta -><-spike_duration->      .   .   .                          tend``
+    .. code-block:: none
+
+              hypamp        hypamp+amp      hypamp       hypamp+amp          .   .   .
+                :                :             :             :
+                :        _________________     :      _________________                      _________________
+                :       |                 |    :     |                 |                    |                 |
+                :       |                 |    :     |                 |   * len(tspike)    |                 |
+                :       |                 |    :     |                 |     .   .   .      |                 |
+                :       |                 |    :     |                 |                    |                 |
+        |_______________|                 |__________|                 |__                __|                 |___
+        :               :                 :          :                 :                                          ^
+        :               :                 :          :                 :                                          :
+        :               :                 :          :                 :                                          :
+         <--tspike[0] --><-spike_duration-><- delta -><-spike_duration->      .   .   .                          tend
 
     """
 
