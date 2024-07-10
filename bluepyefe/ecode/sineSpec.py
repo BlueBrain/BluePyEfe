@@ -95,7 +95,7 @@ class SineSpec(Recording):
         if "toff" in config_data and config_data["toff"] is not None:
             self.toff = int(round(config_data["toff"] / self.dt))
         else:
-            self.ton = 5100
+            self.toff = 5100
             logger.warning(
                 "As toff was not specified for protocol {}, it will "
                 "be set to 5100ms.".format(self.protocol_name)
