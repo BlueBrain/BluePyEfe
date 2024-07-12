@@ -276,6 +276,8 @@ class Recording(ABC):
             'stim_start': [stim_start],
             'stim_end': [stim_end]
         }
+        if self.current is not None:
+            efel_trace["I"] = self.current
 
         try:
             return efel.getFeatureValues(
