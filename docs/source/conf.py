@@ -108,6 +108,10 @@ autoclass_content = "both"
 
 add_module_names = False
 
+suppress_warnings = [
+    'autosummary.import_cycle',
+]
+
 # -- Options for HTML output ---------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
