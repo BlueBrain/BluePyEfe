@@ -34,22 +34,23 @@ class HyperDePol(Recording):
     The hyperpolarizing step is usually fixed at 100% of rheobase, and the hyperpolarizing step
     can usually vary from -40% to -160% of rheobase.
 
+    .. code-block:: none
 
-          hypamp         hypamp+amp           hypamp+amp2         hypamp
-            :                :                     :                :
-            :                :           _____________________      :
-            :                :          |                     |     :
-            :                :          |                     |     :
-            :                :          |                     |     :
-            :                :          |                     |     :
-            :                :          |                     |     :
-    |_______________         :          |                     |___________
-    ^               |        :          |                     ^           ^
-    :               |___________________|                     :           :
-    :               ^                   ^                     :           :
-    :               :                   :                     :           :
-    :               :                   :                     :           :
-    t=0             ton                 tmid                  toff        tend
+              hypamp         hypamp+amp           hypamp+amp2         hypamp
+                :                :                     :                :
+                :                :           _____________________      :
+                :                :          |                     |     :
+                :                :          |                     |     :
+                :                :          |                     |     :
+                :                :          |                     |     :
+                :                :          |                     |     :
+        |_______________         :          |                     |___________
+        ^               |        :          |                     ^           ^
+        :               |___________________|                     :           :
+        :               ^                   ^                     :           :
+        :               :                   :                     :           :
+        :               :                   :                     :           :
+        t=0             ton                 tmid                  toff        tend
     """
 
     def __init__(
@@ -140,9 +141,9 @@ class HyperDePol(Recording):
         toff = int(self.toff / self.dt)
 
         time = numpy.arange(0.0, self.tend, self.dt)
-        current = numpy.full(time.shape, self.hypamp)
-        current[ton:tmid] += self.amp
-        current[tmid:toff] += self.amp2
+        current = numpy.full(time.shape, numpy.float64(self.hypamp))
+        current[ton:tmid] += numpy.float64(self.amp)
+        current[tmid:toff] += numpy.float64(self.amp2)
 
         return time, current
 

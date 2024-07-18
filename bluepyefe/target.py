@@ -140,7 +140,7 @@ class EFeatureTarget():
         std = self.std
         if std == 0.0:
             logger.warning(
-                "Standard deviation for efeatures {} stimulus {} is 0 and"
+                "Standard deviation for efeatures {} stimulus {} is 0 and "
                 "will be set to {}".format(
                     self.efel_feature_name, self.protocol_name, default_std_value
                 )

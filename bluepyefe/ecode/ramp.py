@@ -32,24 +32,25 @@ class Ramp(Recording):
 
     """Ramp current stimulus
 
+    .. code-block:: none
 
-        hypamp        hypamp+amp      hypamp
-          :                :             :
-          :                :             :
-          :               /|             :
-          :              / |             :
-          :             /  |             :
-          :            /   |             :
-          :           /    |             :
-          :          /     |             :
-          :         /      |             :
-          :        /       |             :
-          :       /        |             :
-    |___________ /         |__________________________
-    ^           ^          ^                          ^
-    :           :          :                          :
-    :           :          :                          :
-    t=0         ton        toff                       tend
+            hypamp        hypamp+amp      hypamp
+              :                :             :
+              :                :             :
+              :               /|             :
+              :              / |             :
+              :             /  |             :
+              :            /   |             :
+              :           /    |             :
+              :          /     |             :
+              :         /      |             :
+              :        /       |             :
+              :       /        |             :
+        |___________ /         |__________________________
+        ^           ^          ^                          ^
+        :           :          :                          :
+        :           :          :                          :
+        t=0         ton        toff                       tend
     """
 
     def __init__(
@@ -128,7 +129,7 @@ class Ramp(Recording):
         toff_idx = int(self.toff / self.dt)
 
         t = numpy.arange(0.0, self.tend, self.dt)
-        current = numpy.full(t.shape, self.hypamp)
+        current = numpy.full(t.shape, numpy.float64(self.hypamp))
         current[ton_idx:toff_idx] += numpy.linspace(
             0.0, self.amp, toff_idx - ton_idx
         )

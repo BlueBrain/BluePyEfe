@@ -32,19 +32,21 @@ class Step(Recording):
 
     """Step current stimulus
 
-          hypamp             hypamp+amp               hypamp
-            :                     :                      :
-            :                     :                      :
-            :           ______________________           :
-            :          |                      |          :
-            :          |                      |          :
-            :          |                      |          :
-            :          |                      |          :
-    |__________________|                      |______________________
-    ^                  ^                      ^                      ^
-    :                  :                      :                      :
-    :                  :                      :                      :
-    t=0                ton                    toff                   tend
+    .. code-block:: none
+
+              hypamp             hypamp+amp               hypamp
+                :                     :                      :
+                :                     :                      :
+                :           ______________________           :
+                :          |                      |          :
+                :          |                      |          :
+                :          |                      |          :
+                :          |                      |          :
+        |__________________|                      |______________________
+        ^                  ^                      ^                      ^
+        :                  :                      :                      :
+        :                  :                      :                      :
+        t=0                ton                    toff                   tend
     """
 
     def __init__(
@@ -60,8 +62,6 @@ class Step(Recording):
         self.ton = None
         self.toff = None
         self.tend = None
-        self.amp = None
-        self.hypamp = None
         self.dt = None
 
         self.amp_rel = None
@@ -123,20 +123,6 @@ class Step(Recording):
         else:
             self.toff = None
 
-        # amp
-        if "amp" in config_data and config_data["amp"] is not None:
-            self.amp = config_data["amp"]
-        elif "amp" in reader_data and reader_data["amp"] is not None:
-            self.amp = reader_data["amp"]
-        else:
-            self.amp = None
-
-        # hypamp
-        if "hypamp" in config_data and config_data["hypamp"] is not None:
-            self.hypamp = config_data["hypamp"]
-        elif "hypamp" in reader_data and reader_data["hypamp"] is not None:
-            self.hypamp = reader_data["hypamp"]
-
         # Infer the begin and end of the step current
         if self.ton is None:
             if self.hypamp is None:
@@ -145,8 +131,7 @@ class Step(Recording):
                 smooth_current = scipy_signal2d(current, 85)
             _ = numpy.abs(smooth_current[idx_buffer:] - self.hypamp)
             self.ton = idx_buffer + numpy.argmax(_ > step_threshold)
-
-        else:
+        elif self.hypamp is None:
             # Infer the base current hypamp
             self.hypamp = base_current(current, idx_ton=self.ton)
 
@@ -193,7 +178,7 @@ class Step(Recording):
         toff_idx = int(self.toff / self.dt)
 
         t = numpy.arange(0.0, self.tend, self.dt)
-        current = numpy.full(t.shape, self.hypamp)
-        current[ton_idx:toff_idx] += self.amp
+        current = numpy.full(t.shape, numpy.float64(self.hypamp))
+        current[ton_idx:toff_idx] += numpy.float64(self.amp)
 
         return t, current

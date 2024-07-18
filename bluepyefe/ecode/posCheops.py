@@ -33,25 +33,27 @@ class PosCheops(Recording):
 
     """PosCheops current stimulus
 
-        hypamp         hypamp+amp          hypamp           hypamp+amp          hypamp           hypamp+amp          hypamp
-          :                 :                 :                  :                 :                  :                 :
-          :                 .                 :                  .                 :                  .                 :
-          :                / \                :                 / \                :                 / \                :
-          :               /   \               :                /   \               :                /   \               :
-          :              /     \              :               /     \              :               /     \              :
-          :             /       \             :              /       \             :              /       \             :
-          :            /         \            :             /         \            :             /         \            :
-          :           /           \           :            /           \           :            /           \           :
-          :          /             \          :           /             \          :           /             \          :
-          :         /               \         :          /               \         :          /               \         :
-          :        /                 \        :         /                 \        :         /                 \        :
-          :       /                   \       :        /                   \       :        /                   \       :
-          :      /                     \      :       /                     \      :       /                     \      :
-    |__________ /                       \ __________ /                       \ __________ /                       \ __________
-    :          :                         :          :                         :          :                         :          ^
-    :          :                         :          :                         :          :                         :          :
-    :          :                         :          :                         :          :                         :          :
-    t=0        ton                       t1         t2                        t3         t4                        toff       tend
+    .. code-block:: none
+
+            hypamp         hypamp+amp          hypamp           hypamp+amp          hypamp           hypamp+amp          hypamp
+              :                 :                 :                  :                 :                  :                 :
+              :                 .                 :                  .                 :                  .                 :
+              :                / \                :                 / \                :                 / \                :
+              :               /   \               :                /   \               :                /   \               :
+              :              /     \              :               /     \              :               /     \              :
+              :             /       \             :              /       \             :              /       \             :
+              :            /         \            :             /         \            :             /         \            :
+              :           /           \           :            /           \           :            /           \           :
+              :          /             \          :           /             \          :           /             \          :
+              :         /               \         :          /               \         :          /               \         :
+              :        /                 \        :         /                 \        :         /                 \        :
+              :       /                   \       :        /                   \       :        /                   \       :
+              :      /                     \      :       /                     \      :       /                     \      :
+        |__________ /                       \ __________ /                       \ __________ /                       \ __________
+        :          :                         :          :                         :          :                         :          ^
+        :          :                         :          :                         :          :                         :          :
+        :          :                         :          :                         :          :                         :          :
+        t=0        ton                       t1         t2                        t3         t4                        toff       tend
     """
 
     def __init__(
@@ -140,7 +142,7 @@ class PosCheops(Recording):
         toff = int(self.toff / self.dt)
 
         time = numpy.arange(0.0, self.tend, self.dt)
-        current = numpy.full(time.shape, self.hypamp)
+        current = numpy.full(time.shape, numpy.float64(self.hypamp))
 
         # First peak
         mid = int(0.5 * (self.ton + self.t1) / self.dt)

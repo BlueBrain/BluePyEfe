@@ -23,6 +23,7 @@ import h5py
 import numpy
 import scipy.io
 from neo import io
+import os
 
 from . import igorpy
 from .nwbreader import BBPNWBReader, ScalaNWBReader, AIBSNWBReader
@@ -46,14 +47,18 @@ def _check_metadata(metadata, reader_name, required_entries=[]):
 
 def axon_reader(in_data):
     """Reader to read .abf
+
     Args:
         in_data (dict): of the format
-        {
-            "filepath": "./XXX.abf",
-            "i_unit": "pA",
-            "t_unit": "s",
-            "v_unit": "mV",
-        }
+
+            .. code-block:: python
+
+                {
+                    "filepath": "./XXX.abf",
+                    "i_unit": "pA",
+                    "t_unit": "s",
+                    "v_unit": "mV"
+                }
     """
 
     fp = in_data["filepath"]
@@ -90,13 +95,16 @@ def igor_reader(in_data):
 
     Args:
         in_data (dict): of the format
-        {
-            'i_file': './XXX.ibw',
-            'v_file': './XXX.ibw',
-            'v_unit': 'V',
-            't_unit': 's',
-            'i_unit': 'A'
-        }
+
+            .. code-block:: python
+
+                {
+                    'i_file': './XXX.ibw',
+                    'v_file': './XXX.ibw',
+                    'v_unit': 'V',
+                    't_unit': 's',
+                    'i_unit': 'A'
+                }
     """
 
     _check_metadata(
@@ -133,14 +141,17 @@ def read_matlab(in_data):
 
     Args:
         in_data (dict): of the format
-        {
-            'filepath': './161214_AL_113_CC.mat',
-            'ton': 2000,
-            'toff': 2500,
-            'v_unit': 'V',
-            't_unit': 's',
-            'i_unit': 'A'
-        }
+
+            .. code-block:: python
+
+                {
+                    'filepath': './161214_AL_113_CC.mat',
+                    'ton': 2000,
+                    'toff': 2500,
+                    'v_unit': 'V',
+                    't_unit': 's',
+                    'i_unit': 'A'
+                }
     """
 
     _check_metadata(
@@ -169,13 +180,17 @@ def read_matlab(in_data):
 
 def nwb_reader(in_data):
     """Reader for .nwb
+
     Args:
         in_data (dict): of the format
-        {
-            'filepath': './XXX.nwb',
-            "protocol_name": "IV",
-            "repetition": 1 (or [1, 3, ...]) # Optional
-        }
+
+            .. code-block:: python
+
+                {
+                    'filepath': './XXX.nwb',
+                    "protocol_name": "IV",
+                    "repetition": 1 (or [1, 3, ...]) # Optional
+                }
     """
 
     _check_metadata(
@@ -190,12 +205,107 @@ def nwb_reader(in_data):
 
     with h5py.File(in_data["filepath"], "r") as content:
         if "data_organization" in content:
-            reader = BBPNWBReader(content, target_protocols, in_data.get("repetition", None))
+            reader = BBPNWBReader(
+                content,
+                target_protocols,
+                in_data.get("repetition", None),
+                in_data.get("v_file", None)
+            )
         elif "timeseries" in content["acquisition"].keys():
             reader = AIBSNWBReader(content, target_protocols)
         else:
             reader = ScalaNWBReader(content, target_protocols)
 
         data = reader.read()
+
+    return data
+
+
+def csv_lccr_reader(in_data):
+    """Reader to read .txt (csv_lccr)
+
+    Args:
+        in_data (dict): of the format:
+
+            .. code-block:: python
+
+                {
+                    'filepath': "./XXX.txt",
+                    'dt': 0.1,
+                    'ton': 2000,
+                    'toff': 2500,
+                    'ljp': 14.0,
+                    'amplitudes': [10 -10 20 -20 30 -30 40 -40 50 -50],
+                    'hypamp': -20 # (units should match 'amplitudes'),
+                    'remove_last_100ms': True,
+                    'v_unit': 'mV',
+                    't_unit': 'ms',
+                    'i_unit': 'pA' # current unit for 'amplitudes' and 'hypamp'
+                }
+    """
+    _check_metadata(
+        in_data,
+        csv_lccr_reader.__name__,
+        ["filepath", "dt", "amplitudes", "v_unit", "t_unit", "i_unit", "ton", "toff", "hypamp"],
+    )
+
+    data = []
+
+    fln = os.path.join(in_data['filepath'])
+    if not os.path.isfile(fln):
+        raise FileNotFoundError(
+            "Please provide a string with the filename of the txt file; "
+            f"current path not found: {fln}"
+        )
+
+    dt = in_data['dt']
+    ton = in_data['ton']
+    toff = in_data['toff']
+    amplitudes = in_data['amplitudes']
+    hypamp = in_data['hypamp']
+
+    import csv
+    with open(fln, 'rt') as f:
+        reader = csv.reader(f, delimiter='\t')
+        columns = list(zip(*reader))
+        length = numpy.shape(columns)[1]
+
+        voltages = numpy.array([
+            [
+                float(string) if string not in ["-", ""] else 0
+                for string in column
+            ]
+            for column in columns
+        ])
+        t = numpy.arange(length) * dt
+
+    # Remove last 100 ms if needed
+    if in_data.get('remove_last_100ms', False):
+        slice_end = int(-100. / dt)
+        voltages = voltages[:, :slice_end]
+        t = t[:slice_end]
+
+    for amplitude, voltage in zip(amplitudes, voltages):
+        current = numpy.zeros_like(voltage)
+        ion, ioff = int(ton / dt), int(toff / dt)
+        current[:] = hypamp
+        current[ion:ioff] = amplitude + hypamp
+        trace_data = {
+            "filename": os.path.basename(in_data['filepath']),
+            "current": current,
+            "voltage": voltage,
+            "t": t,
+            "dt": numpy.float64(dt),
+            "ton": numpy.float64(ton),
+            "toff": numpy.float64(toff),
+            "amp": numpy.float64(amplitude),
+            "hypamp": numpy.float64(hypamp),
+            "ljp": in_data.get('ljp', 0),
+            "i_unit": in_data['i_unit'],
+            "v_unit": in_data['v_unit'],
+            "t_unit": in_data['t_unit'],
+        }
+
+        data.append(trace_data)
 
     return data

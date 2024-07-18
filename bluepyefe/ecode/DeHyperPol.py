@@ -3,20 +3,20 @@
 """
 Copyright (c) 2022, EPFL/Blue Brain Project
 
- This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
+This file is part of BluePyEfe <https://github.com/BlueBrain/BluePyEfe>
 
- This library is free software; you can redistribute it and/or modify it under
- the terms of the GNU Lesser General Public License version 3.0 as published
- by the Free Software Foundation.
+This library is free software; you can redistribute it and/or modify it under
+the terms of the GNU Lesser General Public License version 3.0 as published
+by the Free Software Foundation.
 
- This library is distributed in the hope that it will be useful, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
- details.
+This library is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+details.
 
- You should have received a copy of the GNU Lesser General Public License
- along with this library; if not, write to the Free Software Foundation, Inc.,
- 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+You should have received a copy of the GNU Lesser General Public License
+along with this library; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 import logging
 import numpy
@@ -34,20 +34,22 @@ class DeHyperPol(Recording):
     The hyperpolarizing step is usually fixed at 150% of rheobase, and the hyperpolarizing step
     can usually vary from -40% to -160% of rheobase.
 
-         hypamp        hypamp+amp      hypamp+amp2    hypamp
-           :                :               :            :
-           :         _________________      :            :
-           :        |                 |     :            :
-           :        |                 |     :            :
-    |_______________|                 |     :       ___________
-    ^               ^                 |     :      |           ^
-    :               :                 |     :      |           :
-    :               :                 |     :      |           :
-    :               :                 |____________|           :
-    :               :                 ^            ^           :
-    :               :                 :            :           :
-    :               :                 :            :           :
-    t=0             ton               tmid         toff        tend
+    .. code-block:: none
+
+             hypamp        hypamp+amp      hypamp+amp2    hypamp
+               :                :               :            :
+               :         _________________      :            :
+               :        |                 |     :            :
+               :        |                 |     :            :
+        |_______________|                 |     :       ___________
+        ^               ^                 |     :      |           ^
+        :               :                 |     :      |           :
+        :               :                 |     :      |           :
+        :               :                 |____________|           :
+        :               :                 ^            ^           :
+        :               :                 :            :           :
+        :               :                 :            :           :
+        t=0             ton               tmid         toff        tend
     """
 
     def __init__(
@@ -137,9 +139,9 @@ class DeHyperPol(Recording):
         toff = int(self.toff / self.dt)
 
         time = numpy.arange(0.0, self.tend, self.dt)
-        current = numpy.full(time.shape, self.hypamp)
-        current[ton:tmid] += self.amp
-        current[tmid:toff] += self.amp2
+        current = numpy.full(time.shape, numpy.float64(self.hypamp))
+        current[ton:tmid] += numpy.float64(self.amp)
+        current[tmid:toff] += numpy.float64(self.amp2)
 
         return time, current
 

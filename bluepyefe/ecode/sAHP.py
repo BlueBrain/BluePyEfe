@@ -35,20 +35,21 @@ class SAHP(Recording):
     The long step (here amp) is usually fixed at 40% of rheobase, and the short step (here amp2)
     can usually vary from 150% to 300% of rheobase.
 
+    .. code-block:: none
 
-       hypamp        hypamp+amp       hypamp+amp2        hypamp+amp           hypamp
-         :                :                :                 :                   :
-         :                :          ______________          :                   :
-         :                :         |              |         :                   :
-         :      ____________________|              |____________________         :
-         :     |                    ^              ^                    |        :
-         :     |                    :              :                    |        :
-    |__________|                    :              :                    |__________________
-    ^          ^                    :              :                    ^                  ^
-    :          :                    :              :                    :                  :
-    :          :                    :              :                    :                  :
-    t=0        ton                  tmid           tmid2                toff               tend
-
+           hypamp        hypamp+amp       hypamp+amp2        hypamp+amp           hypamp
+             :                :                :                 :                   :
+             :                :          ______________          :                   :
+             :                :         |              |         :                   :
+             :                :         |              |         :                   :
+             :      ____________________                ____________________         :
+             :     |                    ^              ^                    |        :
+             :     |                    :              :                    |        :
+        |__________|                    :              :                    |__________________
+        ^          ^                    :              :                    ^                  ^
+        :          :                    :              :                    :                  :
+        :          :                    :              :                    :                  :
+        t=0        ton                  tmid           tmid2                toff               tend
     """
 
     def __init__(
@@ -239,10 +240,10 @@ class SAHP(Recording):
         toff = int(self.toff / self.dt)
 
         time = numpy.arange(0.0, self.tend, self.dt)
-        current = numpy.full(time.shape, self.hypamp)
-        current[ton:tmid] += self.amp
-        current[tmid2:toff] += self.amp
-        current[tmid:tmid2] += self.amp2
+        current = numpy.full(time.shape, numpy.float64(self.hypamp))
+        current[ton:tmid] += numpy.float64(self.amp)
+        current[tmid2:toff] += numpy.float64(self.amp)
+        current[tmid:tmid2] += numpy.float64(self.amp2)
 
         return time, current
 

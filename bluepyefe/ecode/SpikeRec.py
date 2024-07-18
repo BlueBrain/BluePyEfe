@@ -76,18 +76,20 @@ class SpikeRec(Recording):
 
     """SpikeRec current stimulus
 
-          hypamp        hypamp+amp      hypamp       hypamp+amp          .   .   .
-            :                :             :             :
-            :        _________________     :      _________________                      _________________
-            :       |                 |    :     |                 |                    |                 |
-            :       |                 |    :     |                 |   * len(tspike)    |                 |
-            :       |                 |    :     |                 |     .   .   .      |                 |
-            :       |                 |    :     |                 |                    |                 |
-    |_______________|                 |__________|                 |__                __|                 |___
-    :               :                 :          :                 :                                          ^
-    :               :                 :          :                 :                                          :
-    :               :                 :          :                 :                                          :
-     <--tspike[0]--><-spike_duration-><- delta -><-spike_duration->      .   .   .                          tend
+    .. code-block:: none
+
+              hypamp        hypamp+amp      hypamp       hypamp+amp          .   .   .
+                :                :             :             :
+                :        _________________     :      _________________                      _________________
+                :       |                 |    :     |                 |                    |                 |
+                :       |                 |    :     |                 |   * len(tspike)    |                 |
+                :       |                 |    :     |                 |     .   .   .      |                 |
+                :       |                 |    :     |                 |                    |                 |
+        |_______________|                 |__________|                 |__                __|                 |___
+        :               :                 :          :                 :                                          ^
+        :               :                 :          :                 :                                          :
+        :               :                 :          :                 :                                          :
+         <--tspike[0] --><-spike_duration-><- delta -><-spike_duration->      .   .   .                          tend
 
     """
 
@@ -185,16 +187,16 @@ class SpikeRec(Recording):
         """Generate the step current array from the parameters of the ecode"""
 
         t = numpy.arange(0.0, self.tend, self.dt)
-        current = numpy.full(t.shape, self.hypamp)
+        current = numpy.full(t.shape, numpy.float64(self.hypamp))
 
         spike_start = int(self.tspike[0] / self.dt)
         spike_end = int((self.tspike[0] + self.spike_duration) / self.dt)
-        current[spike_start:spike_end] += self.amp
+        current[spike_start:spike_end] += numpy.float64(self.amp)
 
         for i in range(1, len(self.tspike)):
             spike_start = int(spike_end + (self.delta / self.dt))
             spike_end = spike_start + int(self.spike_duration / self.dt)
-            current[spike_start:spike_end] += self.amp
+            current[spike_start:spike_end] += numpy.float64(self.amp)
 
         return t, current
 
