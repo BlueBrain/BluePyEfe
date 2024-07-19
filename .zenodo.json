@@ -31,15 +31,6 @@
     },
     {
       "affiliation": "Blue Brain Project, EPFL",
-      "name": "Sanin, Aleksei"
-    },
-    {
-      "affiliation": "Centre National de la Recherche Scientifique (CNRS)",
-      "name": "Davison, Andrew",
-      "orcid": "0000-0002-4793-7541"
-    },
-    {
-      "affiliation": "Blue Brain Project, EPFL",
       "name": "Jaquier, Aurélien",
       "orcid": "0000-0001-6202-6175"
     },
@@ -57,6 +48,15 @@
       "affiliation": "Blue Brain Project, EPFL",
       "name": "Kilic, Ilkan",
       "orcid": "0009-0004-4234-8766"
+    },
+    {
+      "affiliation": "Blue Brain Project, EPFL",
+      "name": "Sanin, Aleksei"
+    },
+    {
+      "affiliation": "Centre National de la Recherche Scientifique (CNRS)",
+      "name": "Davison, Andrew",
+      "orcid": "0000-0002-4793-7541"
     }
   ]
 }
