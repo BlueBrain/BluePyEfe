@@ -79,9 +79,9 @@ by `BluePyOpt <https://github.com/BlueBrain/BluePyOpt>`_ for neuron electrical m
 
 How to cite
 ===========
-If you use this repository in your work, please refer to the `./CITATION.cff <./CITATION.cff>`_ file for detailed citation information.
+If you use this repository in your work, please refer to the "Cite this repository" button at the top of the repository page to get various citation formats, including APA and BibTeX.
 
-You can also access various citation formats, including APA and BibTeX, directly from the GitHub interface. Simply click on the "Cite this repository" button at the top of the repository page to get the formatted citations.
+For detailed citation information, please refer to the `CITATION.cff <./CITATION.cff>`_ file.
 
 Requirements
 ============
