@@ -45,7 +45,7 @@ BluePyEfe: Blue Brain Python E-feature extraction
       <td>DOI</td>
       <td>
         <a href="https://doi.org/10.5281/zenodo.3728191">
-          <img src="https://zenodo.org/badge/10.5281/zenodo.3728191.svg" alt="DOI"/>
+          <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.3728191.svg" alt="DOI"/>
         </a>
       </td>
     </tr>
