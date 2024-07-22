@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "BluePyEfe"
+doi: 10.5281/zenodo.3728191
+url: https://doi.org/10.5281/zenodo.3728191
+abstract: "BluePyEfe aims at easing the process of reading experimental recordings and extracting batches of electrical features from these recordings. To do so, it combines trace reading functions and features extraction functions from the eFel library. BluePyEfe outputs protocols and features files in the format used by BluePyOpt for neuron electrical model building."
+authors:
+  - family-names: "Rössert"
+    given-names: "Christian"
+  - family-names: "Van Geit"
+    given-names: "Werner"
+  - family-names: "Iavarone"
+    given-names: "Elisabetta"
+  - family-names: "Bologna"
+    given-names: "Luca Leonardo"
+  - family-names: "Damart"
+    given-names: "Tanguy"
+  - family-names: "Jaquier"
+    given-names: "Aurélien"
+  - family-names: "Mandge"
+    given-names: "Darshan"
+  - family-names: "Tuncel"
+    given-names: "Anil"
+  - family-names: "Kilic"
+    given-names: "Ilkan"
+  - family-names: "Sanin"
+    given-names: "Aleksei"
+  - family-names: "Davison"
+    given-names: "Andrew"
+date-released: 2020-03-01
+publisher: "Zenodo"
