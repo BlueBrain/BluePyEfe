@@ -1042,7 +1042,11 @@ def extract_efeatures(
 
     if plot:
         plot_all_recordings_efeatures(
-            cells, protocols, output_dir=output_directory, mapper=map_function
+            cells,
+            protocols,
+            output_dir=output_directory,
+            mapper=map_function,
+            efel_settings=efel_settings
         )
 
     if extract_per_cell and write_files:
