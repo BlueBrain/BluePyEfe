@@ -393,9 +393,8 @@ def plot_impedance(cell, output_dir, efel_settings):
                 )[0]
                 smooth_Z = gaussian_filter1d(norm_Z[select_idxs], 10)
 
-                amp = "{:.3}".format(rec.amp) if rec.amp is not None else "None"
                 filename = "{}_{}_{}_{}_impedance.pdf".format(
-                    cell.name, protocol_name, i, amp
+                    cell.name, protocol_name, i, rec.name
                 )
                 dirname = pathlib.Path(output_dir) / cell.name / "impedance"
 
@@ -404,7 +403,7 @@ def plot_impedance(cell, output_dir, efel_settings):
                 ax.plot(freq[:len(smooth_Z)], smooth_Z)
                 ax.set_xlabel("Frequency (Hz)")
                 ax.set_ylabel("normalized Z")
-                fig .suptitle(f"Impedance for {cell.name} at amp {amp}")
+                fig .suptitle(f"Impedance for {rec.name}\nfor cell {cell.name}")
                 _save_fig(dirname, filename)
 
 

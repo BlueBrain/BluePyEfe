@@ -25,6 +25,7 @@ import logging
 import numpy
 import efel
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 from .tools import to_ms, to_mV, to_nA, set_efel_settings
 
@@ -80,6 +81,17 @@ class Recording(ABC):
         self.export_attr = None
         self.auto_threshold = None
         self.peak_time = None
+
+    @property
+    def name(self):
+        """Proxy that can be used to name the recording."""
+        if self.id:
+            return self.id
+        if "filepath" in self.config_data and self.config_data["filepath"] is not None:
+            return str(Path(self.config_data["filepath"]).stem)
+        if "v_file" in self.config_data:
+            return str(Path(self.config_data["v_file"]).stem)
+        return ""
 
     @property
     def time(self):
