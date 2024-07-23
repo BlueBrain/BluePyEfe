@@ -342,6 +342,79 @@ def plot_grouped_efeatures(
     _ = _plot_legend(colors, markers, output_dir, show=show)
 
 
+def plot_impedance(cell, output_dir, efel_settings):
+    """Plots the impedance."""
+    from scipy.ndimage.filters import gaussian_filter1d
+
+    dt = 0.1
+    Z_max_freq = 50.0
+    if efel_settings is not None:
+        dt = efel_settings.get("interp_step", dt)
+        Z_max_freq = efel_settings.get("impedance_max_freq", Z_max_freq)
+
+    for protocol_name in cell.get_protocol_names():
+        if "sinespec" in protocol_name.lower():
+            recordings = cell.get_recordings_by_protocol_name(protocol_name)
+            for i, rec in enumerate(recordings):
+                voltage = rec.voltage
+                current = rec.current
+
+                efel_vals = rec.call_efel(
+                    [
+                        "voltage_base",
+                        "steady_state_voltage_stimend",
+                        "current_base",
+                        "steady_state_current_stimend",
+                    ],
+                    efel_settings
+                )
+                if efel_vals[0]["voltage_base"] is not None:
+                    holding_voltage = efel_vals[0]["voltage_base"][0]
+                else:
+                    holding_voltage = efel_vals[0]["steady_state_voltage_stimend"][0]
+                if efel_vals[0]["current_base"] is not None:
+                    holding_current = efel_vals[0]["current_base"][0]
+                else:
+                    holding_current = efel_vals[0]["steady_state_current_stimend"][0]
+
+                normalized_voltage = voltage - holding_voltage
+                normalized_current = current - holding_current
+
+                fft_volt = numpy.fft.fft(normalized_voltage)
+                fft_cur = numpy.fft.fft(normalized_current)
+                if any(fft_cur) == 0:
+                    return None
+                # convert dt from ms to s to have freq in Hz
+                freq = numpy.fft.fftfreq(len(normalized_voltage), d=dt / 1000.)
+                Z = fft_volt / fft_cur
+                norm_Z = abs(Z) / max(abs(Z))
+                select_idxs = numpy.swapaxes(
+                    numpy.argwhere((freq > 0) & (freq <= Z_max_freq)), 0, 1
+                )[0]
+                smooth_Z = gaussian_filter1d(norm_Z[select_idxs], 10)
+
+                amp = rec.amp if rec.amp is not None else 0.0
+                filename = "{}_{}_{}_{:.3}_impedance.pdf".format(
+                    cell.name, protocol_name, i, amp
+                )
+                dirname = pathlib.Path(output_dir) / cell.name / "impedance"
+
+                fig = plt.figure()
+                ax = fig.add_subplot(1, 1, 1)
+                ax.plot(freq[:len(smooth_Z)], smooth_Z)
+                _save_fig(dirname, filename)
+
+
+def plot_all_impedances(cells, output_dir, mapper=map, efel_settings=None):
+    """Plot recordings for all cells and all protocols"""
+    if mapper == map:
+        # For the built-in map(), ensure immediate evaluation as it returns a lazy iterator
+        # which won't execute the function until iterated over. Converting to a list forces this iteration.
+        list(mapper(partial(plot_impedance, output_dir=output_dir, efel_settings=efel_settings), cells))
+    else:
+        mapper(partial(plot_impedance, output_dir=output_dir, efel_settings=efel_settings), cells)
+
+
 def plot_all_recordings_efeatures(
     cells, protocols, output_dir=None, show=False, mapper=map, efel_settings=None
 ):
@@ -373,71 +446,3 @@ def plot_all_recordings_efeatures(
             key_amp=key_amp,
             show=show
         )
-
-
-def plot_impedance(cell, output_dir, efel_settings, dt=0.1, Z_max_freq=50):
-    """Plots the impedance."""
-    from scipy.ndimage.filters import gaussian_filter1d
-
-    for protocol_name in cell.get_protocol_names():
-        if "sinespec" in protocol_name.lower():
-            recordings = cell.get_recordings_by_protocol_name(protocol_name)
-            for rec in recordings:
-                voltage = rec.voltage
-                current = rec.current
-
-                efel_vals = rec.call_efel(
-                    [
-                        "voltage_base",
-                        "steady_state_voltage_stimend",
-                        "current_base",
-                        "steady_state_current_stimend",
-                    ],
-                    efel_settings
-                )
-                if efel_vals[0]["voltage_base"] is not None:
-                    holding_voltage = efel_vals[0]["voltage_base"][0]
-                else:
-                    holding_voltage = efel_vals[0]["steady_state_voltage_stimend"][0]
-                if efel_vals[0]["current_base"] is not None:
-                    holding_current = efel_vals[0]["current_base"][0]
-                else:
-                    holding_current = efel_vals[0]["steady_state_current_stimend"][0]
-                
-                normalized_voltage = voltage - holding_voltage
-                normalized_current = current - holding_current
-
-                fft_volt = numpy.fft.fft(normalized_voltage)
-                fft_cur = numpy.fft.fft(normalized_current)
-                if any(fft_cur) == 0:
-                    return None
-                # convert dt from ms to s to have freq in Hz
-                freq = numpy.fft.fftfreq(len(normalized_voltage), d=dt / 1000.)
-                Z = fft_volt / fft_cur
-                norm_Z = abs(Z) / max(abs(Z))
-                select_idxs = numpy.swapaxes(
-                    numpy.argwhere((freq > 0) & (freq <= Z_max_freq)), 0, 1
-                )[0]
-                smooth_Z = gaussian_filter1d(norm_Z[select_idxs], 10)
-
-                filename = "{}_{}_impedance.pdf".format(
-                    cell.name, protocol_name
-                )
-                dirname = pathlib.Path(output_dir) / cell.name / "impedance"
-
-                fig = plt.figure()
-                ax = fig.add_subplot(1, 1, 1)
-                ax.plot(freq, smooth_Z)
-                _save_fig(dirname, filename)
-    plt.close("all")
-    plt.clf()
-
-
-def plot_all_impedances(cells, output_dir, mapper=map, efel_settings=None):
-    """Plot recordings for all cells and all protocols"""
-    if mapper == map:
-        # For the built-in map(), ensure immediate evaluation as it returns a lazy iterator
-        # which won't execute the function until iterated over. Converting to a list forces this iteration.
-        list(mapper(partial(plot_impedance, output_dir=output_dir, efel_settings=efel_settings), cells))
-    else:
-        mapper(partial(plot_impedance, output_dir=output_dir, efel_settings=efel_settings), cells)
