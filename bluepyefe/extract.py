@@ -43,6 +43,24 @@ from bluepyefe.auto_targets import default_auto_targets
 logger = logging.getLogger(__name__)
 
 
+def cells_pickle_output_path(output_directory):
+    """Returns the cells.pkl output file path
+
+    Args:
+        output_directory (Path): the output directory
+    """
+    return output_directory / "cells.pkl"
+
+
+def protocols_pickle_output_path(output_directory):
+    """Returns the protocols.pkl output file path
+
+    Args:
+        output_directory (Path): the output directory
+    """
+    return output_directory / "protocols.pkl"
+
+
 def _create_cell(cell_definition, recording_reader, efel_settings=None):
     """
     Initialize a Cell object and populate it with the content of the associated
@@ -1037,8 +1055,8 @@ def extract_efeatures(
     if pickle_cells:
         path_cells = pathlib.Path(output_directory)
         path_cells.mkdir(parents=True, exist_ok=True)
-        pickle.dump(cells, open(path_cells / "cells.pkl", 'wb'))
-        pickle.dump(protocols, open(path_cells / "protocols.pkl", 'wb'))
+        pickle.dump(cells, open(cells_pickle_output_path(path_cells), 'wb'))
+        pickle.dump(protocols, open(protocols_pickle_output_path(path_cells), 'wb'))
 
     if plot:
         plot_all_recordings_efeatures(
