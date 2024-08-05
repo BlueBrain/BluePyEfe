@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 
 def cells_pickle_output_path(output_directory):
     """Returns the cells.pkl output file path
-    
+
     Args:
         output_directory (Path): the output directory
     """
@@ -54,7 +54,7 @@ def cells_pickle_output_path(output_directory):
 
 def protocols_pickle_output_path(output_directory):
     """Returns the protocols.pkl output file path
-    
+
     Args:
         output_directory (Path): the output directory
     """
