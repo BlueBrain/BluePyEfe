@@ -56,8 +56,8 @@ class TestTranslateLegacyConfig(unittest.TestCase):
         bluepyefe.extract.compute_rheobase(cells, protocols_rheobase=["IDRest"])
 
         self.assertEqual(len(cells), 2)
-        self.assertEqual(len(cells[0].recordings), 5)
-        self.assertEqual(len(cells[1].recordings), 5)
+        self.assertEqual(len(cells[0].recordings_as_list), 5)
+        self.assertEqual(len(cells[1].recordings_as_list), 5)
 
         self.assertLess(abs(cells[0].rheobase - 0.119), 0.01)
         self.assertLess(abs(cells[1].rheobase - 0.0923), 0.01)

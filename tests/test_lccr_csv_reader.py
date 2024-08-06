@@ -1,6 +1,5 @@
 """bluepyefe.nwbreader tests"""
 import unittest
-import h5py
 from pathlib import Path
 from bluepyefe.reader import csv_lccr_reader
 
