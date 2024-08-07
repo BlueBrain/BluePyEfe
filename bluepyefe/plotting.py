@@ -383,7 +383,7 @@ def plot_impedance(cell, output_dir, efel_settings):
                 fft_volt = numpy.fft.fft(normalized_voltage)
                 fft_cur = numpy.fft.fft(normalized_current)
                 if any(fft_cur) == 0:
-                    return None
+                    continue
                 # convert dt from ms to s to have freq in Hz
                 freq = numpy.fft.fftfreq(len(normalized_voltage), d=dt / 1000.)
                 Z = fft_volt / fft_cur
@@ -400,7 +400,7 @@ def plot_impedance(cell, output_dir, efel_settings):
 
                 fig = plt.figure()
                 ax = fig.add_subplot(1, 1, 1)
-                ax.plot(freq[:len(smooth_Z)], smooth_Z)
+                ax.plot(freq[select_idxs][:len(smooth_Z)], smooth_Z)
                 ax.set_xlabel("Frequency (Hz)")
                 ax.set_ylabel("normalized Z")
                 fig .suptitle(f"Impedance for {rec.name}\nfor cell {cell.name}")
