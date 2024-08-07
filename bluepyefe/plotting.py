@@ -400,7 +400,7 @@ def plot_impedance(cell, output_dir, efel_settings):
 
                 fig = plt.figure()
                 ax = fig.add_subplot(1, 1, 1)
-                ax.plot(freq[select_idxs][:len(smooth_Z)], smooth_Z)
+                ax.plot(freq[select_idxs], smooth_Z)
                 ax.set_xlabel("Frequency (Hz)")
                 ax.set_ylabel("normalized Z")
                 fig .suptitle(f"Impedance for {rec.name}\nfor cell {cell.name}")
