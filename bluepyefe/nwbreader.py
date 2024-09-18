@@ -28,7 +28,6 @@ class NWBReader:
 
         raise NotImplementedError()
 
-
     def _format_nwb_trace(self, voltage, current, start_time, trace_name=None, repetition=None):
         """ Format the data from the NWB file to the format used by BluePyEfe
 
