@@ -120,28 +120,6 @@ class AIBSNWBReader(NWBReader):
 
 class ScalaNWBReader(NWBReader):
 
-    def _get_repetition_keys(self, content, request_repetitions=None):
-        """
-        Retrieve the keys of the traces based on the requested repetitions.
-
-        Args:
-            content (dict): The content of the NWB file for one sweep or protocol, containing repetition data.
-            request_repetitions (list of int or int, optional): Specific repetitions to retrieve. If None, all repetitions are returned.
-
-        Returns:
-            list of str: The keys of the traces that correspond to the requested repetitions.
-        """
-        if isinstance(request_repetitions, (int, str)):
-            request_repetitions = [int(request_repetitions)]
-
-        reps = list(content.keys())
-        reps_id = [int(rep.replace("repetition ", "")) for rep in reps]
-
-        if request_repetitions:
-            return [reps[reps_id.index(i)] for i in request_repetitions if i in reps_id]
-        else:
-            return reps
-
     def read(self):
         """ Read and format the content of the NWB file
 
@@ -150,6 +128,11 @@ class ScalaNWBReader(NWBReader):
         """
 
         data = []
+
+        if self.repetition:
+            repetitions_content = self.content['general']['intracellular_ephys']['intracellular_recordings']['repetition']
+            if isinstance(self.repetition, (int, str)):
+                self.repetition = [int(self.repetition)]
 
         for sweep in list(self.content['acquisition'].keys()):
             key_current = sweep.replace('Series', 'StimulusSeries')
@@ -171,17 +154,15 @@ class ScalaNWBReader(NWBReader):
             if key_current not in self.content['stimulus']['presentation']:
                 continue
 
-            repetitions_content = self.content["acquisition"][sweep].get("repetitions", None)
-
-            if repetitions_content:
-                rep_iter = self._get_repetition_keys(repetitions_content, request_repetitions=self.repetition)
-                for rep in rep_iter:
+            if self.repetition:
+                sweep_id = int(sweep.split("_")[-1])
+                if (int(repetitions_content[sweep_id]) in self.repetition):
                     data.append(self._format_nwb_trace(
-                        voltage=repetitions_content[rep]['data'],
+                        voltage=self.content['acquisition'][sweep]['data'],
                         current=self.content['stimulus']['presentation'][key_current]['data'],
-                        start_time=repetitions_content[rep]["starting_time"],
-                        trace_name=f"{sweep}_repetition_{rep}",
-                        repetition=int(rep.replace("repetition ", ""))
+                        start_time=self.content['acquisition'][sweep]["starting_time"],
+                        trace_name=sweep,
+                        repetition=repetitions_content[sweep_id]
                     ))
             else:
                 data.append(self._format_nwb_trace(
