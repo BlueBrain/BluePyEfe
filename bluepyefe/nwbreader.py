@@ -28,21 +28,6 @@ class NWBReader:
 
         raise NotImplementedError()
 
-    def _get_repetition_keys(self, content, request_repetitions=None):
-        """
-        Retrieve the keys of the traces based on the requested repetitions.
-
-        Args:
-            content (dict): The content of the NWB file for one sweep or protocol, containing repetition data.
-            request_repetitions (list of int or int, optional): Specific repetitions to retrieve. If None, all repetitions are returned.
-
-        Returns:
-            list of str: The keys of the traces that correspond to the requested repetitions.
-
-        Raises:
-            NotImplementedError: If the method is called in a subclass that does not support repetition handling.
-        """
-        raise NotImplementedError("This NWBReader does not support repetitions.")
 
     def _format_nwb_trace(self, voltage, current, start_time, trace_name=None, repetition=None):
         """ Format the data from the NWB file to the format used by BluePyEfe
