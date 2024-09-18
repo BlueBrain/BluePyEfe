@@ -162,7 +162,7 @@ class ScalaNWBReader(NWBReader):
                         current=self.content['stimulus']['presentation'][key_current]['data'],
                         start_time=self.content['acquisition'][sweep]["starting_time"],
                         trace_name=sweep,
-                        repetition=repetitions_content[sweep_id]
+                        repetition=int(repetitions_content[sweep_id])
                     ))
             else:
                 data.append(self._format_nwb_trace(
