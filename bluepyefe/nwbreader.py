@@ -103,6 +103,7 @@ class AIBSNWBReader(NWBReader):
 
 
 class ScalaNWBReader(NWBReader):
+
     def read(self):
         """ Read and format the content of the NWB file
 
@@ -111,6 +112,11 @@ class ScalaNWBReader(NWBReader):
         """
 
         data = []
+
+        if self.repetition:
+            repetitions_content = self.content['general']['intracellular_ephys']['intracellular_recordings']['repetition']
+            if isinstance(self.repetition, (int, str)):
+                self.repetition = [int(self.repetition)]
 
         for sweep in list(self.content['acquisition'].keys()):
             key_current = sweep.replace('Series', 'StimulusSeries')
@@ -132,12 +138,23 @@ class ScalaNWBReader(NWBReader):
             if key_current not in self.content['stimulus']['presentation']:
                 continue
 
-            data.append(self._format_nwb_trace(
-                voltage=self.content['acquisition'][sweep]['data'],
-                current=self.content['stimulus']['presentation'][key_current]['data'],
-                start_time=self.content["acquisition"][sweep]["starting_time"],
-                trace_name=sweep,
-            ))
+            if self.repetition:
+                sweep_id = int(sweep.split("_")[-1])
+                if (int(repetitions_content[sweep_id]) in self.repetition):
+                    data.append(self._format_nwb_trace(
+                        voltage=self.content['acquisition'][sweep]['data'],
+                        current=self.content['stimulus']['presentation'][key_current]['data'],
+                        start_time=self.content['acquisition'][sweep]["starting_time"],
+                        trace_name=sweep,
+                        repetition=int(repetitions_content[sweep_id])
+                    ))
+            else:
+                data.append(self._format_nwb_trace(
+                    voltage=self.content['acquisition'][sweep]['data'],
+                    current=self.content['stimulus']['presentation'][key_current]['data'],
+                    start_time=self.content["acquisition"][sweep]["starting_time"],
+                    trace_name=sweep,
+                ))
 
         return data
 
