@@ -56,7 +56,7 @@ setuptools.setup(
         'numpy',
         'neo',
         'matplotlib',
-        'efel',
+        'efel>=5.6.19',
         'scipy',
         'h5py',
         'igor2'],

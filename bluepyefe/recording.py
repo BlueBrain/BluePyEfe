@@ -292,7 +292,7 @@ class Recording(ABC):
             efel_trace["I"] = self.current
 
         try:
-            return efel.getFeatureValues(
+            return efel.get_feature_values(
                 [efel_trace], efeatures, raise_warnings=False
             )
         except TypeError as e:

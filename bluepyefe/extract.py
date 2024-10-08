@@ -18,7 +18,6 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
-import os
 import pickle
 import functools
 import logging
@@ -481,10 +480,8 @@ def _build_current_dict(cells, default_std_value):
     threshold = {}
 
     for cell in cells:
-
-        holding[cell.name] = numpy.nanmean(
-            [t.hypamp for t in cell.recordings]
-        )
+        holding_currents = [rec.hypamp for rec in cell.recordings_as_list]
+        holding[cell.name] = numpy.nanmean(holding_currents)
 
         if cell.rheobase is not None:
             threshold[cell.name] = cell.rheobase
@@ -645,10 +642,10 @@ def _read_extract_low_memory(
 
         # clean traces voltage and time
         for i in range(len(cell.recordings)):
-            cell.recordings[i].t = None
-            cell.recordings[i].voltage = None
-            cell.recordings[i].current = None
-            cell.recordings[i].reader_data = None
+            cell.recordings_as_list[i].t = None
+            cell.recordings_as_list[i].voltage = None
+            cell.recordings_as_list[i].current = None
+            cell.recordings_as_list[i].reader_data = None
 
         cells.append(cell)
         gc.collect()
@@ -801,7 +798,7 @@ def _extract_auto_targets(
 
     recordings = []
     for c in cells:
-        recordings += c.recordings
+        recordings += c.recordings_as_list
 
     for i in range(len(auto_targets)):
         auto_targets[i].select_ecode_and_amplitude(recordings)

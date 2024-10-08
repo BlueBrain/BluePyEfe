@@ -18,20 +18,30 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
+from collections import defaultdict
 import logging
+from multiprocessing import Pool
 import numpy
 import matplotlib.pyplot as plt
 import pathlib
 
 from bluepyefe.ecode import eCodes
 from bluepyefe.reader import *
-from bluepyefe.plotting import _save_fig
 from matplotlib.backends.backend_pdf import PdfPages
+
+from bluepyefe.recording import Recording
 
 logger = logging.getLogger(__name__)
 
 
-class Cell(object):
+def extract_efeatures_helper(recording, efeatures, efeature_names, efel_settings):
+    """Helper function to compute efeatures for a single recording."""
+    recording.compute_efeatures(
+        efeatures, efeature_names, efel_settings)
+    return recording
+
+
+class Cell:
 
     """Contains the metadata related to a cell as well as the
     electrophysiological recordings once they are read"""
@@ -46,8 +56,13 @@ class Cell(object):
 
         self.name = name
 
-        self.recordings = []
+        self.recordings: dict[str, list[Recording]] = defaultdict(list)
         self.rheobase = None
+
+    @property
+    def recordings_as_list(self):
+        """Return all the recordings as a list."""
+        return [rec for recordings_list in self.recordings.values() for rec in recordings_list]
 
     def reader(self, config_data, recording_reader=None):
         """Define the reader method used to read the ephys data for the
@@ -90,9 +105,8 @@ class Cell(object):
         )
 
     def get_protocol_names(self):
-        """List of all the protocols available for the present cell."""
-
-        return list(set([rec.protocol_name for rec in self.recordings]))
+        """List of all the protocol names available for the present cell."""
+        return list(self.recordings.keys())
 
     def get_recordings_by_protocol_name(self, protocol_name):
         """List of all the recordings available for the present cell for a
@@ -102,27 +116,7 @@ class Cell(object):
             protocol_name (str): name of the protocol for which to get
                 the recordings.
         """
-
-        return [
-            rec
-            for rec in self.recordings
-            if rec.protocol_name == protocol_name
-        ]
-
-    def get_recordings_id_by_protocol_name(self, protocol_name):
-        """List of the indexes of the recordings available for the present
-        cell for a given protocol.
-
-        Args:
-            protocol_name (str): name of the protocol for which to get
-                the recordings.
-        """
-
-        return [
-            i
-            for i, trace in enumerate(self.recordings)
-            if trace.protocol_name == protocol_name
-        ]
+        return self.recordings.get(protocol_name)
 
     def read_recordings(
         self,
@@ -163,7 +157,7 @@ class Cell(object):
                             protocol_name,
                             efel_settings
                         )
-                        self.recordings.append(rec)
+                        self.recordings[protocol_name].append(rec)
                         break
                 else:
                     raise KeyError(
@@ -192,19 +186,25 @@ class Cell(object):
                 is to be extracted several time on different sections
                 of the same recording.
         """
+        recordings_of_protocol: list[Recording] = self.recordings.get(protocol_name)
 
-        for i in self.get_recordings_id_by_protocol_name(protocol_name):
-            self.recordings[i].compute_efeatures(
-                efeatures, efeature_names, efel_settings)
+        # Run in parallel via multiprocessing
+        with Pool(maxtasksperchild=1) as pool:
+            tasks = [
+                (recording, efeatures, efeature_names, efel_settings)
+                for recording in recordings_of_protocol
+            ]
+            results = pool.starmap(extract_efeatures_helper, tasks)
+
+        self.recordings[protocol_name] = results
 
     def compute_relative_amp(self):
         """Compute the relative current amplitude for all the recordings as a
         percentage of the rheobase."""
 
         if self.rheobase not in (0.0, None, False, numpy.nan):
-
-            for i in range(len(self.recordings)):
-                self.recordings[i].compute_relative_amp(self.rheobase)
+            for recording in self.recordings_as_list:
+                recording.compute_relative_amp(self.rheobase)
 
         else:
 

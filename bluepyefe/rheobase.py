@@ -25,13 +25,13 @@ logger = logging.getLogger(__name__)
 
 
 def _get_list_spiking_amplitude(cell, protocols_rheobase):
-    """Return the list of sorted list of amplitude that triggered at least
-    one spike"""
+    """Return the list of sorted amplitudes that triggered at least
+    one spike, along with their corresponding spike counts."""
 
     amps = []
     spike_counts = []
 
-    for i, rec in enumerate(cell.recordings):
+    for rec in cell.recordings_as_list:
         if rec.protocol_name in protocols_rheobase:
             if rec.spikecount is not None:
 
@@ -42,13 +42,16 @@ def _get_list_spiking_amplitude(cell, protocols_rheobase):
                     logger.warning(
                         f"A recording of cell {cell.name} protocol "
                         f"{rec.protocol_name} shows spikes at a "
-                        "suspiciously low current in a trace from file"
-                        f" {rec.files}. Check that the ton and toff are"
+                        "suspiciously low current in a trace from file "
+                        f"{rec.files}. Check that the ton and toff are "
                         "correct or for the presence of unwanted spikes."
                     )
 
+    # Sort amplitudes and their corresponding spike counts
     if amps:
         amps, spike_counts = zip(*sorted(zip(amps, spike_counts)))
+    else:
+        amps, spike_counts = (), ()
 
     return amps, spike_counts
 

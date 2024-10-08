@@ -73,13 +73,13 @@ class RecordingTestNWB(unittest.TestCase):
 
     def test_set_autothreshold(self):
         """Test the auto_threshold detection in Recording."""
-        assert self.cell.recordings[0].auto_threshold == approx(4.999999)
-        assert self.cell.recordings[15].auto_threshold == approx(26.5)
+        assert self.cell.recordings_as_list[0].auto_threshold == approx(4.999999)
+        assert self.cell.recordings_as_list[15].auto_threshold == approx(26.5)
 
     def test_compute_spikecount(self):
         """Test Recording.compute_spikecount()."""
-        assert self.cell.recordings[1].spikecount == 2
-        assert_array_almost_equal(self.cell.recordings[1].peak_time, [85.4, 346.1])
+        assert self.cell.recordings_as_list[1].spikecount == 2
+        assert_array_almost_equal(self.cell.recordings_as_list[1].peak_time, [85.4, 346.1])
 
 
 if __name__ == "__main__":

@@ -6,7 +6,6 @@ import json
 
 import bluepyefe.extract
 import bluepyefe.tools
-from tests.utils import download_sahp_datafiles
 
 
 def get_config(absolute_amplitude=False):
@@ -90,8 +89,8 @@ class ExtractorTest(unittest.TestCase):
         bluepyefe.extract.compute_rheobase(cells, protocols_rheobase=["IDRest"])
 
         self.assertEqual(len(cells), 2)
-        self.assertEqual(len(cells[0].recordings), 5)
-        self.assertEqual(len(cells[1].recordings), 5)
+        self.assertEqual(len(cells[0].recordings_as_list), 5)
+        self.assertEqual(len(cells[1].recordings_as_list), 5)
 
         self.assertLess(abs(cells[0].rheobase - 0.119), 0.01)
         self.assertLess(abs(cells[1].rheobase - 0.0923), 0.01)
@@ -158,7 +157,7 @@ class ExtractorTest(unittest.TestCase):
 
         recordings = []
         for c in cells:
-            recordings += c.recordings
+            recordings += c.recordings_as_list
 
         for i in range(len(auto_targets)):
             auto_targets[i].select_ecode_and_amplitude(recordings)
@@ -181,8 +180,8 @@ class ExtractorTest(unittest.TestCase):
         )
 
         self.assertEqual(len(cells), 2)
-        self.assertEqual(len(cells[0].recordings), 5)
-        self.assertEqual(len(cells[1].recordings), 5)
+        self.assertEqual(len(cells[0].recordings_as_list), 5)
+        self.assertEqual(len(cells[1].recordings_as_list), 5)
 
         self.assertEqual(cells[0].rheobase, None)
         self.assertEqual(cells[1].rheobase, None)
@@ -197,10 +196,6 @@ class ExtractorTest(unittest.TestCase):
         _ = bluepyefe.extract.create_feature_protocol_files(
             cells=cells, protocols=protocols, output_directory="MouseCells"
         )
-
-        for cell in cells:
-            for r in cell.recordings:
-                print(r.amp, r.efeatures)
 
         for protocol in protocols:
             if protocol.name == "IDRest" and protocol.amplitude == 0.25:
