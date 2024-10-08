@@ -18,11 +18,3 @@ Copyright (c) 2022, EPFL/Blue Brain Project
  along with this library; if not, write to the Free Software Foundation, Inc.,
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
-
-from ._version import get_versions
-
-__version__ = get_versions()["version"]
-del get_versions
-
-from . import _version
-__version__ = _version.get_versions()['version']
