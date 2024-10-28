@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools >= 64", "setuptools-scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bluepyefe"
+authors = [
+    {name = "Blue Brain Project, EPFL", email = "werner.vangeit@epfl.ch"},
+]
+description="Blue Brain Python E-feature extraction"
+readme = "README.rst"
+license = {file = "LICENSE.txt"}
+requires-python = ">= 3.9"
+dynamic = ["version"]
+dependencies = [
+    "numpy",
+    "neo",
+    "matplotlib",
+    "efel",
+    "scipy",
+    "h5py",
+    "igor2",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "License :: OSI Approved :: GNU Lesser General Public ",
+    "License v3 (LGPLv3)",
+    "Programming Language :: Python :: 3",
+    "Operating System :: POSIX",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Utilities",
+]
+keywords = [
+    "neuroscience",
+    "BlueBrainProject",
+]
+
+[project.urls]
+Homepage = "https://github.com/BlueBrain/BluePyEfe"
+Source = "https://github.com/BlueBrain/BluePyEfe"
+Repository = "https://github.com/BlueBrain/BluePyEfe.git"
+Tracker = "https://github.com/BlueBrain/BluePyEfe/issues"
+Documentation = "https://bluepyefe.readthedocs.io/en/latest"
+
+[tool.setuptools_scm]
+version_scheme = "python-simplified-semver"
+local_scheme = "no-local-version"
