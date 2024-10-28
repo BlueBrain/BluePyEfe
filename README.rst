@@ -5,67 +5,22 @@
 BluePyEfe: Blue Brain Python E-feature extraction
 =================================================
 
-.. raw:: html
++----------------+------------+
+| Latest Release | |pypi|     |
++----------------+------------+
+| Documentation  | |docs|     |
++----------------+------------+
+| License        | |license|  |
++----------------+------------+
+| Build Status 	 | |tests|    |
++----------------+------------+
+| Coverage       | |coverage| |
++----------------+------------+
+| Citation       | |zenodo|   |
++----------------+------------+
+| Gitter         | |gitter|   |
++----------------+------------+
 
-    <table>
-    <tr>
-      <td>Latest Release</td>
-      <td>
-        <a href="https://pypi.org/project/bluepyefe/">
-        <img src="https://img.shields.io/pypi/v/bluepyefe.svg" alt="latest release" />
-        </a>
-      </td>
-    </tr>
-    <tr>
-      <td>Documentation</td>
-      <td>
-        <a href="https://bluepyefe.readthedocs.io/">
-        <img src="https://readthedocs.org/projects/bluepyefe/badge/?version=latest" alt="latest documentation" />
-        </a>
-      </td>
-    </tr>
-    <tr>
-      <td>License</td>
-      <td>
-        <a href="https://github.com/BlueBrain/bluepyefe/blob/master/LICENSE.txt">
-        <img src="https://img.shields.io/pypi/l/bluepyefe.svg" alt="license" />
-        </a>
-    </td>
-    </tr>
-    <tr>
-      <td>Build Status</td>
-      <td>
-      <a href="https://github.com/BlueBrain/BluePyEfe/actions">
-        <img src="https://github.com/BlueBrain/BluePyEfe/workflows/Build/badge.svg?branch=master" alt="Actions build status" />
-        </a>
-      </td>
-    </tr>
-    <tr>
-    <tr>
-      <td>DOI</td>
-      <td>
-        <a href="https://doi.org/10.5281/zenodo.3728191">
-          <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.3728191.svg" alt="DOI"/>
-        </a>
-      </td>
-    </tr>
-    <tr>
-      <td>Gitter</td>
-      <td>
-        <a href="https://gitter.im/bluebrain/bluepyefe">
-        <img src="https://badges.gitter.im/Join%20Chat.svg">
-      </a>
-      </td>
-    </tr>
-    <tr>
-      <td>Coverage</td>
-        <td>
-          <a href="https://codecov.io/gh/BlueBrain/BluePyEfe">
-          <img src="https://codecov.io/github/BlueBrain/BluePyEfe/coverage.svg?branch=master" alt="coverage" />
-          </a>
-      </td>
-    </tr>
-    </table>
 
 Introduction
 ============
@@ -139,6 +94,27 @@ Funding
 =======
 This work has been partially funded by the European Union Seventh Framework Program (FP7/2007­2013) under grant agreement no. 604102 (HBP), and by the European Union’s Horizon 2020 Framework Programme for Research and Innovation under the Specific Grant Agreements No. 720270 (Human Brain Project SGA1) and No. 785907 (Human Brain Project SGA2) and by the EBRAINS research infrastructure, funded from the European Union’s Horizon 2020 Framework Programme for Research and Innovation under the Specific Grant Agreement No. 945539 (Human Brain Project SGA3).
 
+
+.. |pypi| image:: https://img.shields.io/pypi/v/bluepyefe.svg
+               :target: https://pypi.org/project/bluepyefe/
+               :alt: latest release
+.. |docs| image:: https://readthedocs.org/projects/bluepyefe/badge/?version=latest
+               :target: https://bluepyefe.readthedocs.io/
+               :alt: latest documentation
+.. |license| image:: https://img.shields.io/pypi/l/bluepyefe.svg
+                  :target: https://github.com/BlueBrain/bluepyefe/blob/master/LICENSE.txt
+.. |tests| image:: https://github.com/BlueBrain/BluePyEfe/workflows/Build/badge.svg?branch=master
+                :target: https://github.com/BlueBrain/BluePyEfe/actions
+                :alt: Actions build status
+.. |coverage| image:: https://codecov.io/github/BlueBrain/BluePyEfe/coverage.svg?branch=master
+                   :target: https://codecov.io/gh/BlueBrain/BluePyEfe
+                   :alt: coverage
+.. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
+                 :target: https://gitter.im/bluebrain/bluepyefe
+                :alt: gitter
+.. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3728191.svg
+                 :target: https://doi.org/10.5281/zenodo.3728191
+                 :alt: DOI
 
 ..
     The following image is also defined in the index.rst file, as the relative path is
