@@ -46,3 +46,6 @@ Documentation = "https://bluepyefe.readthedocs.io/en/latest"
 [tool.setuptools_scm]
 version_scheme = "python-simplified-semver"
 local_scheme = "no-local-version"
+
+[tool.setuptools.packages.find]
+include = ["bluepyefe"]
