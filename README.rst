@@ -103,6 +103,7 @@ This work has been partially funded by the European Union Seventh Framework Prog
                :alt: latest documentation
 .. |license| image:: https://img.shields.io/pypi/l/bluepyefe.svg
                   :target: https://github.com/BlueBrain/bluepyefe/blob/master/LICENSE.txt
+                  :alt: license
 .. |tests| image:: https://github.com/BlueBrain/BluePyEfe/workflows/Build/badge.svg?branch=master
                 :target: https://github.com/BlueBrain/BluePyEfe/actions
                 :alt: Actions build status
@@ -111,7 +112,7 @@ This work has been partially funded by the European Union Seventh Framework Prog
                    :alt: coverage
 .. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
                  :target: https://gitter.im/bluebrain/bluepyefe
-                :alt: gitter
+                 :alt: gitter
 .. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3728191.svg
                  :target: https://doi.org/10.5281/zenodo.3728191
                  :alt: DOI
