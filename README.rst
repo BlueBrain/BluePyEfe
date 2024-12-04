@@ -94,6 +94,7 @@ Funding
 =======
 This work has been partially funded by the European Union Seventh Framework Program (FP7/2007­2013) under grant agreement no. 604102 (HBP), and by the European Union’s Horizon 2020 Framework Programme for Research and Innovation under the Specific Grant Agreements No. 720270 (Human Brain Project SGA1) and No. 785907 (Human Brain Project SGA2) and by the EBRAINS research infrastructure, funded from the European Union’s Horizon 2020 Framework Programme for Research and Innovation under the Specific Grant Agreement No. 945539 (Human Brain Project SGA3).
 
+Copyright (c) 2016-2024 Blue Brain Project/EPFL
 
 .. |pypi| image:: https://img.shields.io/pypi/v/bluepyefe.svg
                :target: https://pypi.org/project/bluepyefe/
@@ -126,3 +127,4 @@ This work has been partially funded by the European Union Seventh Framework Prog
 
 .. substitutions
 .. |banner| image::  https://raw.githubusercontent.com/BlueBrain/BluePyEfe/master/docs/source/logo/BluePyEfeBanner.jpg
+
